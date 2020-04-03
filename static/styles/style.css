@@ -1,0 +1,157 @@
+/* general */
+@media (min-width: 600px) and (min-height: 400px){
+	#inputCol {
+		width: 30%;
+		float: left;
+	}
+
+	#outputCol {
+		width: 70%;
+		float: right;
+	}
+
+	#input {
+		max-height: 90vh;
+	}
+
+	#output {
+		max-height: 90vh;
+
+		display: flex;
+		flex-direction: column;
+	}
+
+	#show-output {
+		flex-grow: 1;
+	}
+}
+
+#input, #output {
+	padding: 10px;
+}
+
+.errorMessage {
+	color: red;
+}
+/* output */
+
+#showOutput {
+	font-family: "Courier New", Courier, monospace;
+	word-wrap: break-word;
+
+	padding: 5px;
+	background: #eee;
+	border: 1px solid #333;
+
+	overflow: auto;
+}
+
+#showOutput > p {
+	margin: 0px;
+}
+
+/* input */
+
+select {
+	background-color: #fff;
+	border: 1px solid #bbb;
+	padding: 3px 5px;
+}
+
+input[type=text]{
+	border: 1px solid #bbb;
+	padding: 3px 5px;
+	width: 100px;
+	transition-duration: 0.3s;
+}
+
+input[type=text]:focus{
+	border: 1px solid black;
+}
+
+button {
+	background-color: white;
+	color: black;
+	border: 1px solid #000;
+	border-radius: 3px;
+	margin: 2px 15px 2px 0px;
+	transition-duration: 0.3s;
+	padding: 5px 10px;
+}
+
+button:hover, button:focus {
+	background-color: #333;
+	color: white;
+}
+
+button:active {
+	background-color: black;
+	color: white;
+}
+
+button:active:after {
+	background-color: black;
+	color: white;
+	transition: 1.5s;
+}
+
+#fidelityInput, #meltingPtInput {
+	display:flex;
+	flex-direction: row;
+	max-width: 600px;
+}
+
+#meltingPt {
+	width: 50px;
+}
+
+.shouldGrow {
+	flex-grow: 1;
+}
+
+#meltingErrorContainer {
+	text-align: right;
+}
+
+div.elemDiv {
+	border: 1px solid #333;
+	background: #eee;
+	padding: 5px;
+	margin: 5px;
+	text-align: center;
+}
+
+div.elemDiv > p{
+	margin: 5px;
+	font-weight: bold;
+}
+
+div.elemDiv > label{
+	margin: 5px;
+	font-style: bold;
+}
+
+div.elemDiv > div{
+	display: inline-block;
+	margin: 5px;
+}
+
+@media (min-width: 600px) and (min-height: 400px){
+	#form {
+		display: flex;
+		flex-direction: column;
+		max-height: 90vh;
+	}
+
+	#elements {
+		flex-grow: 1;
+	}
+}
+
+#elements {
+	border: 1px solid black;
+	overflow: auto;
+
+	min-height: 20px;
+	max-width: 600px;
+}

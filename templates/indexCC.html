@@ -1,0 +1,77 @@
+<!--cyano thing-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cyano'Construct</title>
+
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/style.css') }}">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+<script src = "{{ url_for('static',filename='js/ccJS.js') }}" ></script>
+
+</head>
+<body>
+
+<div id = "inputCol"><div id = "input">
+	<form id = "form" method = "POST" onsubmit = "validate(); return false;">
+		<div>
+			<h3>Input</h3>
+
+			<div id = "fidelityInput">
+				<label for = "fidelity">Spacer Fidelity</label>
+				<div class = "shouldGrow"></div>
+				<select class = "formField" name = "fidelity" id = "fidelity">
+					{% for num in fidelities %}
+						<option value = "{{ num }}">{{ num }}</option>
+					{% endfor %}
+				</select>
+			</div>
+
+			<br/>
+			<div id = "meltingPtInput">
+				<label for = "meltingPt">Melting Point</label>
+				<div class = "shouldGrow"></div>
+				<input class = "formField" name = "meltingPt" id = "meltingPt" type = "text">
+			</div>
+
+			<div id = "meltingErrorContainer">
+				<span class = "errorMessage" id = "meltingError"></span>
+			</div>
+
+			<h3>Sequence</h3>
+		</div>
+
+		<div id = "elements"></div>
+
+		<div>
+			<span class = "errorMessage" id = "elementError"></span>
+			<br>
+			<button name = "newElement" type = "button" onclick = "addElem()">New Element</button>
+			<button name = "rmElement" type = "button" onclick = "rmLastElem()">Remove Last Element</button>
+			<hr>
+
+			<button type = "submit" id = "threeSubmit">Submit</button>
+		</div>
+	</form>
+</div></div>
+
+<div id = "outputCol"><div id = "output">
+	<h3>Output</h3>
+	<div id = "showOutput"><p id = "outputParagraph">
+		First construct a sequence, then submit it. Information about the sequence produced will fill the output box. It will then be downloadable as a .zip.
+		<br><br>
+		Warnings:
+		<br>
+		- .zip must be downloaded within 24 hours of submitting the sequence.
+		<br>
+		- JavaScript must be enabled to run this program.
+		</p></div>
+	<hr style = "width: 100%">
+	<div>
+		<button type = "button" onclick = "downloadFile()">Download .fasta files as .zip</button>
+		<span id = "downloadMessage"></span>
+	</div>
+</div></div>
+
+</body>
+</html>
