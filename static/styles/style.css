@@ -52,6 +52,11 @@
 
 /* input */
 
+textarea {
+	height: 40px;
+	width: 200px;
+}
+
 select {
 	background-color: #fff;
 	border: 1px solid #bbb;

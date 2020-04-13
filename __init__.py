@@ -15,5 +15,6 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "salix" #not good form
 
 from cyanoConstruct import CyanoConstructMod
+from cyanoConstruct import Component
 
 __version__ = "0.1"

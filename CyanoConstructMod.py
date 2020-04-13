@@ -41,7 +41,7 @@ def choice_spacer(ls, spacerchoice): ##creates randomly ordered spacer list, var
     options = ["A", "G", "C", "T"]
     firstspacers = []
     endspacers = []
-    if spacerchoice == '98.5%':
+    if spacerchoice == '98.5%': #why isn't TGCC, CAGA, ACTA, TTAC, etc. in the other ones
         spacers = ['TGCC', 'GCAA', 'ACTA', 'TTAC', 'CAGA', 'TGTG', 'GAGC', 'AGGA', 'ATTC', 'CGAA', 'ATAG', "AAGG", "AAAA", "ACCG"]
     elif spacerchoice == '98.1%':
         spacers = ['AGTG', 'CAGG', 'ACTC', 'AAAA', 'AGAC', 'CGAA', 'ATAG', 'AACC', 'TACA', 'TAGA', 'ATGC', 'GATA', 'CTCC', 'GTAA', 'CTGA', 'ACAA','AGGA', 'ATTA', 'ACCG', 'GCGA']
@@ -52,14 +52,14 @@ def choice_spacer(ls, spacerchoice): ##creates randomly ordered spacer list, var
     elif spacerchoice == "random":
         spacers = makespacers(ls)
     for i in range(len(spacers)):
-        firstspacers.append(random.choice(options) + random.choice(options) + spacers[i])
-        endspacers.append(spacers[i]+random.choice(options) + random.choice(options[:3]))
-    random.shuffle(firstspacers, random.random)
-    random.shuffle(endspacers, random.random)
-    while len(firstspacers) < len(ls)-1:
-        firstspacers.append(str(random.choice(options)+random.choice(options)+random.choice(options)
+        firstspacers.append(random.choice(options) + random.choice(options) + spacers[i]) #add two random Nucleotides then spacer in the array
+        endspacers.append(spacers[i]+random.choice(options) + random.choice(options[:3])) #add spacer from list, one random nucleotide, one random nucleotide that isn't T
+    random.shuffle(firstspacers, random.random) #shuffle the first spacers around: Don't? Do? This?
+    random.shuffle(endspacers, random.random)   #shuffle the end spacers around
+    while len(firstspacers) < len(ls)-1: #if you don't have enough spacers, just randomly generate some more?
+        firstspacers.append(str(random.choice(options)+random.choice(options)+random.choice(options) #add 5 random nucleotides and 1 random not-T nucleotide
               +random.choice(options)+random.choice(options)+random.choice(options[:3])))
-        endspacers.append(str(random.choice(options)+random.choice(options)+random.choice(options)
+        endspacers.append(str(random.choice(options)+random.choice(options)+random.choice(options)  #same
               +random.choice(options)+random.choice(options)+random.choice(options[:3])))
     return (firstspacers, endspacers)
 
@@ -88,7 +88,7 @@ def findTM(seq, TMgoal):
         numG = 0
         numC = 0
         i = 0
-        seq = list(seq)
+        #seq = list(seq) #this is superfluous
         while TM - TMgoal > 1 or TM -TMgoal < -1:
             if seq[i] == "A":
                 numA +=1
@@ -100,11 +100,11 @@ def findTM(seq, TMgoal):
                 numC +=1
             TM = 64.9 + 41*(numG+numC-16.4)/(numA+numT+numG+numC)
             i += 1
-        seq = ''.join(seq)
-        gccontent1 = (numG +numC)/(len(seq[0:i]))
-        gccontent1 = round(gccontent1, 4) * 100
+        seq = ''.join(seq) #why?
+        gccontent1 = (numG +numC)/(len(seq[0:i]))   #gc content is the gc content of the first i letters in the seq. (WHY?)
+        gccontent1 = round(gccontent1, 4) * 100     #convert it to a pretty percentage
         gccontent1 = str(gccontent1)+" %"
-        j, TM2, gccontent2 = findsecondTM(seq, TMgoal)
+        j, TM2, gccontent2 = findsecondTM(seq, TMgoal) #goes backwards through the seq. and gets the same stuff
         if i +j > len(seq):
             return("TM not possible", "No sequence possible","No GC %", "TM not possible", "No sequence possible", "No GC%")
         return(round(TM, 4), seq[0:i], gccontent1, round(TM2,4), seq[j:], gccontent2)
@@ -118,9 +118,9 @@ def findsecondTM(seq, TMgoal):
     numT = 0
     numG = 0
     numC = 0
-    i = -2 ## compensates for the "\n" at the end of elm.
-    seq = list(seq)
-    while TM2 - TMgoal > 1 or TM2 -TMgoal < -1:
+    i = -2 ## compensates for the "\n" at the end of elm. where did the \n come from???
+    seq = list(seq) #again, superfluous
+    while TM2 - TMgoal > 1 or TM2 -TMgoal < -1: #oh I see, going backwards
         if seq[i] == "A":
             numA +=1
         elif seq[i] == "T":
@@ -145,7 +145,7 @@ def printToWeb(outputString, string):
 def createseq(elements, names, fidelity, tmgoal):
     outputString = [""]
     
-    start = "GAAGAC"
+    start = "GAAGAC" #enzyme recog. site?
     end = "GTCTTC"
     comp_seq = ''
     
@@ -156,34 +156,29 @@ def createseq(elements, names, fidelity, tmgoal):
         
     #printToWeb(outputString, str(elements))
         
-    firstspacers, endspacers =  choice_spacer(elements, fidelity)
+    firstspacers, endspacers =  choice_spacer(elements, fidelity)   #get the spacers
 
     printToWeb(outputString, "\n Sequence with spaces between spacers and elements: ") ##Prints with spaces, each element on own line
     printToWeb(outputString, "\n"+"("+"TTTGCC  "+ " " + elements[0] + " " + endspacers[0] + end + ")")
-    comp_seq += 'TTTGCC' + elements[0].strip('\n') + endspacers[0] + end
+    comp_seq += 'TTTGCC' + elements[0] + endspacers[0] + end
+
+    fileContents[("%s.fasta") % names[0]] = ("TTTGCC"+elements[0] +endspacers[0]+end) #need to add title of fasta
     
-    #need to print out the promoter sequence here
-    #with open(("%s.fasta") % names[0], 'w') as outputfile:
-    #    print("TTTGCC"+elements[0].strip('\n')+endspacers[0]+end, file=outputfile)
-    
-    fileContents[("%s.fasta") % names[0]]= ("TTTGCC"+elements[0].strip('\n')+endspacers[0]+end)
-    
-    if len(elements) > 1:
-        for i in range(len(elements)-2):
+    if len(elements) > 1: #for each element except the last?
+        for i in range(len(elements)-2): #print: start (GAAGAC), firstspacer, element proceeding, endspacer proceeding, end
             printToWeb(outputString, "("+start+firstspacers[i] + " " + elements[i+1] + " " +  endspacers[i+1]+end+")")
-            #with open(("%s.fasta") % names[i+1], 'w') as outputfile:
-            #    print(start+firstspacers[i]+elements[i+1].strip('\n')+endspacers[i+1]+end, file=outputfile)
             
-            fileContents[("%s.fasta") % names[i+1]] = (start+firstspacers[i]+elements[i+1].strip('\n')+endspacers[i+1]+end)
+            fileContents[("%s.fasta") % names[i+1]] = (start+firstspacers[i]+elements[i+1] +endspacers[i+1]+end)
             
-            comp_seq += start + firstspacers[i].strip('\n') + elements[i+1].strip('\n') + endspacers[i+1].strip('\n') + end
+            comp_seq += start + firstspacers[i] + elements[i+1] + endspacers[i+1] + end
         printToWeb(outputString, "("+start+firstspacers[-1] + " " + elements[-1] + " " + "  GCAAGG"+")")
         #with open(("%s.fasta") % names[-1], 'w') as outputfile:
         #    print(start+firstspacers[-1]+elements[-1].strip('\n')+"GCAAGG", file=outputfile)
         
-        fileContents[("%s.fasta") % names[-1]] = (start+firstspacers[-1]+elements[-1].strip('\n')+"GCAAGG")
+        #creates fasta files Wait what
+        fileContents[("%s.fasta") % names[-1]] = (start+firstspacers[-1]+elements[-1]+"GCAAGG")
         
-        comp_seq += start + firstspacers[-1].strip('\n') + elements[-1].strip('\n') + 'GCAAGG'
+        comp_seq += start + firstspacers[-1] + elements[-1] + 'GCAAGG'
         
     printToWeb(outputString, "\n Sequence without spaces between spacers and elements: ")##Prints without spaces, each element on own line
     printToWeb(outputString, "\n"+"TTTGCC"+ elements[0] + endspacers[0] + end)
@@ -195,6 +190,8 @@ def createseq(elements, names, fidelity, tmgoal):
     tmgoal = float(tmgoal) #tm value
     #prints with spaces and breaks at tm value
     firstTM, firstseq, gccontent1, lastTM, lastseq, gccontent2 = findTM(elements[0], tmgoal)
+    #get primers (firstseq & lastseq) melting points of primers, and gc contents
+    #by going down the edges and calculating the melting point until it's within 1 degree of the goal
     printToWeb(outputString, "\n Sequence with elements split at the goal TM, spaces between elements and spacers: ")##Prints with spaces, each element on own line, each element split at TM melting spots
     printToWeb(outputString, "\n"+"Left primer for "+names[0])
     printToWeb(outputString, "Left spacer: "+"TTTGCC "+"\n"+"TM: "+str(firstTM)+
@@ -243,7 +240,7 @@ def createseq(elements, names, fidelity, tmgoal):
     #with open('Complete Sequence.fasta', 'w') as outputfile:
     #    print(comp_seq, file=outputfile)
     
-    fileContents["Complete Sequence.fasta"] = comp_seq
+    fileContents["Complete Sequence.fasta"] = comp_seq #complete sequence
     
     return(outputString[0], fileContents)
 

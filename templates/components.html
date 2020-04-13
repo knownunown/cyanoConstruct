@@ -1,0 +1,33 @@
+<!--cyano thing-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cyano'Construct | Components</title>
+
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/style.css') }}">
+
+<style>
+	p {
+		word-break: break-all;
+	}
+</style>
+<script>
+//document.getElementById("allComps").onload = function(){fillComps()};
+
+function fillComps(){
+	var allComps = document.getElementById("allComps");
+	allComps.innerHTML = {{ components|tojson }};
+}
+</script>
+</head>
+<body onload = "fillComps()">
+
+<a href = "/domesticate">Domesticate</a> <a href = "/assemble">Assemble</a> <a href = "/components">Components</a>
+
+<p id = "allComps">
+oops
+</p>
+
+</body>
+</html>
