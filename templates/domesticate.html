@@ -1,0 +1,169 @@
+<!--cyano thing-->
+
+{% extends "base.html" %}
+
+{% block pageName %}Domesticate Components{% endblock %}
+
+{% block headContent %}
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+	<script>
+	var namedSequencesNames = {{ namedSequencesNames|tojson }};
+
+	var namedSequencesSeqs = {{ namedSequencesSequences|tojson }};
+	</script>
+	<script src = "{{ url_for('static',filename='js/domesticateJS.js') }}" ></script>
+{% endblock %}
+
+{% block domesticateClass %}active{% endblock %}
+
+
+{% block content %}
+<h3>Domesticate</h3>
+
+<form id = "domesticationForm" name = "domesticationForm">
+	<fieldset id = "selectNS" method = "POST">
+		<legend>Sequence</legend>
+
+		<!--Type of Named Sequence-->
+		<label for = "NStype">Type</label>
+		<select class = "formField" name = "NStype" id = "NStype" onchange = "formatNSname()">
+			<option value = "Pr">Promoter</option>
+			<option value = "RBS">Ribosome binding site</option>
+			<option value = "GOI">Gene of interest</option>
+			<option value = "Term">Terminator</option>
+		</select>
+
+		<br>
+
+		<!--Name of Named Sequence -->
+		<label for = "NSname">Name</label>
+		<select class = "formField" name = "NSname" id = "NSname" onchange = "formatNSsequence()"></select>
+
+		<br>
+
+		<div id = "newNSname">
+			<label for = "newNSname">New Sequence Name</label>
+			<input class = "formField" name = "newNSnameInput" id = "newNSnameInput" type = "text">
+			<span class = "errorMessage" id = "nameError"></span>
+		</div>
+
+		<!--Sequence of Named Sequence-->
+		<label for = "NSseq">Sequence</label>
+		<br>
+		<textarea class = "formField" name = "NSseq" id = "NSseq"></textarea> <!-- if it's not on Create new, display what it is & disable it -->
+		<br>
+		<span class = "errorMessage" id = "sequenceError"></span>
+		<br>
+
+
+		<!--Output-->
+		<div id = "NSoutput"></div>
+
+		<br>
+
+		<!--Should I verify if it can find the sequence?-->
+		<div id = "newNSsubmitDiv"><input type = "button" class = "styledButton" name = "newNSsubmit" id = "newNSsubmit" value = "Create Sequence" onclick = "newNS()"></div>
+
+		<input type = "button" class = "styledButton" name = "NSfinish" id = "NSfinish" value = "Next Step" onclick = "finishNSSection()">
+
+	</fieldset>
+
+	<fieldset id = "componentSpacers" method = "POST" disabled>
+
+		<legend>Position and Spacers</legend>
+
+		<input type = "button" class = "styledButton" name = "spacersBack" id = "spacersBack" value = "Go Back" onclick = "goBackSpacers()">
+
+		<br><br>
+
+		<!--Position-->
+		<label for = "componentPos">Position</label>
+		<input class = "formField" name = "componentPos" id = "componentPos" type = "number" min = "1" step = "1" size = "5">
+		<span class = "errorMessage" id = "posError"></span>
+
+		<br>
+
+		<!--Terminal element-->
+		<label for = "componentTerminal">Terminal? (N-1 element? Last element? What to call it)</label> <!-- is that what I want to name it? -->
+		<input class = "checkField" name = "componentTerminal" id = "componentTerminal" type = "checkbox">
+
+		<br>
+
+		<!--Output-->
+		<div id = "spacersOutput"></div>
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "spacsersSubmit" id = "spacsersSubmit" value = "Find Spacers" onclick = "findSpacers()">
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "spacersFinish" id = "spacersFinish" value = "Next Step" onclick = "finishSpacersSection()" disabled>
+
+	</fieldset>
+
+	<fieldset id = "componentPrimers" method = "POST" disabled>
+
+		<legend>Primers</legend>
+
+		<input type = "button" class = "styledButton" name = "primersBack" id = "primersBack" value = "Go Back" onclick = "goBackPrimers()">
+
+		<br><br>
+
+		<p>(Consider spacers & other non-part-sequence-sequence-elements in the primers?)</p>
+
+		<!--Melting point middle-->
+		<label for = "componentTM">Melting Point</label> <!-- what values are valid -->
+		<input class = "formField" name = "componentTM" id = "componentTM" type = "number" min = "20" max = "80" step = "any" size = "5" value = "55"> 
+		<span class = "errorMessage" id = "TMError"></span>
+
+		<!--Melting point range-->
+		<label for = "TMRange">±</label>
+		<input class = "formField" name = "TMRange" id = "TMRange" type = "number" min = "1" max = "10" step = "1" size = "5" value = "2">°C
+		<span class = "errorMessage" id = "TMRangeError"></span>
+
+		<br><br>
+
+		<label for = "skipPrimers">Skip primers</label>
+		<input class = "formField" name = "skipPrimers" id = "skipPrimers" type = "checkbox">
+
+		<br><br>
+
+		<!--Output-->
+		<div id = "primersOutput"></div>
+
+		<input type = "button" class = "styledButton" name = "primersSubmit" id = "primersSubmit" value = "Find Primers" onclick = "findPrimers()">
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "primersFinish" id = "primersFinish" value = "Next Step" onclick = "finishPrimersSection()" disabled>
+
+	</fieldset>
+
+	<fieldset id = "createNewComponent" method = "POST" disabled>
+		<legend>Finish</legend>
+
+		<input type = "button" class = "styledButton" name = "finishBack" id = "finishBack" value = "Go Back" onclick = "goBackFinish()">
+
+		<br><br>
+
+		<p>Please review the previous steps before confirming etc.</p>
+
+		<div id = "createOutput"></div>
+
+		<input type = "button" class = "styledButton" name = "createSubmit" id = "createSubmit" value = "Create Component" onclick = "createComponent()">
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "downloadSeqs" id = "downloadSeqs" value = "Download Sequences" onclick = "downloadZipFile()" disabled>
+
+		<p id = "downloadMessage"></p>
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "resetForm" id = "resetForm" value = "Create Another" onclick = "startOver();" disabled>
+
+	</fieldset>
+</form>
+
+{% endblock %}

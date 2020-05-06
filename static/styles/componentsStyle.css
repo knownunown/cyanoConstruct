@@ -1,0 +1,88 @@
+.hideableTitle{
+	border: 1px solid #0E1B45;
+	padding: 5px;
+	border-radius: 5px 5px 0px 0px;
+	background-color: #DFE8EE;
+
+	overflow: auto;
+}
+
+.titleLeft{
+	font-weight: bold;
+	float: left;
+}
+
+.titleRight{
+	float:right;
+	color: #555;
+}
+
+.hideableDiv{
+	border: 1px solid #0E1B45;
+	border-bottom: 0px;
+	border-top: 0px;
+	padding: 5px 15px;
+}
+
+.componentData {
+	padding: 5px;
+}
+
+.hideableBottom{
+	border: 1px solid #0E1B45;
+	border-top: 0px;
+	border-radius: 0px 0px 5px 5px;
+	height: 5px;
+	margin-bottom: 5px;
+}
+
+/* other */
+.sequence {
+	border: 1px solid #0E1B45;
+	background: #E7EFF4; /*lighter than the div bg colors */
+	padding: 5px;
+
+	font-family: "Courier New", Courier, monospace;
+	word-wrap: break-word;
+
+	max-height: 200px;
+	overflow: auto;
+}
+
+p {
+	word-wrap: break-word;
+}
+
+span.emphasized {
+	font-weight: bold;
+}
+
+hr {
+	border: 1px solid #0E1B45;
+}
+
+/* library */
+#allLibraryTabs {
+	/*background: #ddd;*/
+}
+
+.libraryTab {
+	display: inline-block;
+	/*background: #ddd;
+	border: 1px solid black;
+	border-radius: 5px 5px 0px 0px;
+	border-bottom: 0px;*/
+	padding: 10px;
+	transition-duration: 0.2s;
+}
+
+.libraryContents {
+	/*padding: 10px;*/
+	border: 1px solid #067373;
+	padding: 0px 20px;
+}
+
+.activeTab {
+	background: #067373;
+	color: white;
+}

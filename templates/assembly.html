@@ -1,0 +1,92 @@
+<!--cyano thing-->
+{% extends "base.html" %}
+
+{% block pageName %}Assemble Sequences{% endblock %}
+
+{% block headContent %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+<script>
+var seqElements = ["Pr", "RBS", "GOI", "Term"];
+
+var elemOptions = {{ availableElements|tojson }}; //all the available elements, sorted by type
+
+var compByPosition = {{ componentsPosition|tojson }}; //all the available components, sorted by position
+
+var validTerminals = {{ validTerminals|tojson }}; //all the valid terminals, sorted by type
+
+var fidelityLimits = {{ fidelityLimits|tojson }};
+</script>
+
+<script src = "{{ url_for('static',filename='js/assembleJS.js') }}" ></script>
+
+{% endblock %}
+
+{% block assembleClass %}active{% endblock %}
+
+
+
+{% block content %}
+<div id = "inputCol"><div id = "input">
+	<form id = "form" method = "POST" onsubmit = "validate(); return false;">
+		<div>
+			<h3>Sequence</h3>
+
+			<div id = "fidelityInput">
+				<label for = "fidelity">Spacer Fidelity</label>
+				<div class = "shouldGrow"></div>
+				<select class = "formField" name = "fidelity" id = "fidelity" onchange = "fidelityChanged()">
+					{% for num in fidelities %}
+						<option value = "{{ num }}">{{ num }}</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+
+		<div class="elemDiv">
+			<span class="elemName">0:</span>
+			<label for="elemType0">Type</label>
+			<div><select class="formField" name="elemType0" id="elemType0"><option value="Pr">Pr</option></select></div>
+			<label for="elemName0">Name</label>
+			<div><select class="formField" name="elemName0" id="elemName0"><option value="psbA">psbA</option></select></div>
+		</div>
+
+		<div id = "elements">
+		</div>
+
+		<div class="elemDiv">
+			<span class="elemName">T:</span>
+			<label for="elemType999">Type</label>
+			<div><select class="formField" name="elemType999" id="elemType999"><option value="Term">Term</option></select></div>
+			<label for="elemName999">Name</label>
+			<div><select class="formField" name="elemName999" id="elemName999"><option value="T1">T1</option></select></div>
+		</div>
+
+
+		<div>
+			<span class = "errorMessage" id = "elementError"></span>
+			<br>
+			<input name = "newElement" type = "button" class = "styledButton" onclick = "addElem()" value = "New Element">
+			<input name = "rmElement" type = "button" class = "styledButton" onclick = "rmLastElem()" value = "Remove Last Element">
+			<hr>
+
+			<input type = "submit" id = "threeSubmit" value = "Submit" class = "styledButton">
+		</div>
+	</form>
+</div></div>
+
+<div id = "outputCol"><div id = "output">
+	<h3>Output</h3>
+	<div id = "showOutput"><p id = "outputParagraph">
+		Allowed position of each element: <br>
+		{{ componentsPosition }}
+		<br>All allowed terminal components: <br>
+		{{ validTerminals }}
+	</p></div>
+	<hr style = "width: 100%">
+	<div>
+		<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
+		<span id = "downloadMessage"></span>
+	</div>
+</div></div>
+
+{% endblock %}

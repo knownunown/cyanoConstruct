@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<meta charset = "UTF-8">
+<head>
+<title>Cyano'Construct | {% block pageName %}{% endblock %} </title>
+
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/style.css') }}">
+
+{% block headContent %}{% endblock %}
+
+</head>
+<body onload = "bodyOnload();"><div id = "bodyDiv">
+
+
+<div id = "navigation">
+	<a href = "/index" class = "{% block indexClass %}{% endblock %}">CyanoConstruct</a>
+	<a href = "/domesticate" class = "{% block domesticateClass %}{% endblock %}">Domesticate</a>
+	<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
+	<a href = "/components"class = "{% block componentsClass %}{% endblock %}">Components</a>
+</div>
+
+
+{% block content %}{% endblock %}
+
+<div id = "footer" style = "padding-top: 10px; padding-bottom: 10px">
+	Copyright 2020 etc. Footer stuff
+</div>
+
+</div></body>
+</html>
