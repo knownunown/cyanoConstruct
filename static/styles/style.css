@@ -1,21 +1,39 @@
 /* general */
-@media (min-width: 600px) and (min-height: 400px){
+body{
+	margin: 0px;
+	word-wrap: break-word;
+}
+
+#bodyDiv{
+	margin: 0px;
+	padding: 0px 10vw;
+	/*overflow: auto;*/
+	height: 100vh;
+}
+
+@media (max-width: 600px){
+	#bodyDiv{
+		padding: 10px 5vw;
+	}
+}
+
+@media (min-width: 600px) and (min-height: 550px){
 	#inputCol {
-		width: 30%;
+		width: 40%;
 		float: left;
 	}
 
 	#outputCol {
-		width: 70%;
+		width: 60%;
 		float: right;
 	}
 
 	#input {
-		max-height: 90vh;
+		max-height: 80vh;
 	}
 
 	#output {
-		max-height: 90vh;
+		max-height: 80vh;
 
 		display: flex;
 		flex-direction: column;
@@ -26,8 +44,22 @@
 	}
 }
 
+@media (max-width: 600px) or (max-height: 550px){
+	#input, #output { /* looks kind of silly but I don't know what else to do */
+		max-width: 610px;
+		margin: auto;
+	}
+}
+
 #input, #output {
 	padding: 10px;
+}
+
+#footer {
+	clear: both;
+	border-top: 2px solid black;
+	padding: 5px 0px;
+	margin: 5px 0px;
 }
 
 .errorMessage {
@@ -53,8 +85,12 @@
 /* input */
 
 textarea {
-	height: 40px;
-	width: 200px;
+	height: 100px;
+	min-height: 30px;
+	width: 100%;
+	max-width: 600px;
+	min-width: 200px;
+	/*transition-duration: 0.3s; because it looks funky*/
 }
 
 select {
@@ -63,18 +99,26 @@ select {
 	padding: 3px 5px;
 }
 
-input[type=text]{
+input[type=text] {
 	border: 1px solid #bbb;
 	padding: 3px 5px;
 	width: 100px;
 	transition-duration: 0.3s;
 }
 
-input[type=text]:focus{
-	border: 1px solid black;
+input[type=number] {
+	border: 1px solid #bbb;
+	padding: 3px 5px;
+	transition-duration: 0.3s;
 }
 
-button {
+input[type=text]:focus, textarea:focus, input[type=number]:focus {
+	border: 1px solid #000;
+	outline: solid thin #888;
+	background-color: #eee;
+}
+
+.styledButton {
 	background-color: white;
 	color: black;
 	border: 1px solid #000;
@@ -84,20 +128,15 @@ button {
 	padding: 5px 10px;
 }
 
-button:hover, button:focus {
+.styledButton:hover, .styledButton:focus {
 	background-color: #333;
 	color: white;
 }
 
-button:active {
-	background-color: black;
-	color: white;
-}
-
-button:active:after {
-	background-color: black;
-	color: white;
-	transition: 1.5s;
+.styledButton:disabled {
+	border: 1px solid #999;
+	background-color: #eee;
+	color: #999;
 }
 
 #fidelityInput, #meltingPtInput {
@@ -124,9 +163,10 @@ div.elemDiv {
 	padding: 5px;
 	margin: 5px;
 	text-align: center;
+	max-width: 580px;
 }
 
-div.elemDiv > p{
+div.elemDiv > span{
 	margin: 5px;
 	font-weight: bold;
 }
@@ -141,11 +181,11 @@ div.elemDiv > div{
 	margin: 5px;
 }
 
-@media (min-width: 600px) and (min-height: 400px){
+@media (min-width: 600px) and (min-height: 550px){
 	#form {
 		display: flex;
 		flex-direction: column;
-		max-height: 90vh;
+		max-height: 80vh;
 	}
 
 	#elements {
@@ -154,9 +194,31 @@ div.elemDiv > div{
 }
 
 #elements {
-	border: 1px solid black;
+	border: 1px dashed black;
 	overflow: auto;
 
 	min-height: 20px;
 	max-width: 600px;
+}
+
+/* navigation */
+#navigation {
+	overflow: hidden;
+	border-bottom: 2px solid black;
+}
+
+#navigation a{
+	float: left;
+	text-align: center;
+	color: #000;
+  	text-decoration: none;
+	padding: 10px;
+}
+
+#navigation a:hover{
+	font-style: italic ;
+}
+
+#navigation a.active{
+	font-weight: bold;
 }

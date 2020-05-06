@@ -4,7 +4,10 @@ var submitted = false;
 
 var seqElements = ["Pr", "RBS", "GOI", "Term"];
 
-var elemOptions = {{ availableElements }};
+var elemOptions = {"Pr": ["psbA"],
+					"RBS": ["S3", "A", "E"],
+					"GOI": ["adh", "pdc", "PK", "EYFP", "sYFP2"],
+					"Term": ["T1"]};
 
 //format element divs
 function formatElements(){ //just get a thing for the seqElements

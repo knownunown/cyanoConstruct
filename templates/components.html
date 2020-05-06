@@ -1,33 +1,109 @@
 <!--cyano thing-->
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html>
-<head>
-<title>Cyano'Construct | Components</title>
+{% block pageName %}Components{% endblock %}
 
-<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/style.css') }}">
+{% block headContent %}
+	<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/componentsStyle.css') }}">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+	<script src = "{{ url_for('static',filename='js/componentJS.js') }}" ></script>
+{% endblock %}
 
-<style>
-	p {
-		word-break: break-all;
-	}
-</style>
-<script>
-//document.getElementById("allComps").onload = function(){fillComps()};
+{% block componentsClass %}active{% endblock %}
 
-function fillComps(){
-	var allComps = document.getElementById("allComps");
-	allComps.innerHTML = {{ components|tojson }};
-}
-</script>
-</head>
-<body onload = "fillComps()">
+{% block content %}
+<br>
 
-<a href = "/domesticate">Domesticate</a> <a href = "/assemble">Assemble</a> <a href = "/components">Components</a>
+<div id = "allLibraryTabs">
+	{% for libraryName in allLibraries %}<div class = "libraryTab" id = "{{ libraryName }}Tab" onclick = "showLibrary('{{ libraryName }}')">{{ libraryName }}</div>{% endfor %}
+</div>
 
-<p id = "allComps">
-oops
-</p>
+{% for libraryName in allLibraries %}
+<div class = "libraryContents" id = "{{ libraryName }}Library">
+	<h2>{{ libraryName }} Library</h2>
 
-</body>
-</html>
+	{% for typeKey in allLibraries[libraryName]["namedSeqs"].keys() %}
+
+		<div class = "hideableTitle" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}')"> <!-- for accessibility, it should be a button -->
+			<span class = "titleLeft">{{ longNames[typeKey] }}</span>
+			<span class = "titleRight">[Click to show/hide]</span>
+		</div>
+		<div id = "{{ libraryName }}{{ typeKey }}" class = "hideableDiv" style = "display: block">
+
+				{% for nameKey in allLibraries[libraryName]["namedSeqs"][typeKey].keys() %}
+				
+				<div class = "hideableTitle" onclick = "toggleDisplay('{{ libraryName }}{{ nameKey }}')">
+					<span class = "titleLeft">Name: {{ nameKey }}</span>
+					<span class = "titleRight">[Click to show/hide]</span>
+				</div>
+
+				<div id = "{{ libraryName }}{{ nameKey }}" class = "hideableDiv" style = "display: none">
+
+						<!-- info about the named sequence -->
+						<p>{{ longNamesSingular[typeKey] }}: {{ nameKey }}</p>
+
+						<p>Sequence:</p>
+						<div class = "sequence">
+							{{ allLibraries[libraryName]["namedSeqs"][typeKey][nameKey].getSeq() }}
+						</div>
+
+						<br>
+
+						<!-- list all components -->
+						{% for compPosKey in allLibraries[libraryName]['components'][typeKey][nameKey] %}
+
+							{% for compTerminalKey in allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey] %}
+
+								<div class = "hideableTitle" id = "{{ libraryName }}{{allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID()}}" onclick = "toggleDisplay('{{ libraryName }}{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID() }}Data')">
+									<span class = "titleLeft">ID: {{allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID()}}</span>
+									<span class = "titleRight">[Click to show/hide]</span>
+								</div>
+
+								<div id = "{{ libraryName }}{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID() }}Data" class = "hideableDiv componentData" style = "display: none">
+
+									<p>
+										{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getHTMLdisplay() }}
+									</p>
+
+									<hr>
+
+									<p><span class = 'emphasized'>Complete Sequence:</span></p>
+									<div class = "sequence">
+										{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getFullSeq() }}
+									</div>
+
+									<br>
+
+									<input type = "button" class = "styledButton" value = "Download Sequences" onclick = "downloadComponentSequence('{{ typeKey }}', '{{ nameKey }}', '{{ compPosKey }}', '{{ compTerminalKey }}')">
+
+									{% if libraryName|string() != "Default" %}
+										<br><hr>
+
+										<input type = "button" class = "styledButton" value = "Remove Component" onclick = "removeComponent('{{ typeKey }}', '{{ nameKey }}', '{{ compPosKey }}', '{{ compTerminalKey }}')">
+									{% endif %}
+
+								</div>
+								<div class = "hideableBottom"></div>
+
+							{% endfor %}
+						{% endfor %}
+
+						{% if libraryName|string() != "Default" %}
+							<br><hr>
+
+							<input type = "button" class = "styledButton" value = "Remove Sequence" onclick = "removeSequence('{{ typeKey }}', '{{ nameKey }}')">
+						{% endif %}
+
+				</div>
+				<div class = "hideableBottom"></div>
+
+				{% endfor %}
+
+		</div>
+		<div class = "hideableBottom"></div>
+
+	{% endfor %}
+</div>
+{% endfor %}
+
+{% endblock %}
