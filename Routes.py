@@ -6,8 +6,7 @@ Created on Wed Apr  1 14:54:27 2020
 
 @author: Lia Thomson
 
-CCRoutes V2
-
+cyanoConstruct routes file
 """
 
 import os
@@ -99,22 +98,22 @@ def addToSelected(newSelected):
     else:
         raise TypeError("can't add item of type " + type(newSelected))
 
-def addToZip(newFile, key):
+def addToZIP(newFile, key):
     if(type(newFile) != dict):
         raise TypeError("newFile not a dict")
 
     sessionData = getSessionData()
 
-    if(key == "newCompZip"):
-        sessionData.setNewCompZip(newFile)
-    elif(key == "assemblyZip"):
-        sessionData.setAssemblyZip(newFile)
-    elif(key == "componentForZip"):
-        sessionData.setComponentForZip(newFile)
+    if(key == "newCompZIP"):
+        sessionData.setNewCompZIP(newFile)
+    elif(key == "assemblyZIP"):
+        sessionData.setAssemblyZIP(newFile)
+    elif(key == "componentForZIP"):
+        sessionData.setComponentForZIP(newFile)
     else:
         raise ValueError("key not valid")
 
-def makeAllLibraryZip(session):
+def makeAllLibraryZIP(session):
     if(type(session) != SessionData):
         raise TypeError("session not a SessionData")
 
@@ -158,17 +157,17 @@ def makeAllLibraryZip(session):
                 compDir = os.path.join(nameDir, comp.getNameID())
                 os.mkdir(compDir)
                 
-                compZip = comp.getCompZIP()
+                compZIP = comp.getCompZIP()
 
                 #make the files for the component
-                for fileName in compZip:
+                for fileName in compZIP:
                     filePath = os.path.join(compDir, fileName)
 
                     with open(filePath, "w") as f:
-                        f.write(compZip[fileName])
+                        f.write(compZIP[fileName])
     
     #make the zip
-    zipPath = os.path.join(sessionDir, "libraryZip")
+    zipPath = os.path.join(sessionDir, "libraryZIP")
     
     make_archive(zipPath, "zip", libraryDir)
     
@@ -200,11 +199,8 @@ def makeZIP(filesDict):
     submissionID = checkSessionID()
     
     #paths
-    #auuuughhhh
     filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
-    print(filesDirPath)
-    #filesDirPath = filePath.rsplit("/", 1)[0] + "/files"
-    sessionDir = os.path.join(filesDirPath, submissionID) #filesDirPath + "/" + submissionID
+    sessionDir = os.path.join(filesDirPath, submissionID)
     
     os.mkdir(sessionDir)
     
@@ -212,13 +208,13 @@ def makeZIP(filesDict):
         print("MADE DIRECTORY: " + sessionDir)    
     
     #write files
-    for filename in filesDict:
-        newName = sessionDir + "/" + filename           #####<----- use os.path.join
+    for fileName in filesDict:
+        newName = os.path.join(sessionDir, fileName)
         with open(newName, "w") as f:
-            f.write(filesDict[filename])
+            f.write(filesDict[fileName])
             
     #make zip
-    zipPath = filesDirPath + "/zips/" + submissionID    #####<----- use os.path.join
+    zipPath = os.path.join(os.path.join(filesDirPath, "zips"), submissionID)
     make_archive(zipPath, "zip", sessionDir)
     
     #read zip as a byte file
@@ -477,7 +473,7 @@ def newNamedSeq():
             validInput = False
             outputStr += "ERROR: '" + character + "' is not allowed in a sequence's name.<br>"
             invalidCharactersName.append(character)
-
+pjp
     #validate sequence
     #length
     if(len(newNSSeq) < 1 or len(newNSSeq) > 99999): #I don't know what limits should be used
@@ -747,7 +743,7 @@ def finishDomestication():
             outputStr = "<a target = '_blank' href = '/components#" + libraryName + newComponent.getNameID() + "'>" + newComponent.getNameID() + "</a> created."
             
             #set it as the tempComp (for the ZIP file)
-            addToZip(newComponent.getCompZIP(), "newCompZip")
+            addToZIP(newComponent.getCompZIP(), "newCompZIP")
             
             succeeded = True
             
@@ -757,10 +753,10 @@ def finishDomestication():
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
 #domestication ZIP file
-@app.route("/domesticationZips.zip")
-def domesticationZips():
+@app.route("/domesticationZIPs.zip")
+def domesticationZIPs():
     try:
-        data = makeZIP(getSessionData().getNewCompZip())
+        data = makeZIP(getSessionData().getNewCompZIP())
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
         return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
@@ -823,12 +819,6 @@ def assemble():
                 posTermCombRow = {"position": comp.getPosition(), "terminalLetter": comp.getTerminalLetter()}
                 if(posTermCombRow not in posTerminalComb[ns.getName()]):
                     posTerminalComb[ns.getName()].append(posTermCombRow)
-
-
-    print("names")
-    print(allAvailableNames)
-    print("position and terminal:")
-    print(posTerminalComb)
     
     #list of fidelities
     fidelities = ["98.1%", "95.8%", "91.7%"]
@@ -928,7 +918,7 @@ def processAssembly():
         outputStr += "<br><br>Full sequence:<br>"  + fullSeq
         
         #slap that sequence into the variable
-        addToZip({"fullSequence.fasta": ">CyanoConstruct sequence\n" + fullSeq}, "assemblyZip")
+        addToZIP({"fullSequence.fasta": ">CyanoConstruct sequence\n" + fullSeq}, "assemblyZIP")
         
     else:
         outputStr += "Errors in finding components are often due to not having a component with the right terminal letter.<br>Sequence not created."
@@ -939,7 +929,7 @@ def processAssembly():
 @app.route("/assembledSequence.zip")
 def assemblyZIP():    
     try:
-        data = makeZIP(getSessionData().getAssemblyZip()) #validate it first?
+        data = makeZIP(getSessionData().getAssemblyZIP()) #validate it first?
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
         return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
@@ -971,12 +961,6 @@ def displayComps():
     allNS = {"Default": defaultSession.getSortedNS(),
              "Personal": sessionData.getSortedNS()}
 
-
-    print("\nallComps")
-    print(allComps)
-    print("\nallNS")
-    print(allNS)
-
     #replace the NamedSequenceDBs with the name and sequence
     for libraryName in allNS.keys():
         for typeKey in allNS[libraryName].keys():
@@ -993,15 +977,13 @@ def displayComps():
                            loggedIn = getSessionData().getLoggedIn())
 
 #find the component to make ZIP file for
-@app.route("/locateComponentForZip", methods = ["POST"])
+@app.route("/locateComponentForZIP", methods = ["POST"])
 def getComponentSequence():
     #get data
     component = request.form["component"]
 
     componentDict = leval(component)
-    
-    print(componentDict)
-    
+        
     #validation?
     succeeded = False
     try:
@@ -1021,7 +1003,7 @@ def getComponentSequence():
         except (SequenceNotFoundError, ComponentNotFoundError):
             foundComp = getSessionData().findComponent(elemType, name, pos, terminal)
                 
-        addToZip(foundComp.getCompZIP(), "componentForZip")
+        addToZIP(foundComp.getCompZIP(), "componentForZIP")
         
         succeeded = True
         
@@ -1032,12 +1014,12 @@ def getComponentSequence():
     return jsonify({"succeeded": succeeded})
 
 #make and send the ZIP file for a component
-@app.route("/componentZip.zip")
-def getComponentZips():
+@app.route("/componentZIP.zip")
+def getComponentZIPs():
     #sessionID = checkSessionID()
 
     try:
-        data = makeZIP(getSessionData().getComponentForZip())
+        data = makeZIP(getSessionData().getComponentForZIP())
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
         return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
@@ -1047,7 +1029,7 @@ def getComponentZips():
     
     else:
         return Response(data, headers = {"Content-Type": "application/zip",
-                                     "Condent-Disposition": "attachment; filename='componentZip.zip';"})
+                                     "Condent-Disposition": "attachment; filename='componentZIP.zip';"})
 
 @app.route("/removeComponent", methods = ["POST"])
 def removeComponent():
@@ -1115,18 +1097,18 @@ def downloadLibrary():
     return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
         
 @app.route("/library.zip")
-def libraryZip():
+def libraryZIP():
     libraryName = getSessionData().getLibraryName()
     
     if(libraryName == "Default"):
         try:
-            data = makeAllLibraryZip(defaultSession)
+            data = makeAllLibraryZIP(defaultSession)
             succeeded = True
         except Exception as e:
             errorMessage = str(e)
     elif(libraryName == "Personal"):
         try:
-            data = makeAllLibraryZip(getSessionData())
+            data = makeAllLibraryZIP(getSessionData())
             succeeded = True
         except Exception as e:
             errorMessage = str(e)

@@ -3,7 +3,9 @@
 """
 Created on Fri May 15 14:06:24 2020
 
-@author: liathomson
+@author: Lia Thomson
+
+cyanoConstruct file to run (because there is currently no __main__ file)
 """
 
 import os

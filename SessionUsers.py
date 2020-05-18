@@ -3,14 +3,10 @@
 """
 Created on Sun May  3 19:58:38 2020
 
-@author: liathomson
+@author: Lia Thomson
 
-session data V2
+cyanoConstruct sessionUsers file (SessionData and UserData classes)
 """
-#import os
-#from sys import path as sysPath
-
-#sysPath.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, UserDataDB
 
@@ -31,7 +27,7 @@ class SessionData:
         
         #no these Don't make sense thanks for asking
         self.__selectedDict = {"selectedNamedSequence": None, "selectedSpacers": None, "selectedPrimers": None}
-        self.__forZipDict = {"newCompZip": None, "assemblyZip": None, "componentForZip": None}
+        self.__forZIPDict = {"newCompZIP": None, "assemblyZIP": None, "componentForZIP": None}
         
         self.__libraryName = None
     
@@ -144,30 +140,30 @@ class SessionData:
             
         self.__selectedDict["selectedPrimers"] = newPrimers
 
-    def getNewCompZip(self):
-        return self.__forZipDict["newCompZip"]
+    def getNewCompZIP(self):
+        return self.__forZIPDict["newCompZIP"]
     
-    def getAssemblyZip(self):
-        return self.__forZipDict["assemblyZip"]
+    def getAssemblyZIP(self):
+        return self.__forZIPDict["assemblyZIP"]
 
-    def getComponentForZip(self):
-        return self.__forZipDict["componentForZip"]
+    def getComponentForZIP(self):
+        return self.__forZIPDict["componentForZIP"]
 
-    #forZip
-    def setNewCompZip(self, newFile):
+    #forZIP
+    def setNewCompZIP(self, newFile):
         if(type(newFile) != dict):
             raise TypeError("newFile not a dict")
-        self.__forZipDict["newCompZip"] = newFile
+        self.__forZIPDict["newCompZIP"] = newFile
     
-    def setAssemblyZip(self, newFile):
+    def setAssemblyZIP(self, newFile):
         if(type(newFile) != dict):
             raise TypeError("newFile not a dict")
-        self.__forZipDict["assemblyZip"] = newFile
+        self.__forZIPDict["assemblyZIP"] = newFile
 
-    def setComponentForZip(self, newFile):
+    def setComponentForZIP(self, newFile):
         if(type(newFile) != dict):
             raise TypeError("newFile not a dict")
-        self.__forZipDict["componentForZip"] = newFile
+        self.__forZIPDict["componentForZIP"] = newFile
         
     def setLibraryName(self, libraryName):
         self.__libraryName = libraryName
@@ -252,7 +248,6 @@ class UserData:
                             
         #see if it already exists
         if(UserDataDB.query.filter_by(email = email).all() != []):
-            print(UserDataDB.query.filter_by(email = email).all())
             raise AlreadyExistsError("User with email " + email + " already exists.")
 
         #begin creating stuff
@@ -278,10 +273,6 @@ class UserData:
 
     @classmethod
     def load(cls, email):
-        print(type(UserDataDB))
-        print(UserDataDB.query.all())
-        print(UserDataDB.query.filter_by(email = email).all())
-        
         queryResults = UserDataDB.query.filter_by(email = email).all()
         
         if(len(queryResults) == 0):
@@ -558,43 +549,22 @@ class UserData:
             raise TypeError("spacerData not a SpacerData")
         if(type(primerData) != PrimerData):
             raise TypeError("primerData not a PrimerData")
-            
-        print("Using: NSentry: ")
-        print(NSentry)
-        
-        print("\nspacerData:")
-        print(spacerData)
-        
-        print("\nprimerData:")
-        print(primerData)
-        
-        
+                    
         """Make a ComponentDB and associated SpacerDataDB, PrimerDataDB in database."""        
         #check if it already exists
-        print("Seeing if it already exists.")
         try:
             self.findComponent(NSentry.getType(), NSentry.getName(), spacerData.getPosition(), spacerData.getTerminalLetter())
 
             raise AlreadyExistsError("Component already exists.")
         except ComponentNotFoundError:
             pass
-        
-        print("It does not already exist.")
-        
+                
         s = SpacerDataDB(position = spacerData.getPosition(), spacerLeft = spacerData.getSpacerLeft(), spacerRight = spacerData.getSpacerRight(),
                  isTerminal = spacerData.getIsTerminal(), terminalLetter = spacerData.getTerminalLetter(),
                  leftNN = spacerData.getLeftNN(), rightNN = spacerData.getRightNN())
 
-        print("Made SpacerDataDB: ")
-        print(s)
-
         p = PrimerDataDB(primersFound = primerData.getPrimersFound(), seqLeft = primerData.getSeqLeft(), seqRight = primerData.getSeqRight(),
                  GCleft = primerData.getGCleft(), GCright = primerData.getGCright(), TMleft = primerData.getTMleft(), TMright = primerData.getTMright())
-
-        print("Made PrimerDataDB: ")
-        print(p)
-        
-        print(NSentry.getAllComponents())
 
         c = ComponentDB(namedSequence_id = NSentry.getID(), user_id = self.getEntry().getID())
 

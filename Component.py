@@ -1,11 +1,12 @@
+"""
+@author: Lia Thomson
+
+cyanoConstruct component file (NamedSequence, SpacerData, PrimerData, Component classes)
+"""
+
 
 import random
 from jinja2 import Markup
-
-#import os
-#from sys import path as sysPath
-
-#sysPath.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cyanoConstruct import NamedSequenceDB, SpacerDataDB, PrimerDataDB
 
@@ -19,13 +20,6 @@ def checkType(elemType, typeName):
     if(elemType not in ["Pr", "RBS", "GOI", "Term"]):
         raise ValueError(typeName + " not valid")
 
-#okay! restructure this so that it's entirely wrapper stuff
-#the ONLY thing the NamedSequence and Component will store are id numbers
-#and it will NOT add anything to the database, it will simply, spit out the information needed to pass to the database
-
-#should it clear its data once it's in the database? I don't know
-
-
 class NamedSequence:
     #why is this here
     #typeShortToLong = {AllowedTypes.PR: "promoter", AllowedTypes.RBS: "ribosome binding site", AllowedTypes.GOI: "gene of interest", AllowedTypes.TERM: "terminator"}
@@ -36,22 +30,22 @@ class NamedSequence:
         pass
     
     @classmethod
-    def makeNew(cls, NStype, NSname, NSseq, nameID):
+    def makeNew(cls, NSType, NSName, NSSeq, nameID):
         #type checking
-        checkType(NStype, "NStype")
+        checkType(NSType, "NSType")
 
-        if(type(NSname) != str):
-            raise TypeError("NSmame not a string")
-        if(type(NSseq) != str):
-            raise TypeError("NSseq not a string")
+        if(type(NSName) != str):
+            raise TypeError("NSName not a string")
+        if(type(NSSeq) != str):
+            raise TypeError("NSSeq not a string")
         if(type(nameID) != int):
             raise TypeError("newID not an int")
                 
         newNS = cls()
         
-        newNS.__type = NStype
-        newNS.__name = NSname
-        newNS.__seq = NSseq
+        newNS.__type = NSType
+        newNS.__name = NSName
+        newNS.__seq = NSSeq
         newNS.__nameID = nameID
         
         newNS.__inDatabase = False

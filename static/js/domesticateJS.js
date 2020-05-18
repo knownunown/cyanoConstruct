@@ -349,10 +349,10 @@ function goBackFinish(){
 	return false;
 }
 
-function downloadZipFile(){
+function downloadZIPFile(){
 	if(submitted){
 		document.getElementById("downloadMessage").textContent = "Preparing files...";
-		window.location.href = "/domesticationZips.zip";
+		window.location.href = "/domesticationZIPs.zip";
 		event.preventDefault();
 		document.getElementById("downloadMessage").textContent = "Downloaded.";
 	}

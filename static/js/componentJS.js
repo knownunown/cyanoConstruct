@@ -67,11 +67,11 @@ function downloadComponentSequence(elemType, name, pos, terminal){
 	$.ajax({
 		data : {component: componentInfo},
 		type : 'POST',
-		url : '/locateComponentForZip'
+		url : '/locateComponentForZIP'
 		})
 	.done(function(data){
 		if(data.succeeded){
-			window.location.href = "/componentZip.zip";
+			window.location.href = "/componentZIP.zip";
 		}
 
 	});

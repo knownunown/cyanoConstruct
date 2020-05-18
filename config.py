@@ -3,10 +3,10 @@
 """
 Created on Sun May  3 15:27:32 2020
 
-@author: liathomson
-"""
+@author: Lia Thomson
 
-#configuration I suppose
+cyanoConstruct config file
+"""
 
 class Config(object):
     SECRET_KEY = "Salix-babylonica" #should get a better secret key

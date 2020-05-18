@@ -3,7 +3,9 @@
 """
 Created on Sun May  3 16:13:01 2020
 
-@author: liathomson
+@author: Lia Thomson
+
+cyanoConstruct database file (UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB tables)
 """
 
 from jinja2 import Markup #for HTML display of Component
@@ -20,9 +22,6 @@ class UserDataDB(db.Model):
     nextNSidGOI = db.Column(db.Integer)
     nextNSidTERM = db.Column(db.Integer)
     
-    #allNamedSeqs = db.relationship("NamedSequenceDB", backref = "userNS", lazy = "joined")
-    #allComponents = db.relationship("ComponentDB", backref = "userC", lazy = "joined")
-
     def __repr__(self):
         return '<User {}>'.format(self.id)
     
@@ -59,12 +58,9 @@ class UserDataDB(db.Model):
 
     def getAllNamedSeqs(self):
         return NamedSequenceDB.query.filter_by(user_id = self.id)
-        #print(self.allNamedSeqs)
-        #return self.allNamedSeqs
     
     def getAllComponents(self):
         return ComponentDB.query.filter_by(user_id = self.id)
-        #return self.allComponents
 
 class NamedSequenceDB(db.Model):
     __tablename__ = "NamedSequence"
@@ -75,12 +71,7 @@ class NamedSequenceDB(db.Model):
     seq = db.Column(db.Text())
     nameID = db.Column(db.Integer)
     
-    #user_id = db.Column(db.Integer, db.ForeignKey("UserData.id"))
     user_id = db.Column(db.Integer)
-
-    #components = db.relationship("ComponentDB", backref = "namedSeq", lazy = "joined")
-    #misc
-    #nextTotalID = {"default": 1}
     
     def __repr__(self):
         return "<NamedSequence " + str(self.getID()) +  ": " + self.getType() + "-" + str(self.getNameID()).zfill(3) + " " + self.getName() + ">"
@@ -169,15 +160,13 @@ class SpacerDataDB(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     position = db.Column(db.SmallInteger)
-    spacerLeft = db.Column(db.String(4)) #4? or bump it up in case?
+    spacerLeft = db.Column(db.String(4))
     spacerRight = db.Column(db.String(4))
     isTerminal = db.Column(db.Boolean)
     terminalLetter = db.Column(db.String(1))
     leftNN = db.Column(db.String(2))
     rightNN = db.Column(db.String(2))
 
-    #uhhhhh
-    #comp_id = db.Column(db.Integer, db.ForeignKey("Component.id"))
     comp_id = db.Column(db.Integer)
 
     def __repr__(self):
@@ -186,14 +175,10 @@ class SpacerDataDB(db.Model):
     def __str__(self):
         return "SpacerData: " + str(self.getPosition()) + " " + self.getTerminalLetter()
 
-    #setters
-    #def setComp(self, comp):
-    #    self.comp = comp
-
     def setCompID(self, compID):
         self.comp_id = compID
 
-    #them getters
+    #getters
     def getID(self):
         return self.id
     
@@ -276,7 +261,6 @@ class PrimerDataDB(db.Model):
     TMleft = db.Column(db.Float)
     TMright = db.Column(db.Float)
     
-    #comp_id = db.Column(db.Integer, db.ForeignKey("Component.id"))
     comp_id = db.Column(db.Integer)
 
     def __repr__(self):
@@ -338,14 +322,7 @@ class ComponentDB(db.Model):
     __tablename__ = "Component"
     
     id = db.Column(db.Integer, primary_key=True)
-    
-    #namedSequence_id = db.Column(db.Integer, db.ForeignKey("NamedSequence.id"))
-    #spacerData = db.relationship("SpacerDataDB", uselist = False, backref = "comp")
-    #primerData = db.relationship("PrimerDataDB", uselist = False, backref = "comp")
-
-    #the user is just... the user of the named sequence, no?
-    #user_id = db.Column(db.Integer, db.ForeignKey("UserData.id"))
-    
+        
     namedSequence_id = db.Column(db.Integer)
     spacerData_id = db.Column(db.Integer)
     primerData_id = db.Column(db.Integer)
@@ -429,7 +406,7 @@ class ComponentDB(db.Model):
         return self.namedSequence_id
     
     def getUserID(self):
-        return self.user_id #could just redirect to the namedSequence.user_id
+        return self.user_id
 
 
 

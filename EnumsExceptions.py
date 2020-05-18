@@ -3,10 +3,11 @@
 """
 Created on Sun May  3 20:44:56 2020
 
-@author: liathomson
+@author: Lia Thomson
+
+cyanoConstruct enumsExceptions file
 """
 
-#enums errors etc.
 #from enum import Enum
 
 class Error(Exception):
