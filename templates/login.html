@@ -16,11 +16,13 @@ var returnURL = {{ returnURL|tojson }};
 
 {% block content %}
 <h1>Existing Users</h1>
-<ul>
-	{% for email in allEmails %}
-		<li>{{ email }}</li>
-	{% endfor %}
-</ul>
+<p>
+	<ul>
+		{% for email in allEmails %}
+			<li>{{ email }}</li>
+		{% endfor %}
+	</ul>
+</p>
 
 <h1>Log In</h1>
 <form id = "loginForm" onsubmit = "login()">

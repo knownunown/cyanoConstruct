@@ -32,6 +32,8 @@ class SessionData:
         #no these Don't make sense thanks for asking
         self.__selectedDict = {"selectedNamedSequence": None, "selectedSpacers": None, "selectedPrimers": None}
         self.__forZipDict = {"newCompZip": None, "assemblyZip": None, "componentForZip": None}
+        
+        self.__libraryName = None
     
     def setUser(self, userData): #probably rename this
         """Assigns a UserData to the SessionData"""
@@ -56,6 +58,12 @@ class SessionData:
     
     def getLoggedIn(self):
         return self.__loggedIn
+    
+    def getEmail(self):
+        if(self.getLoggedIn()):
+            return self.getUserData().getEmail()
+        else:
+            raise NotLoggedInError("Not logged in.")
     
     def getNextNSid(self):
         if(self.getLoggedIn()):
@@ -89,6 +97,9 @@ class SessionData:
         haveSpacers = self.getSelectedSpacers() is not None
         havePrimers = self.getSelectedPrimers() is not None
         return (haveNS and haveSpacers and havePrimers)
+
+    def getLibraryName(self):
+        return self.__libraryName
 
     def findNamedSequence(self, NStype, NSname, NSseq):
         if(self.getLoggedIn()):
@@ -157,6 +168,9 @@ class SessionData:
         if(type(newFile) != dict):
             raise TypeError("newFile not a dict")
         self.__forZipDict["componentForZip"] = newFile
+        
+    def setLibraryName(self, libraryName):
+        self.__libraryName = libraryName
         
     #all NamedSequences
     def addNS(self, newNS):
@@ -290,7 +304,10 @@ class UserData:
     
     def getEntry(self):
         return self.__entryDB
-    
+
+    def getEmail(self):
+        return self.getEntry().getEmail()    
+
     def getAllNSQuery(self):
         return self.getEntry().getAllNamedSeqs()
     

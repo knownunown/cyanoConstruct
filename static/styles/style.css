@@ -4,11 +4,41 @@ body{
 	word-wrap: break-word;
 }
 
-#bodyDiv{
+#bodyDiv {
 	margin: 0px;
 	padding: 0px 10vw;
 	/*overflow: auto;*/
 	height: 100vh;
+
+	font-family: Verdana, Geneva, sans-serif;
+}
+
+h1, h2, h3, h4, #navigation {
+	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+}
+
+p, span, label {
+	font-size: small;
+}
+
+a:link {
+	text-decoration: none;
+	color: #3C74BD;
+}
+
+a:visited {
+	text-decoration: none;
+	color: #185900;
+}
+
+a:hover {
+	font-style: italic;
+	text-decoration: underline;
+}
+
+a:active {
+	font-style: italic;
+	text-decoration: underline;
 }
 
 @media (max-width: 600px){
@@ -68,9 +98,6 @@ body{
 /* output */
 
 #showOutput {
-	font-family: "Courier New", Courier, monospace;
-	word-wrap: break-word;
-
 	padding: 5px;
 	background: #eee;
 	border: 1px solid #333;
@@ -80,6 +107,13 @@ body{
 
 #showOutput > p {
 	margin: 0px;
+}
+
+.monospaced {
+	font-family: "Courier New", Courier, monospace;
+	word-wrap: break-word;
+
+	font-size: medium;
 }
 
 /* input */
@@ -115,13 +149,13 @@ input[type=number] {
 input[type=text]:focus, textarea:focus, input[type=number]:focus {
 	border: 1px solid #000;
 	outline: solid thin #888;
-	background-color: #eee;
+	background-color: #D5E0ED;
 }
 
 .styledButton {
 	background-color: white;
 	color: black;
-	border: 1px solid #000;
+	border: 1px solid #001F18;
 	border-radius: 3px;
 	margin: 2px 15px 2px 0px;
 	transition-duration: 0.3s;
@@ -129,7 +163,7 @@ input[type=text]:focus, textarea:focus, input[type=number]:focus {
 }
 
 .styledButton:hover, .styledButton:focus {
-	background-color: #333;
+	background-color: #064235;
 	color: white;
 }
 
@@ -207,7 +241,7 @@ div.elemDiv > div{
 	border-bottom: 2px solid black;
 }
 
-#navigation a{
+#navigation a {
 	float: left;
 	text-align: center;
 	color: #000;
@@ -215,12 +249,20 @@ div.elemDiv > div{
 	padding: 10px;
 }
 
-#navigation a:hover{
-	font-style: italic ;
+#navigation a:hover {
+	font-style: italic;
 }
 
-#navigation a.active{
+#navigation a:active {
+	font-weight: normal;
+}
+
+#navigation a.active {
 	font-weight: bold;
+}
+
+#navigation a#logInOut, #navigation a#accountNav {
+	float: right;
 }
 
 /* form stuff */
@@ -246,14 +288,15 @@ fieldset:disabled {
 }
 
 fieldset:disabled legend{
-	border-bottom-color: #777;
+	border-bottom-color: #5F7856;
+	color: #5F7856;
 }
 
 legend {
-	border-bottom: 2px solid black;
+	border-bottom: 2px solid #1F6605;
+	color: #1F6605;
 	width: 100%;
-	font-weight: bold;
 	font-size: larger;
-	margin: 10px 0px;
+	margin: 5px 0px 10px 0px;
 	padding: 5px 0px;
 }

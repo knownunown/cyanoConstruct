@@ -12,6 +12,7 @@
 {% block componentsClass %}active{% endblock %}
 
 {% block content %}
+
 <br>
 
 <div id = "allLibraryTabs">
@@ -24,17 +25,17 @@
 
 	{% for typeKey in allComps[libraryName].keys() %}
 
-		<div class = "hideableTitle typeTitle" onclick = "">
-			<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}')" value = "{{ longNames[typeKey] }}">
-			<span class = "titleRight">[Click to show/hide]</span>
+		<div class = "hideableTitle typeTitle">
+			<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}'); switchToggleText(this);" value = "{{ longNames[typeKey] }}">
+			<span class = "titleRight monospaced">[Click to hide]</span>
 		</div>
 		<div id = "{{ libraryName }}{{ typeKey }}" class = "hideableDiv" style = "display: block">
 
 				{% for nameKey in allComps[libraryName][typeKey].keys() %}
 				
 				<div class = "hideableTitle nameTitle">
-					<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ nameKey }}')" value = "Name: {{ nameKey }}">
-					<span class = "titleRight">[Click to show/hide]</span>
+					<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ nameKey }}'); switchToggleText(this);" value = "Name: {{ nameKey }}">
+					<span class = "titleRight monospaced">[Click to show]</span>
 				</div>
 
 				<div id = "{{ libraryName }}{{ nameKey }}" class = "hideableDiv" style = "display: none">
@@ -43,7 +44,7 @@
 						<p>{{ longNamesSingular[typeKey] }}: {{ nameKey }}</p>
 
 						<p>Sequence:</p>
-						<div class = "sequence">{{ allNS[libraryName][typeKey][nameKey] }}</div>
+						<div class = "sequence monospaced">{{ allNS[libraryName][typeKey][nameKey] }}</div>
 
 						<br>
 
@@ -51,8 +52,8 @@
 						{% for component in allComps[libraryName][typeKey][nameKey] %}
 
 								<div class = "hideableTitle compTitle" id = "{{ libraryName }}{{component.getNameID()}}">
-									<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ component.getNameID() }}Data')" value = "ID: {{ component.getNameID() }}">
-									<span class = "titleRight">[Click to show/hide]</span>
+									<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ component.getNameID() }}Data'); switchToggleText(this);" value = "ID: {{ component.getNameID() }}">
+									<span class = "titleRight monospaced">[Click to show]</span>
 								</div>
 
 								<div id = "{{ libraryName }}{{ component.getNameID() }}Data" class = "hideableDiv componentData" style = "display: none">
@@ -64,7 +65,7 @@
 									<hr>
 
 									<p><span class = 'emphasized'>Complete Sequence:</span></p>
-									<div class = "sequence">
+									<div class = "sequence monospaced">
 										{{ component.getFullSeq() }}
 									</div>
 
@@ -98,6 +99,10 @@
 		<div class = "hideableBottom"></div>
 
 	{% endfor %}
+
+<br>
+<input type = "button" class = "styledButton" value = "Download All {{ libraryName }} Components" onclick = "downloadLibrary('{{ libraryName }}');">
+<br><br>
 </div>
 {% endfor %}
 

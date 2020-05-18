@@ -4,7 +4,7 @@
 {% block pageName %}Assemble Sequences{% endblock %}
 
 {% block headContent %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
 <script>
 var seqElements = ["Pr", "RBS", "GOI", "Term"];
 
@@ -74,7 +74,11 @@ var posTermComb = {{ posTermComb|tojson }}
 
 <div id = "outputCol"><div id = "output">
 	<h3>Output</h3>
-	<div id = "showOutput"><p id = "outputParagraph">
+	<div id = "showOutput" class = "monospaced">
+		<p id = "outputParagraph" class = "monospaced">
+			Available components by position:
+		</p>
+		
 		<ul>
 		{% for key in posTermComb %}
 
@@ -88,7 +92,7 @@ var posTermComb = {{ posTermComb|tojson }}
 
 		{% endfor %}
 		</ul>
-	</p></div>
+	</div>
 	<hr style = "width: 100%">
 	<div>
 		<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">

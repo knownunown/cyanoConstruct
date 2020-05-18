@@ -9,9 +9,7 @@ Created on Wed Apr  1 21:32:02 2020
 #__init__.py
 
 from flask import Flask
-#from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-#from flask_migrate import Migrate
 
 from cyanoConstruct.config import Config
 
@@ -37,4 +35,4 @@ from cyanoConstruct.routes2 import *
 #from cyanoConstruct import SessionUsers
 #from cyanoConstruct import CCDatabase
 
-__version__ = "0.2.9"
+__version__ = "0.3"

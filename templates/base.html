@@ -17,13 +17,19 @@
 	<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
 	<a href = "/components"class = "{% block componentsClass %}{% endblock %}">Components</a>
 	<a href = "/domesticate" class = "{% block domesticateClass %}{% endblock %}">Domesticate</a>
+	{% if loggedIn %}
+		<a href = "/logout" id = "logInOut">Log Out</a>
+		<a href = "/account" class = "{% block accountClass %}{% endblock %}" id = "accountNav">Account</a>
+	{% else %}
+		<a href = "/login" id = "logInOut">Log In</a>
+	{% endif %}
 </div>
 
 
 {% block content %}{% endblock %}
 
-<div id = "footer" style = "padding-top: 10px; padding-bottom: 10px">
-	Copyright 2020 etc. Footer stuff
+<div id = "footer">
+	<p>Copyright 2020 etc. Footer stuff</p>
 </div>
 
 </div></body>

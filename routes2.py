@@ -67,10 +67,11 @@ def checkSessionID():
         allSessions[newID] = SessionData(newID) #####<----- is this okay? I think so
 
         if(printActions):
-            print("new sessionID and SessionData")
+            print("new sessionID and SessionData: " + newID)
 
     
-    try:
+    """
+    try:                                        #####<---- what does this do?
         haveLoaded[session["sessionID"]]
         
     except KeyError:
@@ -79,17 +80,17 @@ def checkSessionID():
         allSessions[newID] = SessionData(newID)
         
         haveLoaded[newID] = True
+    """
         
     return session["sessionID"]
 
 def getSessionData():
-    print(allSessions[checkSessionID()].getID())
     return allSessions[checkSessionID()]
 
 def addToSelected(newSelected):
     sessionData = getSessionData()
     
-    if(type(newSelected) == NamedSequenceDB):
+    if(type(newSelected) == NamedSequenceDB): #####<----- edit to store an int ID of the NSDB instead
         sessionData.setSelectedNS(newSelected)
     elif(type(newSelected) == SpacerData):
         sessionData.setSelectedSpacers(newSelected)
@@ -113,6 +114,75 @@ def addToZip(newFile, key):
     else:
         raise ValueError("key not valid")
 
+def makeAllLibraryZip(session):
+    if(type(session) != SessionData):
+        raise TypeError("session not a SessionData")
+
+    filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
+    sessionDir = os.path.join(filesDirPath, checkSessionID())
+    libraryDir = os.path.join(sessionDir, session.getEmail() + "Library")
+
+    try:
+        os.mkdir(sessionDir)
+    except OSError: #if it exists
+        pass
+    os.mkdir(libraryDir)
+    
+    if(printActions):
+        print("MADE DIRECTORY: " + libraryDir)
+        
+    #great now what?
+    sortedNS = session.getSortedNS()
+    for typeKey in sortedNS:
+        if(sortedNS[typeKey] == []): #do nothing if the folder would be empty
+            continue
+
+        #make folder for the type        
+        typeDir = os.path.join(libraryDir, typeKey)
+        os.mkdir(typeDir)
+        
+        for ns in sortedNS[typeKey]:
+            nsComps = ns.getAllComponents()
+            
+            if(nsComps == []): #do nothing if the folder would be empty
+                continue
+
+            #make folder for the sequence
+            nameDir = os.path.join(typeDir, ns.getName())
+            os.mkdir(nameDir)
+            
+            nsComps.sort() #is this necessary?
+            
+            for comp in nsComps:
+                #make folder for the component
+                compDir = os.path.join(nameDir, comp.getNameID())
+                os.mkdir(compDir)
+                
+                compZip = comp.getCompZIP()
+
+                #make the files for the component
+                for fileName in compZip:
+                    filePath = os.path.join(compDir, fileName)
+
+                    with open(filePath, "w") as f:
+                        f.write(compZip[fileName])
+    
+    #make the zip
+    zipPath = os.path.join(sessionDir, "libraryZip")
+    
+    make_archive(zipPath, "zip", libraryDir)
+    
+    #read zip as a byte file
+    with open(zipPath + ".zip", "rb") as f:
+        data = f.readlines()
+        
+    rmtree(sessionDir)
+
+    if(printActions):
+        print("FINISHED CREATING LIBRARY ZIP FOR SESSION " + checkSessionID())
+    
+    return data
+
 def makeZIP(filesDict):
     if(type(filesDict) != dict):
         raise TypeError("files not a dict")
@@ -134,7 +204,7 @@ def makeZIP(filesDict):
     filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
     print(filesDirPath)
     #filesDirPath = filePath.rsplit("/", 1)[0] + "/files"
-    sessionDir = filesDirPath + "/" + submissionID
+    sessionDir = os.path.join(filesDirPath, submissionID) #filesDirPath + "/" + submissionID
     
     os.mkdir(sessionDir)
     
@@ -143,12 +213,12 @@ def makeZIP(filesDict):
     
     #write files
     for filename in filesDict:
-        newName = sessionDir + "/" + filename
+        newName = sessionDir + "/" + filename           #####<----- use os.path.join
         with open(newName, "w") as f:
             f.write(filesDict[filename])
             
     #make zip
-    zipPath = filesDirPath + "/zips/" + submissionID 
+    zipPath = filesDirPath + "/zips/" + submissionID    #####<----- use os.path.join
     make_archive(zipPath, "zip", sessionDir)
     
     #read zip as a byte file
@@ -208,81 +278,102 @@ except AlreadyExistsError:
 
 @app.route("/login", methods = ["POST", "GET"])
 def login():
+    #get all "emails" for testing
     allEmails = []
     for user in UserDataDB.query.order_by(UserDataDB.email).all():
         allEmails.append(user.getEmail())
     
+    #get the returnURL to use after a successful log in.
     if("returnURL" in session):
         returnURL = session["returnURL"]
     else:
         returnURL = "index"
-    
-    print("returnURL " + returnURL)
-    
-    return render_template("login.html", returnURL = returnURL, allEmails = allEmails)
+        
+    return render_template("login.html", returnURL = returnURL, allEmails = allEmails, 
+                           loggedIn = getSessionData().getLoggedIn())
 
 @app.route("/loginProcess", methods = ["POST"])
 def loginProcess():
     loginData = leval(request.form["loginData"])
     
-    succeeded = True
+    succeeded = False
     outputStr = ""
         
     try:
+        #load the user
         sessionData = getSessionData()
         user = UserData.load(loginData["email"])
         sessionData.setUser(user)
         
+        #alter globals
         session["loggedIn"] = True
-        session.modified = True #this feels very unnecessary
-        
-        global allSessions
-        
         allSessions[checkSessionID()] = sessionData #####<----- I dislike this
-        
-        print("Signed in to " + sessionData.getUserData().getEntry().getEmail())
-        
-        outputStr += "Successfully logged in as " + loginData["email"] + ".<br>"
+                
+        #indicate success
+        outputStr = "Successfully logged in as " + loginData["email"] + ".<br>"
+        succeeded = True
     except Exception as e:
-        succeeded = False
-        outputStr += "ERROR: " + str(e) + "<br>"
+        outputStr = "ERROR: " + str(e) + "<br>" #####<----- maybe I shouldn't use .innerHTML with this?
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-@app.route("/logoutProcess", methods = ["POST"])
+@app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():
     if("loggedIn" in session):
-        session.pop("loggedIn")
+        session.pop("loggedIn", False)
         getSessionData().removeUser()
         #and all that
+        #some sort of success message
+    else:
+        #already not logged in
+        getSessionData().removeUser() #just in case?
     
+    return redirect("/index")
         
 
 @app.route("/registerProcess", methods = ["POST"])
 def registerProcess():
     registrationData = leval(request.form["registrationData"])
     
-    succeeded = True
+    succeeded = False
     outputStr = ""
     
     try:
+        #create UserData
         sessionData = getSessionData()
         user = UserData.new(registrationData["email"])
         sessionData.setUser(user)
         
+        #alter globals
         session["loggedIn"] = True
-        
-        global allSessions
-        
         allSessions[checkSessionID()] = sessionData #####<----- I dislike this
         
+        #indicate success
         outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
+        succeeded = True
     except Exception as e:
-        succeeded = False
         outputStr += "ERROR: " + str(e) + "<br>"
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
     
+
+################################     USER PAGE     ################################
+###################################################################################
+    
+@app.route("/account", methods = ["POST", "GET"])
+def accountInfo():
+    shouldRedirect, retValue = redirectIfNotLoggedIn()
+    if(shouldRedirect):
+        session["returnURL"] = "account"
+        return retValue
+    else:
+        session["returnURL"] = "index"
+
+    sessionData = getSessionData()
+    email = sessionData.getEmail()
+    
+    return render_template("account.html", email = email,
+                           loggedIn = sessionData.getLoggedIn())
 
 
 ##############################     DOMESTICATION     ##############################
@@ -325,7 +416,8 @@ def domesticate():
 
     
     return render_template("domesticate.html", namedSequencesNames = NSNamesJSONifiable,
-                           namedSequencesSequences = NSSequencesJSONifiable)
+                           namedSequencesSequences = NSSequencesJSONifiable,
+                           loggedIn = getSessionData().getLoggedIn())
 
 #make a new NamedSequence
 @app.route("/newNamedSeq", methods = ["POST"])
@@ -671,10 +763,10 @@ def domesticationZips():
         data = makeZIP(getSessionData().getNewCompZip())
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html")
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
     
     if(data == None):
-        return render_template("noSeq.html")
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
 
 
     return Response(data, headers = {"Content-Type": "application/zip",
@@ -746,7 +838,8 @@ def assemble():
     return render_template("assembly.html", fidelities = fidelities,
                            fidelityLimits = fidelityLimits,
                            availableElements = allAvailableNames, 
-                           posTermComb = posTerminalComb)
+                           posTermComb = posTerminalComb,
+                           loggedIn = getSessionData().getLoggedIn())
 
 #process assembly
 @app.route("/processAssembly", methods = ["POST"])
@@ -849,10 +942,10 @@ def assemblyZIP():
         data = makeZIP(getSessionData().getAssemblyZip()) #validate it first?
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html")
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
     
     if(data == None):
-        return render_template("noSeq.html")
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
     
 
     return Response(data, headers = {"Content-Type": "application/zip",
@@ -896,7 +989,8 @@ def displayComps():
     longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators"}
     longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
     return render_template("components.html", allComps = allComps, allNS = allNS,
-                           longNames = longNames, longNamesSingular = longNamesSingular)
+                           longNames = longNames, longNamesSingular = longNamesSingular,
+                           loggedIn = getSessionData().getLoggedIn())
 
 #find the component to make ZIP file for
 @app.route("/locateComponentForZip", methods = ["POST"])
@@ -946,10 +1040,10 @@ def getComponentZips():
         data = makeZIP(getSessionData().getComponentForZip())
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html")
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
     
     if(data == None):
-        return render_template("noSeq.html")
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
     
     else:
         return Response(data, headers = {"Content-Type": "application/zip",
@@ -1001,6 +1095,49 @@ def removeSequence():
             
     return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
 
+@app.route("/downloadLibrary", methods = ["POST"])
+def downloadLibrary():
+    libraryName = request.form["libraryName"]
+    
+    succeeded = False    
+    
+    if(libraryName == "Default"):
+        getSessionData().setLibraryName("Default")
+        succeeded = True
+        errorMessage = ""
+    elif(libraryName == "Personal"):
+        getSessionData().setLibraryName("Personal")
+        succeeded = True
+        errorMessage = ""
+    else:
+        errorMessage = "Can't find " + libraryName + " library."
+        
+    return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
+        
+@app.route("/library.zip")
+def libraryZip():
+    libraryName = getSessionData().getLibraryName()
+    
+    if(libraryName == "Default"):
+        try:
+            data = makeAllLibraryZip(defaultSession)
+            succeeded = True
+        except Exception as e:
+            errorMessage = str(e)
+    elif(libraryName == "Personal"):
+        try:
+            data = makeAllLibraryZip(getSessionData())
+            succeeded = True
+        except Exception as e:
+            errorMessage = str(e)
+    
+    if(succeeded):
+        return Response(data, headers = {"Content-Type": "application/zip",
+                                     "Condent-Disposition": "attachment; filename='library.zip';"})
+    else:
+        print(errorMessage)
+        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn()) #####<----- I need something better than this
+
 
 ################################################################################
 ################################################################################
@@ -1011,14 +1148,14 @@ def removeSequence():
 @app.route("/", methods = ["GET", "POST"], endpoint = "index")
 def index():    
     sessionID = checkSessionID()
-    return render_template("index.html", sessionID = sessionID)
+    return render_template("index.html", sessionID = sessionID, loggedIn = getSessionData().getLoggedIn())
 
 #sets session timeout
 @app.before_request
 def before_request():
-    #set sessions to expire 24 hours after being changed
+    #set sessions to expire 30 days after being changed
     session.permanent = True
-    app.permanent_session_lifetime = timedelta(days=1)
+    app.permanent_session_lifetime = timedelta(days=30)
     session.modified = True
 
 

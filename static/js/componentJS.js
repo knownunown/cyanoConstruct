@@ -1,3 +1,14 @@
+function switchToggleText(headDiv){
+	var span = headDiv.nextElementSibling;
+
+	if(span.textContent == "[Click to show]"){
+		span.textContent = "[Click to hide]";
+	}
+	else{
+		span.textContent = "[Click to show]";
+	}
+}
+
 function toggleDisplay(id){
 	var div = document.getElementById(id);
 
@@ -51,7 +62,7 @@ function bodyOnload(){
 }
 
 function downloadComponentSequence(elemType, name, pos, terminal){
-	componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
+	var componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
 
 	$.ajax({
 		data : {component: componentInfo},
@@ -94,7 +105,7 @@ function showLibrary(libraryName){
 function removeComponent(elemType, name, pos, terminal){
 	if(window.confirm("This will permanently remove a component from your library.\nAre you sure?")){
 
-		componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
+		var componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
 
 		$.ajax({
 			data : {componentToRemove: componentInfo},
@@ -121,7 +132,7 @@ function removeComponent(elemType, name, pos, terminal){
 function removeSequence(elemType, name){
 	if(window.confirm("This will permanently remove sequence " + name + " and all components derived from it from your library.\nAre you sure?")){
 
-		sequenceInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "'}";
+		var sequenceInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "'}";
 
 		$.ajax({
 			data : {sequenceToRemove: sequenceInfo},
@@ -143,4 +154,22 @@ function removeSequence(elemType, name){
 
 		return true;
 	}
+}
+
+function downloadLibrary(libName){
+	$.ajax({
+		data : {libraryName: libName},
+		type : 'POST',
+		url : '/downloadLibrary'
+		})
+	.done(function(data){
+		if(data.succeeded){
+			window.location.href = "/library.zip";
+		}
+		else{
+			alert("ERROR: " + data.errorMessage);
+		}
+
+	});
+	event.preventDefault();
 }
