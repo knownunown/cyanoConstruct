@@ -15,25 +15,25 @@
 <br>
 
 <div id = "allLibraryTabs">
-	{% for libraryName in allLibraries %}<div class = "libraryTab" id = "{{ libraryName }}Tab" onclick = "showLibrary('{{ libraryName }}')">{{ libraryName }}</div>{% endfor %}
+	{% for libraryName in allComps.keys() %}<div class = "libraryTab" id = "{{ libraryName }}Tab"><input class = "subtleButton" type = "button" onclick = "showLibrary('{{ libraryName }}')" value = "{{ libraryName }}"></div>{% endfor %}
 </div>
 
-{% for libraryName in allLibraries %}
+{% for libraryName in allComps.keys() %}
 <div class = "libraryContents" id = "{{ libraryName }}Library">
 	<h2>{{ libraryName }} Library</h2>
 
-	{% for typeKey in allLibraries[libraryName]["namedSeqs"].keys() %}
+	{% for typeKey in allComps[libraryName].keys() %}
 
-		<div class = "hideableTitle" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}')"> <!-- for accessibility, it should be a button -->
-			<span class = "titleLeft">{{ longNames[typeKey] }}</span>
+		<div class = "hideableTitle typeTitle" onclick = "">
+			<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}')" value = "{{ longNames[typeKey] }}">
 			<span class = "titleRight">[Click to show/hide]</span>
 		</div>
 		<div id = "{{ libraryName }}{{ typeKey }}" class = "hideableDiv" style = "display: block">
 
-				{% for nameKey in allLibraries[libraryName]["namedSeqs"][typeKey].keys() %}
+				{% for nameKey in allComps[libraryName][typeKey].keys() %}
 				
-				<div class = "hideableTitle" onclick = "toggleDisplay('{{ libraryName }}{{ nameKey }}')">
-					<span class = "titleLeft">Name: {{ nameKey }}</span>
+				<div class = "hideableTitle nameTitle">
+					<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ nameKey }}')" value = "Name: {{ nameKey }}">
 					<span class = "titleRight">[Click to show/hide]</span>
 				</div>
 
@@ -43,49 +43,44 @@
 						<p>{{ longNamesSingular[typeKey] }}: {{ nameKey }}</p>
 
 						<p>Sequence:</p>
-						<div class = "sequence">
-							{{ allLibraries[libraryName]["namedSeqs"][typeKey][nameKey].getSeq() }}
-						</div>
+						<div class = "sequence">{{ allNS[libraryName][typeKey][nameKey] }}</div>
 
 						<br>
 
 						<!-- list all components -->
-						{% for compPosKey in allLibraries[libraryName]['components'][typeKey][nameKey] %}
+						{% for component in allComps[libraryName][typeKey][nameKey] %}
 
-							{% for compTerminalKey in allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey] %}
-
-								<div class = "hideableTitle" id = "{{ libraryName }}{{allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID()}}" onclick = "toggleDisplay('{{ libraryName }}{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID() }}Data')">
-									<span class = "titleLeft">ID: {{allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID()}}</span>
+								<div class = "hideableTitle compTitle" id = "{{ libraryName }}{{component.getNameID()}}">
+									<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ component.getNameID() }}Data')" value = "ID: {{ component.getNameID() }}">
 									<span class = "titleRight">[Click to show/hide]</span>
 								</div>
 
-								<div id = "{{ libraryName }}{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getID() }}Data" class = "hideableDiv componentData" style = "display: none">
+								<div id = "{{ libraryName }}{{ component.getNameID() }}Data" class = "hideableDiv componentData" style = "display: none">
 
 									<p>
-										{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getHTMLdisplay() }}
+										{{ component.getHTMLdisplay() }}
 									</p>
 
 									<hr>
 
 									<p><span class = 'emphasized'>Complete Sequence:</span></p>
 									<div class = "sequence">
-										{{ allLibraries[libraryName]['components'][typeKey][nameKey][compPosKey][compTerminalKey].getFullSeq() }}
+										{{ component.getFullSeq() }}
 									</div>
 
 									<br>
 
-									<input type = "button" class = "styledButton" value = "Download Sequences" onclick = "downloadComponentSequence('{{ typeKey }}', '{{ nameKey }}', '{{ compPosKey }}', '{{ compTerminalKey }}')">
+									<input type = "button" class = "styledButton" value = "Download Sequences" onclick = "downloadComponentSequence('{{ typeKey }}', '{{ nameKey }}', '{{ component.getPosition() }}', '{{ component.getTerminalLetter() }}')"> <!-- that won't work anymore -->
 
 									{% if libraryName|string() != "Default" %}
 										<br><hr>
 
-										<input type = "button" class = "styledButton" value = "Remove Component" onclick = "removeComponent('{{ typeKey }}', '{{ nameKey }}', '{{ compPosKey }}', '{{ compTerminalKey }}')">
+										<input type = "button" class = "styledButton" value = "Remove Component" onclick = "removeComponent('{{ typeKey }}', '{{ nameKey }}', '{{ component.getPosition() }}', '{{ component.getTerminalLetter() }}')"> <!-- that won't work anymore -->
 									{% endif %}
 
 								</div>
 								<div class = "hideableBottom"></div>
 
-							{% endfor %}
 						{% endfor %}
 
 						{% if libraryName|string() != "Default" %}

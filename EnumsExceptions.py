@@ -7,15 +7,7 @@ Created on Sun May  3 20:44:56 2020
 """
 
 #enums errors etc.
-
-from enum import Enum
-class AllowedTypes(Enum):
-    PR = 1
-    RBS = 2
-    GOI = 3
-    TERM = 4
-    
-
+#from enum import Enum
 
 class Error(Exception):
     def __init__(self, message):
@@ -40,4 +32,7 @@ class ComponentNotFoundError(Error):
     pass
 
 class UserNotFoundError(Error):
+    pass
+
+class NotLoggedInError(Error):
     pass

@@ -4,13 +4,13 @@ var submitted = false;
 
 var currFidLimit;
 
-
-function inArray(elem, array){
-	for(arrayElement of array){
-		if(arrayElement == elem){
+function validPos(pos, name){
+	for(combination of posTermComb[name]){
+		if(pos == combination.position){
 			return true;
 		}
 	}
+
 	return false;
 }
 
@@ -28,7 +28,7 @@ function formatOptions(elementToUse, idNumber = count){ //get a thing for the lo
 	var retString = "<select class = 'formField' name = 'elemName" + idNumber + "' id = 'elemName" + idNumber + "'>";
 	for(option of elemOptions[elementToUse]){
 		var idString = idNumber.toString();
-		if(inArray(idNumber, compByPosition[option])){
+		if(validPos(idNumber, option)){
 			retString += "<option value = '" + option + "'>" + option + "</option>"; //id?			
 		}
 		else{
@@ -150,30 +150,13 @@ function validate(){
 
 	//check number of elements vs fidelity
 	if(count - 1 > currFidLimit){
+		$("#elementError").text("Too many elements for current fidelity.");
 		retValue = false;
+		return false;
 	}
 
-	//check if terminal is valid
-	var termTypeStr = "elemType" + (count - 1);
-	var termTypeVal = document.getElementById(termTypeStr).value;
-
-	var termNameStr = "elemName" + (count - 1);
-	var termNameVal = document.getElementById(termNameStr).value;
-
-	var isValidTerm = false;
-	for(name of validTerminals[termTypeVal]){
-		if(name == termNameVal){
-			isValidTerm = true;
-			break;
-		}
-	}
-
-	if(!isValidTerm){
-		var errorStr = "There is no " + termTypeVal + " " + termNameVal + " component that can be the terminal.";
-		$("#elementError").text(errorStr);
-		retValue = false;
-		//return false;
-	}
+	//check the positions of everything
+	var collectedError = "";
 
 	//check values of elements & make allData
 	var allFields = document.getElementsByClassName("formField");
@@ -181,15 +164,78 @@ function validate(){
 	var allData = "{";
 	for (i = 0; i < allFields.length; i++){
 
+		//check if something is selected
 		if(allFields[i].value == ""){
 			$("#elementError").text("Not all elements have values.");
 			retValue = false;
-			break;		
+			//break;	
+			return false;	
 		}
 
-		var name = allFields[i].name; //key: name
-		allData += "'" + name + "': ";
+		var name = allFields[i].name; 	//key: name
 		var value = allFields[i].value; //value: value
+
+		//check terminalLetter
+		if(name.substr(0,8) == "elemName"){
+			var pos = name.substr(8);
+			var isTerminal = (pos == count - 1);
+
+			//should never happen
+			if(posTermComb[value] == "undefined"){
+				retValue = false;
+				collectedError += "Can't find valid " + value + ".";
+			}
+			
+			else{
+				var validPos = false;
+				var validLetter = false;
+
+				//go through all possible position & terminalLetter combinations
+				for(posTerm of posTermComb[value]){
+					//only look further if it has the right position
+					if(pos == posTerm.position){
+						//found a valid position
+						validPos = true;
+
+						//check the terminalLetter
+											//last element
+						if(isTerminal){
+							if(posTerm.terminalLetter == "L"){
+								validLetter = true;
+								break;
+							}
+						}
+											//middle element
+						else if(posTerm.terminalLetter == "M"){
+							validLetter = true;
+							break;
+						}
+											//special element (S or T)
+						else if((pos == "0" && posTerm.terminalLetter == "S") || (pos == "999" && posTerm.terminalLetter == "T")){
+							validLetter = true;
+							break;
+						}
+					}
+				}
+				
+				//error messages
+				if(!validPos){ 				//bad position
+					retValue = false;
+					collectedError += "No valid " + value + " at position " + pos + ". ";
+				}
+				if(!validLetter){ 			//bad terminalLetter
+					retValue = false;
+					if(isTerminal){
+						collectedError += "No valid terminal " + value + " at position " + pos + ". ";
+					}
+					else{
+						collectedError += "No valid non-terminal " + value + " at position " + pos + ". ";
+					}
+				}
+			}
+		}
+
+		allData += "'" + name + "': ";
 		allData += "'" + value + "'";
 
 		if(i < allFields.length - 1){ //,
@@ -201,6 +247,9 @@ function validate(){
 	//submit
 	if(retValue){
 		submitted = submitForm(allData);
+	}
+	else{
+		$("#elementError").text(collectedError);
 	}
 
 	return retValue;

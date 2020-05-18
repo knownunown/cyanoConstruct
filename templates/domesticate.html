@@ -21,7 +21,7 @@
 <h3>Domesticate</h3>
 
 <form id = "domesticationForm" name = "domesticationForm">
-	<fieldset id = "selectNS" method = "POST">
+	<div class = "formSection"><fieldset id = "selectNS" method = "POST">
 		<legend>Sequence</legend>
 
 		<!--Type of Named Sequence-->
@@ -66,9 +66,9 @@
 
 		<input type = "button" class = "styledButton" name = "NSfinish" id = "NSfinish" value = "Next Step" onclick = "finishNSSection()">
 
-	</fieldset>
+	</fieldset></div>
 
-	<fieldset id = "componentSpacers" method = "POST" disabled>
+	<div class = "formSection"><fieldset id = "componentSpacers" method = "POST" disabled>
 
 		<legend>Position and Spacers</legend>
 
@@ -100,9 +100,9 @@
 
 		<input type = "button" class = "styledButton" name = "spacersFinish" id = "spacersFinish" value = "Next Step" onclick = "finishSpacersSection()" disabled>
 
-	</fieldset>
+	</fieldset></div>
 
-	<fieldset id = "componentPrimers" method = "POST" disabled>
+	<div class = "formSection"><fieldset id = "componentPrimers" method = "POST" disabled>
 
 		<legend>Primers</legend>
 
@@ -138,9 +138,9 @@
 
 		<input type = "button" class = "styledButton" name = "primersFinish" id = "primersFinish" value = "Next Step" onclick = "finishPrimersSection()" disabled>
 
-	</fieldset>
+	</fieldset></div>
 
-	<fieldset id = "createNewComponent" method = "POST" disabled>
+	<div class = "formSection"><fieldset id = "createNewComponent" method = "POST" disabled>
 		<legend>Finish</legend>
 
 		<input type = "button" class = "styledButton" name = "finishBack" id = "finishBack" value = "Go Back" onclick = "goBackFinish()">
@@ -163,7 +163,7 @@
 
 		<input type = "button" class = "styledButton" name = "resetForm" id = "resetForm" value = "Create Another" onclick = "startOver();" disabled>
 
-	</fieldset>
+	</fieldset></div>
 </form>
 
 {% endblock %}

@@ -1,20 +1,39 @@
 .hideableTitle{
 	border: 1px solid #0E1B45;
-	padding: 5px;
+	/*padding: 5px;*/
 	border-radius: 5px 5px 0px 0px;
 	background-color: #DFE8EE;
 
 	overflow: auto;
+
+	display: flex;
 }
 
-.titleLeft{
-	font-weight: bold;
-	float: left;
+.subtleButton{
+	background: transparent;
+	border: none;
+	font: inherit;
+	color: inherit;
+	font-style: inherit;
 }
+
+
+.titleLeft{
+	/*float: left;*/
+	font-weight: bold;
+}
+
+.titleLeft.subtleButton {
+	flex-grow: 1;
+	text-align: left;
+	padding: 5px;
+}
+
 
 .titleRight{
 	float:right;
 	color: #555;
+	padding: 5px;
 }
 
 .hideableDiv{
@@ -68,12 +87,11 @@ hr {
 
 .libraryTab {
 	display: inline-block;
-	/*background: #ddd;
-	border: 1px solid black;
-	border-radius: 5px 5px 0px 0px;
-	border-bottom: 0px;*/
-	padding: 10px;
 	transition-duration: 0.2s;
+}
+
+.libraryTab .subtleButton {
+	padding: 10px;
 }
 
 .libraryContents {

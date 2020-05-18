@@ -222,3 +222,38 @@ div.elemDiv > div{
 #navigation a.active{
 	font-weight: bold;
 }
+
+/* form stuff */
+
+.formSection {
+	padding: 5px;
+	margin: 10px 0px;
+	border-radius: 10px;
+	border: 1px solid black;
+}
+
+.formSection input[type = number], .formSection input[type = text], .formSection select {
+	margin: 5px;
+}
+
+fieldset {
+	border: 0px;
+	padding: 0px;
+}
+
+fieldset:disabled {
+	color: #777;
+}
+
+fieldset:disabled legend{
+	border-bottom-color: #777;
+}
+
+legend {
+	border-bottom: 2px solid black;
+	width: 100%;
+	font-weight: bold;
+	font-size: larger;
+	margin: 10px 0px;
+	padding: 5px 0px;
+}

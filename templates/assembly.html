@@ -10,11 +10,9 @@ var seqElements = ["Pr", "RBS", "GOI", "Term"];
 
 var elemOptions = {{ availableElements|tojson }}; //all the available elements, sorted by type
 
-var compByPosition = {{ componentsPosition|tojson }}; //all the available components, sorted by position
-
-var validTerminals = {{ validTerminals|tojson }}; //all the valid terminals, sorted by type
-
 var fidelityLimits = {{ fidelityLimits|tojson }};
+
+var posTermComb = {{ posTermComb|tojson }}
 </script>
 
 <script src = "{{ url_for('static',filename='js/assembleJS.js') }}" ></script>
@@ -77,10 +75,19 @@ var fidelityLimits = {{ fidelityLimits|tojson }};
 <div id = "outputCol"><div id = "output">
 	<h3>Output</h3>
 	<div id = "showOutput"><p id = "outputParagraph">
-		Allowed position of each element: <br>
-		{{ componentsPosition }}
-		<br>All allowed terminal components: <br>
-		{{ validTerminals }}
+		<ul>
+		{% for key in posTermComb %}
+
+			<li>{{ key }}: 
+			{% for row in posTermComb[key] %}
+
+				{{ row["position"] }}{{ row["terminalLetter"]}} 
+
+			{% endfor %}
+			</li>
+
+		{% endfor %}
+		</ul>
 	</p></div>
 	<hr style = "width: 100%">
 	<div>

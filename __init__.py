@@ -9,9 +9,9 @@ Created on Wed Apr  1 21:32:02 2020
 #__init__.py
 
 from flask import Flask
-from flask_login import LoginManager
+#from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+#from flask_migrate import Migrate
 
 from cyanoConstruct.config import Config
 
@@ -22,12 +22,19 @@ app = Flask(__name__)
 
 app.config.from_object(Config)
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db = SQLAlchemy(app, session_options={"expire_on_commit": False})
+#migrate = Migrate(app, db)
 
-from cyanoConstruct import CyanoConstructMod
-from cyanoConstruct import Component
-from cyanoConstruct import SessionUsers
-from cyanoConstruct import CCDatabase
+from cyanoConstruct.EnumsExceptions import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
+from cyanoConstruct.ok import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
+db.create_all()
+from cyanoConstruct.ComponentDatabaseVersion import NamedSequence, SpacerData, PrimerData, Component, checkType
+from cyanoConstruct.SessionUsers2 import SessionData, UserData
+from cyanoConstruct.routes2 import *
 
-__version__ = "0.2"
+#from cyanoConstruct import CyanoConstructMod
+#from cyanoConstruct import Component
+#from cyanoConstruct import SessionUsers
+#from cyanoConstruct import CCDatabase
+
+__version__ = "0.2.9"
