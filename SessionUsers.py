@@ -15,6 +15,8 @@ class SessionData:
     #nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
     allSessions = {}
 
+    maxTries = 5
+
     @classmethod
     def setSession(cls, sessionID, sessionData):
         if(type(sessionID) != str):
@@ -26,10 +28,25 @@ class SessionData:
 
     @classmethod
     def getSession(cls, sessionID):
+        print(cls.allSessions)
+
         try:
             return cls.allSessions[sessionID]
         except KeyError:
-            return None #or something
+            return cls.tryGetSessionAgain(sessionID, 0) #or something
+
+    @classmethod
+    def tryGetSessionAgain(cls, sessionID, i):
+        print("trying again at iteration " + str(i))
+        print(cls.allSessions)
+
+        if(i >= maxTries):
+            return None
+
+        try:
+            return cls.allSessions[sessionID]
+        except KeyError:
+            return cls.tryGetSessionAgain(sessionID, i + 1)
 
     @classmethod
     def loadDefault(cls):
