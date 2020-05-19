@@ -33,11 +33,11 @@ class SessionData:
         try:
             return cls.allSessions[sessionID]
         except KeyError:
-            return cls.tryGetSessionAgain(sessionID, 0) #or something
+            return cls.tryGetSessionAgain(sessionID, 1) #or something
 
     @classmethod
     def tryGetSessionAgain(cls, sessionID, i):
-        print("trying again at iteration " + str(i))
+        print("searching for " + sessionID + " again at iteration " + str(i))
         print(cls.allSessions)
 
         if(i >= cls.maxTries):
