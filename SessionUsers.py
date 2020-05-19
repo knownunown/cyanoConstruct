@@ -40,7 +40,7 @@ class SessionData:
         print("trying again at iteration " + str(i))
         print(cls.allSessions)
 
-        if(i >= maxTries):
+        if(i >= cls.maxTries):
             return None
 
         try:

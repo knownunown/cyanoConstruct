@@ -55,7 +55,8 @@ def checkSessionID():
     return session["sessionID"]
 
 def getSessionData():
-    return SessionData.getSession(checkSessionID())
+    sessionID = checkSessionID()
+    return SessionData.getSession(sessionID)
 
 def addToSelected(newSelected):
     sessionData = getSessionData()
