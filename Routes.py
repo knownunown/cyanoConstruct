@@ -11,7 +11,7 @@ cyanoConstruct routes file
 
 import os
 
-from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB
+from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals
 
 #flask
 from flask import request, render_template, jsonify, Response, session, redirect
@@ -29,24 +29,7 @@ from string import ascii_letters, digits
 
 ##########################################################################################
 #globals
-startEndComps = [None, None]
-
 printActions = True
-
-defaultSession = SessionData("default")
-try:
-    defaultUser = UserData.new("default") #edit to be load
-except AlreadyExistsError:
-    defaultUser = UserData.load("default")
-defaultSession.setUser(defaultUser)
-
-nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
-
-#sessions
-allSessions = {}    #####<----- this feels bad
-
-haveLoaded = {}
-
 ##########################################################################################
 
 def checkLoggedIn():
@@ -63,28 +46,16 @@ def checkSessionID():
     if("sessionID" not in session):
         newID = uuid1().hex
         session["sessionID"] = newID
-        allSessions[newID] = SessionData(newID) #####<----- is this okay? I think so
+        SessionData(newID)
 
         if(printActions):
             print("new sessionID and SessionData: " + newID)
 
-    
-    """
-    try:                                        #####<---- what does this do?
-        haveLoaded[session["sessionID"]]
-        
-    except KeyError:
-        newID = session["sessionID"]
-        
-        allSessions[newID] = SessionData(newID)
-        
-        haveLoaded[newID] = True
-    """
-        
+            
     return session["sessionID"]
 
 def getSessionData():
-    return allSessions[checkSessionID()]
+    return SessionData.getSession(checkSessionID())
 
 def addToSelected(newSelected):
     sessionData = getSessionData()
@@ -237,30 +208,30 @@ def addToNS(NS):
     return sessionData.addNSDB(NS)
 
 def addDefaultComp(comp):
-    defaultSession.addComp(comp)
+    Globals.getDefault().addComp(comp)
 
 def addDefaultNS(NS):
-    defaultSession.addNS(NS)
+    Globals.getDefault().addNS(NS)
 
 def makeDefaults():
-    defaultSession.makeFromNew("Pr", "psbA", "ATTTAGCGTCTTCTAATCCAGTGTAGACAGTAGTTTTGGCTCCGTTGAGCACTGTAGCCTTGGGCGATCGCTCTAAACATTACATAAATTCACAAAGTTTTCGTTACATAAAAATAGTGTCTACTTAGCTAAAAATTAAGGGTTTTTTACACCTTTTTGACAGTTAATCTCCTAGCCTAAAAAGCAAGAGTTTTTAACTAAGACTCTTGCCCTTTACAACCTC",
+    Globals.getDefault().makeFromNew("Pr", "psbA", "ATTTAGCGTCTTCTAATCCAGTGTAGACAGTAGTTTTGGCTCCGTTGAGCACTGTAGCCTTGGGCGATCGCTCTAAACATTACATAAATTCACAAAGTTTTCGTTACATAAAAATAGTGTCTACTTAGCTAAAAATTAAGGGTTTTTTACACCTTTTTGACAGTTAATCTCCTAGCCTAAAAAGCAAGAGTTTTTAACTAAGACTCTTGCCCTTTACAACCTC",
                                                                      0, False, 45.0, 2)
     
-    defaultSession.makeFromNew("Term", "T1", "ATTTGTCCTACTCAGGAGAGCGTTCACCGACAAACAACAGATAAAACGAAAGGCCCAGTCTTTCGACTGAGCCTTTCGTTTTATTTG",
+    Globals.getDefault().makeFromNew("Term", "T1", "ATTTGTCCTACTCAGGAGAGCGTTCACCGACAAACAACAGATAAAACGAAAGGCCCAGTCTTTCGACTGAGCCTTTCGTTTTATTTG",
                                                                          999, False, 45.0, 2)
 
 def makeMore():
-    defaultSession.makeFromNew("RBS", "S3", "AGTCAAGTAGGAGATTAATTCAATG",
+    Globals.getDefault().makeFromNew("RBS", "S3", "AGTCAAGTAGGAGATTAATTCAATG",
                                                1, False, 45.0, 2)
     
-    defaultSession.makeFromNew("RBS", "A", "AACAAAATGAGGAGGTACTGAGATG",
+    Globals.getDefault().makeFromNew("RBS", "A", "AACAAAATGAGGAGGTACTGAGATG",
                                              1, False, 45.0, 2)
         
-    adhNS = defaultSession.createNS("GOI", "adh", "ATGCATATTAAAGCCTACGCTGCCCTGGAAGCCAACGGAAAACTCCAACCCTTTGAATACGACCCCGGTGCCCTGGGTGCTAATGAGGTGGAGATTGAGGTGCAGTATTGTGGGGTGTGCCACAGTGATTTGTCCATGATTAATAACGAATGGGGCATTTCCAATTACCCCCTAGTGCCGGGTCATGAGGTGGTGGGTACTGTGGCCGCCATGGGCGAAGGGGTGAACCATGTTGAGGTGGGGGATTTAGTGGGGCTGGGTTGGCATTCGGGCTACTGCATGACCTGCCATAGTTGTTTATCTGGCTACCACAACCTTTGTGCCACGGCGGAATCGACCATTGTGGGCCACTACGGTGGCTTTGGCGATCGGGTTCGGGCCAAGGGAGTCAGCGTGGTGAAATTACCTAAAGGCATTGACCTAGCCAGTGCCGGGCCCCTTTTCTGTGGAGGAATTACCGTTTTCAGTCCTATGGTGGAACTGAGTTTAAAGCCCACTGCAAAAGTGGCAGTGATCGGCATTGGGGGCTTGGGCCATTTAGCGGTGCAATTTCTCCGGGCCTGGGGCTGTGAAGTGACTGCCTTTACCTCCAGTGCCAGGAAGCAAACGGAAGTGTTGGAATTGGGCGCTCACCACATACTAGATTCCACCAATCCAGAGGCGATCGCCAGTGCGGAAGGCAAATTTGACTATATTATCTCCACTGTGAACCTGAAGCTTGACTGGAACTTATACATCAGCACCCTGGCGCCCCAGGGACATTTCCACTTTGTTGGGGTGGTGTTGGAGCCTTTGGATCTAAATCTTTTTCCCCTTTTGATGGGACAACGCTCCGTTTCTGCCTCCCCAGTGGGTAGTCCCGCCACCATTGCCACCATGTTGGACTTTGCTGTGCGCCATGACATTAAACCCGTGGTGGAACAATTTAGCTTTGATCAGATCAACGAGGCGATCGCCCATCTAGAAAGCGGCAAAGCCCATTATCGGGTAGTGCTCAGCCATAGTAAAAATTAG")
-    defaultSession.makeWithNamedSequence(adhNS, 2, False, 45.0, 2)
-    defaultSession.makeWithNamedSequence(adhNS, 2, True, 45.0, 2)
+    adhNS = Globals.getDefault().createNS("GOI", "adh", "ATGCATATTAAAGCCTACGCTGCCCTGGAAGCCAACGGAAAACTCCAACCCTTTGAATACGACCCCGGTGCCCTGGGTGCTAATGAGGTGGAGATTGAGGTGCAGTATTGTGGGGTGTGCCACAGTGATTTGTCCATGATTAATAACGAATGGGGCATTTCCAATTACCCCCTAGTGCCGGGTCATGAGGTGGTGGGTACTGTGGCCGCCATGGGCGAAGGGGTGAACCATGTTGAGGTGGGGGATTTAGTGGGGCTGGGTTGGCATTCGGGCTACTGCATGACCTGCCATAGTTGTTTATCTGGCTACCACAACCTTTGTGCCACGGCGGAATCGACCATTGTGGGCCACTACGGTGGCTTTGGCGATCGGGTTCGGGCCAAGGGAGTCAGCGTGGTGAAATTACCTAAAGGCATTGACCTAGCCAGTGCCGGGCCCCTTTTCTGTGGAGGAATTACCGTTTTCAGTCCTATGGTGGAACTGAGTTTAAAGCCCACTGCAAAAGTGGCAGTGATCGGCATTGGGGGCTTGGGCCATTTAGCGGTGCAATTTCTCCGGGCCTGGGGCTGTGAAGTGACTGCCTTTACCTCCAGTGCCAGGAAGCAAACGGAAGTGTTGGAATTGGGCGCTCACCACATACTAGATTCCACCAATCCAGAGGCGATCGCCAGTGCGGAAGGCAAATTTGACTATATTATCTCCACTGTGAACCTGAAGCTTGACTGGAACTTATACATCAGCACCCTGGCGCCCCAGGGACATTTCCACTTTGTTGGGGTGGTGTTGGAGCCTTTGGATCTAAATCTTTTTCCCCTTTTGATGGGACAACGCTCCGTTTCTGCCTCCCCAGTGGGTAGTCCCGCCACCATTGCCACCATGTTGGACTTTGCTGTGCGCCATGACATTAAACCCGTGGTGGAACAATTTAGCTTTGATCAGATCAACGAGGCGATCGCCCATCTAGAAAGCGGCAAAGCCCATTATCGGGTAGTGCTCAGCCATAGTAAAAATTAG")
+    Globals.getDefault().makeWithNamedSequence(adhNS, 2, False, 45.0, 2)
+    Globals.getDefault().makeWithNamedSequence(adhNS, 2, True, 45.0, 2)
         
-    defaultSession.makeFromNew("GOI", "pdc", "ATGCATAGTTATACTGTCGGTACCTATTTAGCGGAGCGGCTTGTCCAGATTGGTCTCAAGCATCACTTCGCAGTCGCGGGCGACTACAACCTCGTCCTTCTTGACAACCTGCTTTTGAACAAAAACATGGAGCAGGTTTATTGCTGTAACGAACTGAACTGCGGTTTCAGTGCAGAAGGTTATGCTCGTGCCAAAGGCGCAGCAGCAGCCGTCGTTACCTACAGCGTTGGTGCGCTTTCCGCATTTGATGCTATCGGTGGCGCCTATGCAGAAAACCTTCCGGTTATCCTGATCTCCGGTGCTCCGAACAACAACGACCACGCTGCTGGTCATGTGTTGCATCATGCTCTTGGCAAAACCGACTATCACTATCAGTTGGAAATGGCCAAGAACATCACGGCCGCCGCTGAAGCGATTTACACCCCGGAAGAAGCTCCGGCTAAAATCGATCACGTGATCAAAACTGCTCTTCGCGAGAAGAAGCCGGTTTATCTCGAAATCGCTTGCAACACTGCTTCCATGCCCTGCGCCGCTCCTGGACCGGCAAGTGCATTGTTCAATGACGAAGCCAGCGACGAAGCATCCTTGAATGCAGCGGTTGACGAAACCCTGAAATTCATCGCCAACCGCGACAAAGTTGCCGTCCTCGTCGGCAGCAAGCTGCGCGCTGCTGGTGCTGAAGAAGCTGCTGTTAAATTCACCGACGCTTTGGGCGGTGCAGTGGCTACTATGGCTGCTGCCAAGAGCTTCTTCCCAGAAGAAAATGCCAATTACATTGGTACCTCATGGGGCGAAGTCAGCTATCCGGGCGTTGAAAAGACGATGAAAGAAGCCGATGCGGTTATCGCTCTGGCTCCTGTCTTCAACGACTACTCCACCACTGGTTGGACGGATATCCCTGATCCTAAGAAACTGGTTCTCGCTGAACCGCGTTCTGTCGTTGTCAACGGCATTCGCTTCCCCAGCGTTCATCTGAAAGACTATCTGACCCGTTTGGCTCAGAAAGTTTCCAAGAAAACCGGTTCTTTGGACTTCTTCAAATCCCTCAATGCAGGTGAACTGAAGAAAGCCGCTCCGGCTGATCCGAGTGCTCCGTTGGTCAACGCAGAAATCGCCCGTCAGGTCGAAGCTCTTCTGACCCCGAACACGACGGTTATTGCTGAAACCGGTGACTCTTGGTTCAATGCTCAGCGCATGAAGCTCCCGAACGGTGCTCGCGTTGAATATGAAATGCAGTGGGGTCACATTGGTTGGTCCGTTCCTGCCGCCTTCGGTTATGCCGTCGGTGCTCCGGAACGTCGCAACATCCTCATGGTTGGTGATGGTTCCTTCCAGCTGACGGCTCAGGAAGTTGCTCAGATGGTTCGCCTGAAACTGCCGGTTATCATCTTCTTGATCAATAACTATGGTTACACCATCGAAGTTATGATCCATGATGGTCCGTACAACAACATCAAGAACTGGGATTATGCCGGTCTGATGGAAGTGTTCAACGGTAACGGTGGTTATGACAGCGGTGCTGCTAAAGGCCTGAAGGCTAAAACCGGTGGCGAACTGGCAGAAGCTATCAAGGTTGCTCTGGCAAACACCGACGGCCCAACCCTGATCGAATGCTTCATCGGTCGTGAAGACTGCACTGAAGAATTGGTCAAATGGGGTAAGCGCGTTGCTGCCGCCAACAGCCGTAAGCCTGTTAACAAGCTCCTCTAG",
+    Globals.getDefault().makeFromNew("GOI", "pdc", "ATGCATAGTTATACTGTCGGTACCTATTTAGCGGAGCGGCTTGTCCAGATTGGTCTCAAGCATCACTTCGCAGTCGCGGGCGACTACAACCTCGTCCTTCTTGACAACCTGCTTTTGAACAAAAACATGGAGCAGGTTTATTGCTGTAACGAACTGAACTGCGGTTTCAGTGCAGAAGGTTATGCTCGTGCCAAAGGCGCAGCAGCAGCCGTCGTTACCTACAGCGTTGGTGCGCTTTCCGCATTTGATGCTATCGGTGGCGCCTATGCAGAAAACCTTCCGGTTATCCTGATCTCCGGTGCTCCGAACAACAACGACCACGCTGCTGGTCATGTGTTGCATCATGCTCTTGGCAAAACCGACTATCACTATCAGTTGGAAATGGCCAAGAACATCACGGCCGCCGCTGAAGCGATTTACACCCCGGAAGAAGCTCCGGCTAAAATCGATCACGTGATCAAAACTGCTCTTCGCGAGAAGAAGCCGGTTTATCTCGAAATCGCTTGCAACACTGCTTCCATGCCCTGCGCCGCTCCTGGACCGGCAAGTGCATTGTTCAATGACGAAGCCAGCGACGAAGCATCCTTGAATGCAGCGGTTGACGAAACCCTGAAATTCATCGCCAACCGCGACAAAGTTGCCGTCCTCGTCGGCAGCAAGCTGCGCGCTGCTGGTGCTGAAGAAGCTGCTGTTAAATTCACCGACGCTTTGGGCGGTGCAGTGGCTACTATGGCTGCTGCCAAGAGCTTCTTCCCAGAAGAAAATGCCAATTACATTGGTACCTCATGGGGCGAAGTCAGCTATCCGGGCGTTGAAAAGACGATGAAAGAAGCCGATGCGGTTATCGCTCTGGCTCCTGTCTTCAACGACTACTCCACCACTGGTTGGACGGATATCCCTGATCCTAAGAAACTGGTTCTCGCTGAACCGCGTTCTGTCGTTGTCAACGGCATTCGCTTCCCCAGCGTTCATCTGAAAGACTATCTGACCCGTTTGGCTCAGAAAGTTTCCAAGAAAACCGGTTCTTTGGACTTCTTCAAATCCCTCAATGCAGGTGAACTGAAGAAAGCCGCTCCGGCTGATCCGAGTGCTCCGTTGGTCAACGCAGAAATCGCCCGTCAGGTCGAAGCTCTTCTGACCCCGAACACGACGGTTATTGCTGAAACCGGTGACTCTTGGTTCAATGCTCAGCGCATGAAGCTCCCGAACGGTGCTCGCGTTGAATATGAAATGCAGTGGGGTCACATTGGTTGGTCCGTTCCTGCCGCCTTCGGTTATGCCGTCGGTGCTCCGGAACGTCGCAACATCCTCATGGTTGGTGATGGTTCCTTCCAGCTGACGGCTCAGGAAGTTGCTCAGATGGTTCGCCTGAAACTGCCGGTTATCATCTTCTTGATCAATAACTATGGTTACACCATCGAAGTTATGATCCATGATGGTCCGTACAACAACATCAAGAACTGGGATTATGCCGGTCTGATGGAAGTGTTCAACGGTAACGGTGGTTATGACAGCGGTGCTGCTAAAGGCCTGAAGGCTAAAACCGGTGGCGAACTGGCAGAAGCTATCAAGGTTGCTCTGGCAAACACCGACGGCCCAACCCTGATCGAATGCTTCATCGGTCGTGAAGACTGCACTGAAGAATTGGTCAAATGGGGTAAGCGCGTTGCTGCCGCCAACAGCCGTAAGCCTGTTAACAAGCTCCTCTAG",
                                                  3, True, 45.0, 2)
 
 try:
@@ -303,7 +274,7 @@ def loginProcess():
         
         #alter globals
         session["loggedIn"] = True
-        allSessions[checkSessionID()] = sessionData #####<----- I dislike this
+        #allSessions[checkSessionID()] = sessionData #####<----- I dislike this
                 
         #indicate success
         outputStr = "Successfully logged in as " + loginData["email"] + ".<br>"
@@ -342,7 +313,7 @@ def registerProcess():
         
         #alter globals
         session["loggedIn"] = True
-        allSessions[checkSessionID()] = sessionData #####<----- I dislike this
+        #allSessions[checkSessionID()] = sessionData #####<----- I dislike this
         
         #indicate success
         outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
@@ -388,7 +359,7 @@ def domesticate():
     sessionData = getSessionData()
         
     sessionNamedSequences = sessionData.getSortedNS()
-    defaultNamedSequences = defaultSession.getSortedNS()
+    defaultNamedSequences = Globals.getDefault().getSortedNS()
     
     #make the named sequences more friendly to javascript
     NSNamesJSONifiable = {}
@@ -450,7 +421,7 @@ def newNamedSeq():
     for elemType in ["Pr", "RBS", "GOI", "Term"]:
         longNames = {"Pr": "promoter", "RBS": "ribosome binding site", "GOI": "gene", "Term": "terminator"}
         try:
-            defaultSession.findNamedSequence(elemType, newNSName, newNSSeq)
+            Globals.getDefault().findNamedSequence(elemType, newNSName, newNSSeq)
                         
             validInput = False
             outputStr += "ERROR: " + newNSName + " already exists in the default library as a " + longNames[elemType] + ".<br>"
@@ -473,7 +444,7 @@ def newNamedSeq():
             validInput = False
             outputStr += "ERROR: '" + character + "' is not allowed in a sequence's name.<br>"
             invalidCharactersName.append(character)
-pjp
+
     #validate sequence
     #length
     if(len(newNSSeq) < 1 or len(newNSSeq) > 99999): #I don't know what limits should be used
@@ -523,7 +494,7 @@ def findNamedSeq():
         #search for it
         #foundNamedSequence = NamedSequence.findNamedSequence(NStype, NSname, NSseq, sessionID)
     try:        #search default first
-        foundNamedSequence = defaultSession.findNamedSequence(NStype, NSname, NSseq)
+        foundNamedSequence = Globals.getDefault().findNamedSequence(NStype, NSname, NSseq)
     except Exception:
         foundNamedSequence = sessionData.findNamedSequence(NStype, NSname, NSseq)
         
@@ -633,7 +604,7 @@ def findPrimers():
     #skip primers if so
     if(skipPrimers):
         outputStr += "Chose not to make primers.<br>"
-        addToSelected(nullPrimerData)
+        addToSelected(Globals.getNullPrimerData())
         
         succeeded = True
         
@@ -716,7 +687,7 @@ def finishDomestication():
             
             #check if it already exists in defaults
             try:
-                defaultSession.findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
+                Globals.getDefault().findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
                 raise AlreadyExistsError("Component already exists as a default component.")
             except (SequenceNotFoundError, ComponentNotFoundError):
                 pass
@@ -783,7 +754,7 @@ def assemble():
     else:
         session["returnURL"] = "index"
        
-    allDefaultNS = defaultSession.getSortedNS()
+    allDefaultNS = Globals.getDefault().getSortedNS()
     allSessionNS = getSessionData().getSortedNS()
     
     #dict of all components
@@ -879,7 +850,7 @@ def processAssembly():
                         
         try:
             try:                    #search defaults
-                foundComp = defaultSession.findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                foundComp = Globals.getDefault().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
                 libraryName = "Default"
             except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
                 foundComp = getSessionData().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
@@ -897,7 +868,7 @@ def processAssembly():
             succeeded = False
     
     #start fullSeq with element 0
-    startEndComps = defaultSession.getStartEndComps()
+    startEndComps = Globals.getDefault().getStartEndComps()
     
     fullSeq = startEndComps[0].getFullSeq()
     
@@ -955,10 +926,10 @@ def displayComps():
     
     sessionData = getSessionData()
     
-    allComps = {"Default": defaultSession.getSortedComps(), 
+    allComps = {"Default": Globals.getDefault().getSortedComps(), 
                     "Personal": sessionData.getSortedComps()}
 
-    allNS = {"Default": defaultSession.getSortedNS(),
+    allNS = {"Default": Globals.getDefault().getSortedNS(),
              "Personal": sessionData.getSortedNS()}
 
     #replace the NamedSequenceDBs with the name and sequence
@@ -999,7 +970,7 @@ def getComponentSequence():
         
         try:
             #defaults first
-            foundComp = defaultSession.findComponent(elemType, name, pos, terminal)
+            foundComp = Globals.getDefault().findComponent(elemType, name, pos, terminal)
         except (SequenceNotFoundError, ComponentNotFoundError):
             foundComp = getSessionData().findComponent(elemType, name, pos, terminal)
                 
@@ -1102,7 +1073,7 @@ def libraryZIP():
     
     if(libraryName == "Default"):
         try:
-            data = makeAllLibraryZIP(defaultSession)
+            data = makeAllLibraryZIP(Globals.getDefault())
             succeeded = True
         except Exception as e:
             errorMessage = str(e)

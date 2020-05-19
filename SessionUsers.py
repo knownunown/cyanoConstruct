@@ -11,8 +11,37 @@ cyanoConstruct sessionUsers file (SessionData and UserData classes)
 from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, UserDataDB
 
 class SessionData:
-    sessionsByID = {}
-    
+    #defaultSession = SessionData.loadDefault()
+    #nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
+    allSessions = {}
+
+    @classmethod
+    def setSession(cls, sessionID, sessionData):
+        if(type(sessionID) != str):
+            raise TypeError("sessionID not a str")
+        if(type(sessionData) != cls):
+            raise TypeError("sessionData not a SessionData")
+
+        cls.allSessions[sessionID] = sessionData
+
+    @classmethod
+    def getSession(cls, sessionID):
+        try:
+            return cls.allSessions[sessionID]
+        except KeyError:
+            return None #or something
+
+    @classmethod
+    def loadDefault(cls):
+        defaultSession = cls("default")
+        try:
+            defaultUser = UserData.load("default") #edit to be load
+        except UserNotFoundError:
+            defaultUser = UserData.new("default")
+        defaultSession.setUser(defaultUser)
+
+        return defaultSession
+
     def __init__(self, newID):
         """Creates an instance of SessionData, which will store:
             sessionID
@@ -30,6 +59,8 @@ class SessionData:
         self.__forZIPDict = {"newCompZIP": None, "assemblyZIP": None, "componentForZIP": None}
         
         self.__libraryName = None
+
+        SessionData.setSession(newID, self)
     
     def setUser(self, userData): #probably rename this
         """Assigns a UserData to the SessionData"""
@@ -632,3 +663,15 @@ class UserData:
         endComp = self.findComponent("Term", "T1", 999, "T")
         
         return (startComp, endComp)
+
+class Globals:
+    defaultSession = SessionData.loadDefault()
+    nullPrimerData = PrimerData.makeNull()
+
+    @classmethod
+    def getDefault(cls):
+        return cls.defaultSession
+
+    @classmethod
+    def getNullPrimerData(cls):
+        return cls.nullPrimerData
