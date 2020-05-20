@@ -8,35 +8,12 @@ Created on Sun May  3 19:58:38 2020
 cyanoConstruct sessionUsers file (SessionData and UserData classes)
 """
 
-from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
-
-class AllSessions:
-    def __init__(self):
-        self.__allSessions = {}
-    
-    def addSession(self, sessionID, sessionData):
-        try:
-            self.__allSessions[sessionID]
-            
-            raise AlreadyExistsError("session already exists")
-        except KeyError:
-            self.__allSessions[sessionID] = sessionData
-    
-    def getSession(self, sessionID):
-        print("allSessions dict")
-        print(self.__allSessions)
-        print("allSessions self")
-        print(self)
-        
-        try:
-            return self.__allSessions[sessionID]
-        except KeyError:
-            return None
+from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, allSessions
 
 class SessionData:
     #defaultSession = SessionData.loadDefault()
     #nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
-    allSessions = AllSessions()
+    #allSessions = AllSessions()
     
     @classmethod
     def setSession(cls, sessionID, sessionData):
@@ -45,14 +22,14 @@ class SessionData:
         if(type(sessionData) != cls):
             raise TypeError("sessionData not a SessionData")
 
-        cls.allSessions.addSession(sessionID, sessionData)
+        allSessions.addSession(sessionID, sessionData)
 
-    @classmethod
+    """@classmethod
     def getSession(cls, sessionID):
         print("allSessions")
         print(cls.allSessions)
         
-        return cls.allSessions.getSession(sessionID)
+        return cls.allSessions.getSession(sessionID)"""
 
     @classmethod
     def loadDefault(cls):
@@ -62,7 +39,9 @@ class SessionData:
         except UserNotFoundError:
             defaultUser = UserData.new("default")
         defaultSession.setUser(defaultUser)
-
+        
+        #allSessions.addSession("default", defaultSession)
+        
         return defaultSession
 
     def __init__(self, newID):

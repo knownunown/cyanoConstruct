@@ -11,7 +11,8 @@ cyanoConstruct routes file
 
 import os
 
-from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session
+from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session, allSessions
+
 
 #flask
 from flask import request, render_template, jsonify, Response, redirect
@@ -56,7 +57,7 @@ def checkSessionID():
 
 def getSessionData():
     sessionID = checkSessionID()
-    return SessionData.getSession(sessionID)
+    return allSessions.getSession(sessionID)
 
 def addToSelected(newSelected):
     sessionData = getSessionData()
