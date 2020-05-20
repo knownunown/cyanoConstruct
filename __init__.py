@@ -8,13 +8,14 @@ Created on Wed Apr  1 21:32:02 2020
 cyanoConstruct __init__ file
 """
 
-from flask import Flask
+from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 
 from cyanoConstruct.config import Config
 
 app = Flask(__name__)
 #login = LoginManager(app)
+Session(app)
 
 app.config.from_object(Config)
 
