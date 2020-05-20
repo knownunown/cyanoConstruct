@@ -52,14 +52,57 @@ def checkSessionID():
         if(printActions):
             print("new sessionID and SessionData: " + newID)
 
-            
+    else:
+        sessionData = allSessions.getSession(session["sessionID"])
+        if(sessionData is None):
+            SessionData(session["sessionID"])
+
+            if(printActions):
+                print("new sessionID and SessionData.")
+
     return session["sessionID"]
 
 def getSessionData():
     sessionID = checkSessionID()
     return allSessions.getSession(sessionID)
 
+def getSelectedNS():
+    try:
+        NSID = session["selectedNS"]
+
+        return NamedSequenceDB.query.get(NSID)
+
+    except KeyError:
+        return None
+
+def getSelectedSD():
+    try:
+        return session["selectedSD"]
+    except KeyError:
+        return None
+
+def getSelectedPD():
+    try:
+        return session["selectedPD"]
+    except KeyError:
+        return None
+
+def getAllSelected():
+    return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
+
 def addToSelected(newSelected):
+    if(type(newSelected) == NamedSequenceDB): #####<----- edit to store an int ID of the NSDB instead
+        session["selectedNS"] = newSelected.getID()
+    elif(type(newSelected) == SpacerData):
+        session["selectedSD"] = newSelected.toJSON()
+    elif(type(newSelected) == PrimerData):
+        session["selectedPD"] = newSelected.toJSON()
+    else:
+        raise TypeError("can't add item of type " + type(newSelected))
+    
+    session.modified = True
+
+def addToSelectedOriginal(newSelected):
     sessionData = getSessionData()
     
     if(type(newSelected) == NamedSequenceDB): #####<----- edit to store an int ID of the NSDB instead
@@ -276,7 +319,6 @@ def loginProcess():
         
         #alter globals
         session["loggedIn"] = True
-        #allSessions[checkSessionID()] = sessionData #####<----- I dislike this
                 
         #indicate success
         outputStr = "Successfully logged in as " + loginData["email"] + ".<br>"
@@ -315,7 +357,6 @@ def registerProcess():
         
         #alter globals
         session["loggedIn"] = True
-        #allSessions[checkSessionID()] = sessionData #####<----- I dislike this
         
         #indicate success
         outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
@@ -638,15 +679,17 @@ def findPrimers():
                 outputStr += "ERROR: Range for melting point must be in range 1-10.<br>"
         
         #is there a spacer selected
-        selectedSpacers = getSessionData().getSelectedSpacers()
+        selectedSpacers = getSelectedSD()
         if(selectedSpacers == None):
             validInput = False
             outputStr += "ERROR: No spacers selected."
         
+        selectedSpacers = SpacerData.fromJSON(selectedSpacers)
+
         #find the primers
         if(validInput):
             try:
-                seqToEvaluate = getSessionData().getSelectedNS().getSeq()
+                seqToEvaluate = getSelectedNS().getSeq() #fix this
                 newPrimerData = PrimerData.makeNew(seqToEvaluate, TMnum, rangeNum)
                 newPrimerData.addSpacerSeqs(selectedSpacers)
                 
@@ -674,7 +717,7 @@ def findPrimers():
 @app.route("/finishDomestication", methods = ["POST"])
 def finishDomestication():
     #validation
-    validInput = getSessionData().getAllSelected()
+    validInput = getAllSelected()
     #validInput = (selectedDict["selectedNamedSequence"] != None and selectedDict["selectedPrimers"] != None and selectedDict["selectedSpacers"] != None)
     succeeded = False
     
@@ -683,9 +726,16 @@ def finishDomestication():
     if(validInput):
         try:
             sessionData = getSessionData()
-            selectedNS = sessionData.getSelectedNS()
-            selectedSpacers = sessionData.getSelectedSpacers()
-            selectedPrimers = sessionData.getSelectedPrimers()
+            selectedNS = getSelectedNS()
+            selectedSpacers = SpacerData.fromJSON(getSelectedSD())
+            selectedPrimers = PrimerData.fromJSON(getSelectedPD())
+
+            print("trying to make a component from:")
+            print(sessionData)
+            print(selectedNS)
+            print(selectedSpacers)
+            print(selectedPrimers)
+            print("\n")
             
             #check if it already exists in defaults
             try:
@@ -722,8 +772,12 @@ def finishDomestication():
             
         except Exception as e:
             outputStr = "ERROR: " + str(e)
+
+    else:
+        outputStr + "ERROR: invalid input."
         
     return jsonify({"output": outputStr, "succeeded": succeeded})
+    
 
 #domestication ZIP file
 @app.route("/domesticationZIPs.zip")
