@@ -10,18 +10,34 @@ cyanoConstruct sessionUsers file (SessionData and UserData classes)
 
 from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, UserDataDB
 
-class NothingClass:
-    pass
+class AllSessions:
+    def __init__():
+        self.__allSessions = ()
+    
+    def addSession(self, sessionID, sessionData):
+        try:
+            self.__allSessions[sessionID]
+            
+            raise AlreadyExistsError("session already exists")
+        except KeyError:
+            self.__allSessions[sessionID] = sessionData
+    
+    def getSession(self, sessionID):
+        print("allSessions dict")
+        print(self.__allSessions)
+        print("allSessions self")
+        print(self)
+        
+        try:
+            return self.__allSessions[sessionID]
+        except KeyError:
+            return None
 
 class SessionData:
     #defaultSession = SessionData.loadDefault()
     #nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
-    allSessions = {}
+    allSessions = AllSessions()
     
-    nothing = NothingClass()
-
-    maxTries = 5
-
     @classmethod
     def setSession(cls, sessionID, sessionData):
         if(type(sessionID) != str):
@@ -29,32 +45,14 @@ class SessionData:
         if(type(sessionData) != cls):
             raise TypeError("sessionData not a SessionData")
 
-        cls.allSessions[sessionID] = sessionData
+        cls.allSessions.addSession(sessionID, sessionData)
 
     @classmethod
     def getSession(cls, sessionID):
         print("allSessions")
         print(cls.allSessions)
-        print("nothing")
-        print(cls.nothing)
         
-        try:
-            return cls.allSessions[sessionID]
-        except KeyError:
-            return cls.tryGetSessionAgain(sessionID, 1) #or something
-
-    @classmethod
-    def tryGetSessionAgain(cls, sessionID, i):
-        print("searching for " + sessionID + " again at iteration " + str(i))
-        print(cls.allSessions)
-
-        if(i >= cls.maxTries):
-            return None
-
-        try:
-            return cls.allSessions[sessionID]
-        except KeyError:
-            return cls.tryGetSessionAgain(sessionID, i + 1)
+        return cls.allSessions.getSession(sessionID)
 
     @classmethod
     def loadDefault(cls):
