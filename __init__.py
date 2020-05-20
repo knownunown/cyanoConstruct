@@ -15,7 +15,6 @@ from cyanoConstruct.config import Config
 
 app = Flask(__name__)
 #login = LoginManager(app)
-Session(app)
 
 app.config.from_object(Config)
 
