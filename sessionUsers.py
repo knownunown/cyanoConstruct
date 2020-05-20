@@ -10,10 +10,15 @@ cyanoConstruct sessionUsers file (SessionData and UserData classes)
 
 from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, UserDataDB
 
+class NothingClass:
+    pass
+
 class SessionData:
     #defaultSession = SessionData.loadDefault()
     #nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
     allSessions = {}
+    
+    nothing = NothingClass()
 
     maxTries = 5
 
@@ -28,8 +33,11 @@ class SessionData:
 
     @classmethod
     def getSession(cls, sessionID):
+        print("allSessions")
         print(cls.allSessions)
-
+        print("nothing")
+        print(cls.nothing)
+        
         try:
             return cls.allSessions[sessionID]
         except KeyError:

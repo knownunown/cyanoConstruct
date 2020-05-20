@@ -11,10 +11,10 @@ cyanoConstruct routes file
 
 import os
 
-from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals
+from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session
 
 #flask
-from flask import request, render_template, jsonify, Response, session, redirect
+from flask import request, render_template, jsonify, Response, redirect
 #import json
 #from jinja2 import Markup
 
