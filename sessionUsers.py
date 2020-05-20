@@ -8,11 +8,11 @@ Created on Sun May  3 19:58:38 2020
 cyanoConstruct sessionUsers file (SessionData and UserData classes)
 """
 
-from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, UserDataDB
+from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
 
 class AllSessions:
-    def __init__():
-        self.__allSessions = ()
+    def __init__(self):
+        self.__allSessions = {}
     
     def addSession(self, sessionID, sessionData):
         try:
