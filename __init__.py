@@ -10,11 +10,12 @@ cyanoConstruct __init__ file
 
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 
 from cyanoConstruct.config import Config
 
 app = Flask(__name__)
-#login = LoginManager(app)
+login = LoginManager(app)
 
 app.config.from_object(Config)
 

@@ -29,6 +29,13 @@ var returnURL = {{ returnURL|tojson }};
 	<label for = "emailLogin">Email</label>
 	<input name = "emailLogin" id = "emailLogin" type = "text">
 
+	<br>
+
+	<label for = "loginRememberMe">Remember me</label>
+	<input name = "loginRememberMe" id = "loginRememberMe" type = "checkbox">
+
+	<br><br>
+
 	<input name = "submitLogin" id = "submitLogin" type = "submit" value = "Log In">
 </form>
 
@@ -36,6 +43,13 @@ var returnURL = {{ returnURL|tojson }};
 <form id = "registrationForm" onsubmit="register()">
 	<label for = "emailRegister">Email</label>
 	<input name = "emailRegister" id = "emailRegister" type = "text">
+
+	<br>
+
+	<label for = "registerRememberMe">Remember me</label>
+	<input name = "registerRememberMe" id = "registerRememberMe" type = "checkbox">
+	
+	<br><br>
 
 	<input name = "submitRegister" id = "submitRegister" type = "submit" value = "Register">
 

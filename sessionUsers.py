@@ -7,8 +7,9 @@ Created on Sun May  3 19:58:38 2020
 
 cyanoConstruct sessionUsers file (SessionData and UserData classes)
 """
-
-from cyanoConstruct import db, NamedSequence, SpacerData, PrimerData, checkType, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, allSessions
+from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
+from cyanoConstruct import NamedSequence, SpacerData, PrimerData, checkType
+from cyanoConstruct import  AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, allSessions
 
 class SessionData:
     #defaultSession = SessionData.loadDefault()
@@ -24,13 +25,6 @@ class SessionData:
 
         allSessions.addSession(sessionID, sessionData)
 
-    """@classmethod
-    def getSession(cls, sessionID):
-        print("allSessions")
-        print(cls.allSessions)
-        
-        return cls.allSessions.getSession(sessionID)"""
-
     @classmethod
     def loadDefault(cls):
         defaultSession = cls("default")
@@ -39,9 +33,7 @@ class SessionData:
         except UserNotFoundError:
             defaultUser = UserData.new("default")
         defaultSession.setUser(defaultUser)
-        
-        #allSessions.addSession("default", defaultSession)
-        
+                
         return defaultSession
 
     def __init__(self, newID):
@@ -264,7 +256,7 @@ class SessionData:
             return self.getUserData().getStartEndComps()
         else:
             raise NotLoggedInError("Not logged in.")
-    
+
 class UserData:
     def __init__(self):
         """Creates an empty UserData. Should not be accessed except through makeNew or load"""
@@ -321,6 +313,22 @@ class UserData:
             newUserData.__entryDB = u
             
             return newUserData
+
+    #things for Flask-Login
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.getEmail()
 
     #getters    
     def getID(self): #potentially superfluous, not currently in use
@@ -665,7 +673,7 @@ class UserData:
         endComp = self.findComponent("Term", "T1", 999, "T")
         
         return (startComp, endComp)
-
+    
 class Globals:
     defaultSession = SessionData.loadDefault()
     nullPrimerData = PrimerData.makeNull()

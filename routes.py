@@ -12,6 +12,7 @@ cyanoConstruct routes file
 import os
 
 from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session, allSessions
+from cyanoConstruct import login, current_user, login_user, logout_user, login_required #import statements are messy
 
 
 #flask
@@ -27,24 +28,38 @@ from datetime import timedelta
 from ast import literal_eval as leval
 from shutil import rmtree, make_archive
 from string import ascii_letters, digits
+from werkzeug.urls import url_parse #for redirect parsing
 
 ##########################################################################################
 #globals
 printActions = True
 ##########################################################################################
 
-def checkLoggedIn():
-    return getSessionData().getLoggedIn()
+@login.user_loader
+def load_user(user_id):
+    try:
+        return UserData.load(user_id)
+    except Exception:
+        return None
 
+login.login_view = "login" #for redirecting if not logged in
+
+######
+
+def checkLoggedIn():
+    return not getSessionData().is_anonymous
+
+"""
 def redirectIfNotLoggedIn():
     if(not checkLoggedIn()):
         return (True, redirect("/login"))
     else:
         return (False, None)
+"""
 
 #sets sessionID if there isn't one
-def checkSessionID():
-    if("sessionID" not in session):
+def checkSessionID():               #####<----- only used for naming folders right now
+    """if("sessionID" not in session):
         newID = uuid1().hex
         session["sessionID"] = newID
         SessionData(newID)
@@ -60,11 +75,15 @@ def checkSessionID():
             if(printActions):
                 print("new sessionID and SessionData.")
 
-    return session["sessionID"]
+    return session["sessionID"]"""
+
+    return uuid1().hex
 
 def getSessionData():
-    sessionID = checkSessionID()
-    return allSessions.getSession(sessionID)
+    #sessionID = checkSessionID()
+    #return allSessions.getSession(sessionID)
+    
+    return current_user
 
 def getSelectedNS():
     try:
@@ -285,105 +304,159 @@ try:
 except AlreadyExistsError:
     pass
 
+##################################     ERRORS     ################################
+##################################################################################
+
+#temp disabled because called on js files
+
+"""
+@app.errorhandler(404)
+def error404(error):
+    print("404 error: " + str(error))
+    return render_template("404.html")
+
+@app.errorhandler(500)
+def error500(error):
+    print("500 eror: " + str(error))
+    #roll back the database somehow, because this is invoked by database errors
+    return render_template("500.html")
+"""
+
 ##################################     LOG IN     ################################
 ##################################################################################
 
 @app.route("/login", methods = ["POST", "GET"])
 def login():
+    #redirect if already logged in
+    if(checkLoggedIn()):
+        return redirect("/index")
+
     #get all "emails" for testing
     allEmails = []
     for user in UserDataDB.query.order_by(UserDataDB.email).all():
         allEmails.append(user.getEmail())
     
     #get the returnURL to use after a successful log in.
-    if("returnURL" in session):
+    """if("returnURL" in session):
         returnURL = session["returnURL"]
     else:
-        returnURL = "index"
+        returnURL = "index"""
+
+    returnURL = request.args.get('next')
+    if(not returnURL or (url_parse(returnURL).netloc != '')):
+        returnURL = "/index"
+
+    print("returnURL " + returnURL)
         
     return render_template("login.html", returnURL = returnURL, allEmails = allEmails, 
-                           loggedIn = getSessionData().getLoggedIn())
+                           loggedIn = checkLoggedIn())
 
 @app.route("/loginProcess", methods = ["POST"])
 def loginProcess():
-    loginData = leval(request.form["loginData"])
-    
-    succeeded = False
+    validInput = False
     outputStr = ""
-        
+    succeeded = False
+
     try:
-        #load the user
-        sessionData = getSessionData()
-        user = UserData.load(loginData["email"])
-        sessionData.setUser(user)
-        
-        #alter globals
-        session["loggedIn"] = True
-                
-        #indicate success
-        outputStr = "Successfully logged in as " + loginData["email"] + ".<br>"
-        succeeded = True
-    except Exception as e:
-        outputStr = "ERROR: " + str(e) + "<br>" #####<----- maybe I shouldn't use .innerHTML with this?
+        loginData = leval(request.form["loginData"])
+        email = loginData["email"]
+
+        if(loginData["remember"] == "true"):
+            remember = True
+        elif(loginData["remember"] == "false"):
+            remember = False
+        else:
+            raise ValueError("invalid remember me")
+
+        validInput = True
+    except Exception:
+        outputStr = "ERROR: could not get valid data from form.<br>"
+    
+    if(validInput):
+        try:
+            #load the user
+            """
+            sessionData = getSessionData()
+            user = UserData.load(loginData["email"])
+            sessionData.setUser(user)
+            
+            #alter globals
+            session["loggedIn"] = True
+            """
+            
+            user = UserData.load(email)
+            
+            login_user(user, remember = remember) #add remember me functionality
+            
+            #indicate success
+            outputStr = "Successfully logged in as " + email + ".<br>"
+            succeeded = True
+        except Exception as e:
+            outputStr = "ERROR: " + str(e) + "<br>" #####<----- maybe I shouldn't use .innerHTML with this?
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
 @app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():
     if("loggedIn" in session):
-        session.pop("loggedIn", False)
-        getSessionData().removeUser()
-        #and all that
-        #some sort of success message
-    else:
-        #already not logged in
-        getSessionData().removeUser() #just in case?
-    
+        session.pop("loggedIn", False) ####<----- keep? or will Flask-Login do this
+        
+    logout_user()
     return redirect("/index")
         
 
 @app.route("/registerProcess", methods = ["POST"])
 def registerProcess():
-    registrationData = leval(request.form["registrationData"])
-    
-    succeeded = False
+    validInput = False
     outputStr = ""
+    succeeded = False
     
     try:
-        #create UserData
-        sessionData = getSessionData()
-        user = UserData.new(registrationData["email"])
-        sessionData.setUser(user)
+        registrationData = leval(request.form["registrationData"])
+        email = registrationData["email"]
+        if(registrationData["remember"] == "true"):
+            remember = True
+        elif(registrationData["remember"] == "false"):
+            remember = False
+        else:
+            raise ValueError("invalid remember me")
+
+        validInput = True
         
-        #alter globals
-        session["loggedIn"] = True
-        
-        #indicate success
-        outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
-        succeeded = True
-    except Exception as e:
-        outputStr += "ERROR: " + str(e) + "<br>"
+    except Exception:
+        outputStr = "ERROR: could not get valid data from form.<br>"
     
-    return jsonify({"output": outputStr, "succeeded": succeeded})
+    if(validInput):    
+        try:
+            #create UserData
+            #sessionData = getSessionData()
+            user = UserData.new(email)
+            login_user(user, remember = remember)
+            #sessionData.setUser(user)
+            
+            #alter globals
+            session["loggedIn"] = True
+            
+            #indicate success
+            outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
+            succeeded = True
+        except Exception as e:
+            outputStr += "ERROR: " + str(e) + "<br>"
+        
+        return jsonify({"output": outputStr, "succeeded": succeeded})
     
 
 ################################     USER PAGE     ################################
 ###################################################################################
     
 @app.route("/account", methods = ["POST", "GET"])
+@login_required
 def accountInfo():
-    shouldRedirect, retValue = redirectIfNotLoggedIn()
-    if(shouldRedirect):
-        session["returnURL"] = "account"
-        return retValue
-    else:
-        session["returnURL"] = "index"
-
     sessionData = getSessionData()
     email = sessionData.getEmail()
     
     return render_template("account.html", email = email,
-                           loggedIn = sessionData.getLoggedIn())
+                           loggedIn = checkLoggedIn())
 
 
 ##############################     DOMESTICATION     ##############################
@@ -391,13 +464,8 @@ def accountInfo():
 
 #the page for domestication
 @app.route("/domesticate", methods = ["POST", "GET"], endpoint = "domesticate")
+@login_required
 def domesticate():
-    shouldRedirect, retValue = redirectIfNotLoggedIn()
-    if(shouldRedirect):
-        session["returnURL"] = "domesticate"
-        return retValue
-    else:
-        session["returnURL"] = "index"
     
     sessionData = getSessionData()
         
@@ -427,7 +495,7 @@ def domesticate():
     
     return render_template("domesticate.html", namedSequencesNames = NSNamesJSONifiable,
                            namedSequencesSequences = NSSequencesJSONifiable,
-                           loggedIn = getSessionData().getLoggedIn())
+                           loggedIn = checkLoggedIn())
 
 #make a new NamedSequence
 @app.route("/newNamedSeq", methods = ["POST"])
@@ -786,10 +854,10 @@ def domesticationZIPs():
         data = makeZIP(getSessionData().getNewCompZIP())
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
     
     if(data == None):
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
 
 
     return Response(data, headers = {"Content-Type": "application/zip",
@@ -802,14 +870,8 @@ def domesticationZIPs():
     
 #the page for assembly
 @app.route("/assemble", methods = ["POST", "GET"])
-def assemble():
-    shouldRedirect, retValue = redirectIfNotLoggedIn()
-    if(shouldRedirect):
-        session["returnURL"] = "assemble"
-        return retValue
-    else:
-        session["returnURL"] = "index"
-       
+@login_required
+def assemble():       
     allDefaultNS = Globals.getDefault().getSortedNS()
     allSessionNS = getSessionData().getSortedNS()
     
@@ -856,7 +918,7 @@ def assemble():
                            fidelityLimits = fidelityLimits,
                            availableElements = allAvailableNames, 
                            posTermComb = posTerminalComb,
-                           loggedIn = getSessionData().getLoggedIn())
+                           loggedIn = checkLoggedIn())
 
 #process assembly
 @app.route("/processAssembly", methods = ["POST"])
@@ -959,10 +1021,10 @@ def assemblyZIP():
         data = makeZIP(getSessionData().getAssemblyZIP()) #validate it first?
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
     
     if(data == None):
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
     
 
     return Response(data, headers = {"Content-Type": "application/zip",
@@ -972,14 +1034,8 @@ def assemblyZIP():
 ##############################     COMPONENT LIST     ##############################
 #components page
 @app.route("/components", methods = ["GET"])
-def displayComps():
-    shouldRedirect, retValue = redirectIfNotLoggedIn()
-    if(shouldRedirect):
-        session["returnURL"] = "components"
-        return retValue
-    else:
-        session["returnURL"] = "index"
-    
+@login_required
+def displayComps():    
     sessionData = getSessionData()
     
     allComps = {"Default": Globals.getDefault().getSortedComps(), 
@@ -1001,7 +1057,7 @@ def displayComps():
     longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
     return render_template("components.html", allComps = allComps, allNS = allNS,
                            longNames = longNames, longNamesSingular = longNamesSingular,
-                           loggedIn = getSessionData().getLoggedIn())
+                           loggedIn = checkLoggedIn())
 
 #find the component to make ZIP file for
 @app.route("/locateComponentForZIP", methods = ["POST"])
@@ -1049,10 +1105,10 @@ def getComponentZIPs():
         data = makeZIP(getSessionData().getComponentForZIP())
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
     
     if(data == None):
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn())
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
     
     else:
         return Response(data, headers = {"Content-Type": "application/zip",
@@ -1145,7 +1201,7 @@ def libraryZIP():
                                      "Condent-Disposition": "attachment; filename='library.zip';"})
     else:
         print(errorMessage)
-        return render_template("noSeq.html", loggedIn = getSessionData().getLoggedIn()) #####<----- I need something better than this
+        return render_template("noSeq.html", loggedIn = checkLoggedIn()) #####<----- I need something better than this
 
 
 ################################################################################
@@ -1157,7 +1213,7 @@ def libraryZIP():
 @app.route("/", methods = ["GET", "POST"], endpoint = "index")
 def index():    
     sessionID = checkSessionID()
-    return render_template("index.html", sessionID = sessionID, loggedIn = getSessionData().getLoggedIn())
+    return render_template("index.html", sessionID = sessionID, loggedIn = checkLoggedIn())
 
 #sets session timeout
 @app.before_request

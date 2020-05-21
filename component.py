@@ -72,6 +72,27 @@ class NamedSequence:
         self.__DBid = newID
         self.__inDatabase = True
         
+    #json stuff
+    def toJSON(self):
+        return vars(self)
+    
+    @classmethod
+    def fromJSON(cls, JSONDict):
+        newNS = cls()
+        
+        prefix = "_NamedSequence__" #used to get private fields
+        
+        try:
+            newNS.__type = JSONDict[prefix + "type"]
+            newNS.__name = JSONDict[prefix + "name"]
+            newNS.__seq = JSONDict[prefix + "seq"]
+            newNS.__nameID = int(JSONDict[prefix + "nameID"])
+            newNS.__inDatabase = bool(JSONDict[prefix + "inDatabase"])
+        except KeyError:
+            raise Exception("Can't create a NamedSequence from this JSONDict.")
+        
+        return newNS
+        
     #other stuff
         
     def __str__(self):
@@ -214,7 +235,38 @@ class SpacerData:
         newSpacerData.__inDatabase = True
         
         return newSpacerData
+    
+    #json stuff
+    def toJSON(self):
+        return vars(self)
+    
+    @classmethod
+    def fromJSON(cls, JSONDict):
+        newSpacerData = cls()
         
+        print("making a spacerData from:")
+        print(JSONDict)
+        
+        prefix = "_SpacerData__" #used to get private fields
+        
+        try:
+            newSpacerData.__spacerLeft = JSONDict[prefix + "spacerLeft"]
+            newSpacerData.__spacerRight = JSONDict[prefix + "spacerRight"]
+            newSpacerData.__isTerminal = JSONDict[prefix + "isTerminal"]
+            newSpacerData.__terminalLetter = JSONDict[prefix + "terminalLetter"]
+            newSpacerData.__position = JSONDict[prefix + "position"]
+            newSpacerData.__leftNN = JSONDict[prefix + "leftNN"]
+            newSpacerData.__rightNN = JSONDict[prefix + "rightNN"]
+            newSpacerData.__fullSeqLeft = JSONDict[prefix + "fullSeqLeft"]
+            newSpacerData.__fullSeqRight = JSONDict[prefix + "fullSeqRight"]
+            
+            newSpacerData.__inDatabase = JSONDict[prefix + "inDatabase"]
+        except KeyError:
+            raise Exception("Can't create a NamedSequence from this JSONDict.")
+        
+        return newSpacerData
+
+    #setters?
     def setDBid(self, newID):
         if(type(newID) != int):
             raise TypeError("newID not an int")
@@ -342,6 +394,32 @@ class PrimerData:
         self.__DBid = newID
         self.__inDatabase = True
 
+    #json stuff
+    def toJSON(self):
+        return vars(self)
+
+    @classmethod
+    def fromJSON(cls, JSONDict):
+        newPrimerData = cls()
+        
+        prefix = "_PrimerData__" #used to get private fields
+        
+        #obviously, will want some kind of type checking of the variables
+        
+        try:
+            newPrimerData.__primersFound = JSONDict[prefix + "primersFound"]
+            newPrimerData.__seqLeft = JSONDict[prefix + "seqLeft"]
+            newPrimerData.__GCleft = JSONDict[prefix + "GCleft"]
+            newPrimerData.__TMleft = JSONDict[prefix + "TMleft"]
+            newPrimerData.__seqRight = JSONDict[prefix + "seqRight"]
+            newPrimerData.__GCright = JSONDict[prefix + "GCright"]
+            newPrimerData.__TMright = JSONDict[prefix + "TMright"]
+
+            newPrimerData.__inDatabase = JSONDict[prefix + "inDatabase"]
+        except KeyError:
+            raise Exception("Can't create a PrimerData from this JSONDict.")
+        
+        return newPrimerData
 
     @classmethod
     def makeNull(cls):
