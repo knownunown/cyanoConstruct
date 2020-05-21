@@ -11,7 +11,7 @@ cyanoConstruct routes file
 
 import os
 
-from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session, allSessions
+from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session
 from cyanoConstruct import login, current_user, login_user, logout_user, login_required #import statements are messy
 
 

@@ -27,8 +27,6 @@ from cyanoConstruct.enumsExceptions import AlreadyExistsError, SequenceMismatchE
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
 db.create_all()
 from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, Component, checkType
-from cyanoConstruct.allSessions import AllSessions
-allSessions = AllSessions()
 from cyanoConstruct.sessionUsers import SessionData, UserData, Globals
 
 from cyanoConstruct.routes import *

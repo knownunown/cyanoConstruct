@@ -16,7 +16,7 @@ class UserDataDB(db.Model):
     __tablename__ = "UserData"
     
     id = db.Column(db.Integer, primary_key = True)
-    email = db.Column(db.String(120), unique = True)
+    email = db.Column(db.String(254), unique = True)
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
     nextNSidGOI = db.Column(db.Integer)
