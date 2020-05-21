@@ -11,6 +11,7 @@ cyanoConstruct __init__ file
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask_migrate import Migrate
 
 from cyanoConstruct.config import Config
 
@@ -20,7 +21,7 @@ login = LoginManager(app)
 app.config.from_object(Config)
 
 db = SQLAlchemy(app, session_options = {"expire_on_commit": False})
-#migrate = Migrate(app, db)
+migrate = Migrate(app, db)
 
 from cyanoConstruct.enumsExceptions import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
@@ -33,4 +34,4 @@ from cyanoConstruct.sessionUsers import SessionData, UserData, Globals
 from cyanoConstruct.routes import *
 
 
-__version__ = "0.3"
+__version__ = "0.3.1"

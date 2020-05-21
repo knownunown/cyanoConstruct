@@ -345,8 +345,6 @@ def login():
     returnURL = request.args.get('next')
     if(not returnURL or (url_parse(returnURL).netloc != '')):
         returnURL = "/index"
-
-    print("returnURL " + returnURL)
         
     return render_template("login.html", returnURL = returnURL, allEmails = allEmails, 
                            loggedIn = checkLoggedIn())

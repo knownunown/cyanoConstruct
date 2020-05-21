@@ -32,6 +32,9 @@ function register(){
 		})
 	.done(function(data){
 		document.getElementById("loginOutput").innerHTML = data.output;
+		if(data.succeeded){
+			document.getElementById("returnURL").innerHTML = "<a href = '" + returnURL + "'>Go to " + returnURL.substr(1) + " page.</a>";
+		}
 	});
 	event.preventDefault();
 
