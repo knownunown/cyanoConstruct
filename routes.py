@@ -49,40 +49,11 @@ login.login_view = "login" #for redirecting if not logged in
 def checkLoggedIn():
     return not getSessionData().is_anonymous
 
-"""
-def redirectIfNotLoggedIn():
-    if(not checkLoggedIn()):
-        return (True, redirect("/login"))
-    else:
-        return (False, None)
-"""
-
 #sets sessionID if there isn't one
 def checkSessionID():               #####<----- only used for naming folders right now
-    """if("sessionID" not in session):
-        newID = uuid1().hex
-        session["sessionID"] = newID
-        SessionData(newID)
-
-        if(printActions):
-            print("new sessionID and SessionData: " + newID)
-
-    else:
-        sessionData = allSessions.getSession(session["sessionID"])
-        if(sessionData is None):
-            SessionData(session["sessionID"])
-
-            if(printActions):
-                print("new sessionID and SessionData.")
-
-    return session["sessionID"]"""
-
     return uuid1().hex
 
 def getSessionData():
-    #sessionID = checkSessionID()
-    #return allSessions.getSession(sessionID)
-    
     return current_user
 
 def getSelectedNS():

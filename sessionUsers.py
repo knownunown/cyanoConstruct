@@ -9,13 +9,9 @@ cyanoConstruct sessionUsers file (SessionData and UserData classes)
 """
 from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
 from cyanoConstruct import NamedSequence, SpacerData, PrimerData, checkType
-from cyanoConstruct import  AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError, allSessions
+from cyanoConstruct import  AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
 
 class SessionData:
-    #defaultSession = SessionData.loadDefault()
-    #nullPrimerData = PrimerData.makeNull() #the PrimerData used if making primers is skipped
-    #allSessions = AllSessions()
-    
     @classmethod
     def setSession(cls, sessionID, sessionData):
         if(type(sessionID) != str):
@@ -23,7 +19,7 @@ class SessionData:
         if(type(sessionData) != cls):
             raise TypeError("sessionData not a SessionData")
 
-        allSessions.addSession(sessionID, sessionData)
+        #allSessions.addSession(sessionID, sessionData)
 
     @classmethod
     def loadDefault(cls):
