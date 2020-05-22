@@ -11,7 +11,7 @@ cyanoConstruct routes file
 
 import os
 
-from cyanoConstruct import app, SessionData, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, Globals, session
+from cyanoConstruct import app, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, ComponentDB, Globals, session
 from cyanoConstruct import login, current_user, login_user, logout_user, login_required #import statements are messy
 
 
@@ -104,6 +104,21 @@ def addToSelectedOriginal(newSelected):
     else:
         raise TypeError("can't add item of type " + type(newSelected))
 
+def setNewCompForZIP(id):
+    if(type(id) != int):
+        raise TypeError("id not an int")
+    else:
+        session["newCompID"] = id
+
+def setOldCompForZIP(id):
+    if(type(id) != int):
+        raise TypeError("id not an int")
+    else:
+        session["oldCompID"] = id
+
+def saveAssemblyZIP(): #how do handle this?
+    pass
+
 def addToZIP(newFile, key):
     if(type(newFile) != dict):
         raise TypeError("newFile not a dict")
@@ -119,13 +134,13 @@ def addToZIP(newFile, key):
     else:
         raise ValueError("key not valid")
 
-def makeAllLibraryZIP(session):
-    if(type(session) != SessionData):
-        raise TypeError("session not a SessionData")
+def makeAllLibraryZIP(user):
+    if(type(user) != UserData):
+        raise TypeError("user not a UserData")
 
     filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
     sessionDir = os.path.join(filesDirPath, checkSessionID())
-    libraryDir = os.path.join(sessionDir, session.getEmail() + "Library")
+    libraryDir = os.path.join(sessionDir, user.getEmail() + "Library")
 
     try:
         os.mkdir(sessionDir)
@@ -137,7 +152,7 @@ def makeAllLibraryZIP(session):
         print("MADE DIRECTORY: " + libraryDir)
         
     #great now what?
-    sortedNS = session.getSortedNS()
+    sortedNS = user.getSortedNS()
     for typeKey in sortedNS:
         if(sortedNS[typeKey] == []): #do nothing if the folder would be empty
             continue
@@ -184,7 +199,7 @@ def makeAllLibraryZIP(session):
     rmtree(sessionDir)
 
     if(printActions):
-        print("FINISHED CREATING LIBRARY ZIP FOR SESSION " + checkSessionID())
+        print("FINISHED CREATING LIBRARY ZIP FOR USER " + user.getEmail())
     
     return data
 
@@ -803,8 +818,9 @@ def finishDomestication():
             outputStr = "<a target = '_blank' href = '/components#" + libraryName + newComponent.getNameID() + "'>" + newComponent.getNameID() + "</a> created."
             
             #set it as the tempComp (for the ZIP file)
-            addToZIP(newComponent.getCompZIP(), "newCompZIP")
-            
+            #addToZIP(newComponent.getCompZIP(), "newCompZIP")
+            setNewCompForZIP(newComponent.getID());
+
             succeeded = True
             
         except Exception as e:
@@ -820,7 +836,10 @@ def finishDomestication():
 @app.route("/domesticationZIPs.zip")
 def domesticationZIPs():
     try:
-        data = makeZIP(getSessionData().getNewCompZIP())
+        compZIP = ComponentDB.query.get(session["newCompID"]).getCompZIP()
+
+        data = makeZIP(compZIP)
+
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
         return render_template("noSeq.html", loggedIn = checkLoggedIn())
@@ -944,6 +963,79 @@ def processAssembly():
                 libraryName = "Personal"
                 
             #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
+            compsList.append(foundComp.getID())
+            #libraryName = "Personal"
+            outputStr += ("Found: <a target = '_blank' href ='/components#" + libraryName + foundComp.getNameID() + "'>" + 
+                          foundComp.getNameID() + "</a><br>")
+        except (SequenceNotFoundError, ComponentNotFoundError):
+            outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
+                          "<br>Position: " + str(comp["position"]) + "<br>Terminal letter: " + terminalLetter + "<br>")
+            
+            succeeded = False
+    
+    #proceed if found everything
+    if(succeeded):
+        session["assemblyCompIDs"] = compsList
+        outputStr += "Full sequence can be downloaded."
+        
+    else:
+        outputStr += "Errors in finding components are often due to not having a component with the right terminal letter.<br>Sequence not created."
+    
+    return jsonify({"output": outputStr, "succeeded": succeeded})
+
+def processAssembly2(): #why yes I did change this entirely
+    #get info.
+    formData = request.form["assemblyData"]
+    dataDict = leval(formData)
+    
+    #Validation where?
+    
+    if(printActions):
+        print("ASSEMBLING SEQUENCE FROM:\n" + str(dataDict))
+    
+    #remove from the dict. the info. that doesn't need to be processed
+    del dataDict["fidelity"]
+    del dataDict["elemName0"]
+    del dataDict["elemType0"]
+    del dataDict["elemName999"]
+    del dataDict["elemType999"]
+    
+    #go through the dataDict, creating an array of all elements with the format:
+    #{'position': position, 'type': elemType, 'name': elemName}
+    gatheredElements = []
+    for key in dataDict.keys():
+        number = int(key[8:])
+        
+        if number > len(gatheredElements): #assumes the elements are in order
+            gatheredElements.append({"position": number}) #add a new element
+            
+        if(key[0:8] == "elemType"):
+            gatheredElements[number - 1]["type"] = dataDict[key]
+            
+        elif(key[0:8] == "elemName"):
+            gatheredElements[number - 1]["name"] = dataDict[key]
+
+    outputStr = ""
+
+    succeeded = True
+    compsList = []
+
+    #find the components of gatheredElements
+    for comp in gatheredElements:
+        if(comp["position"] < len(dataDict) / 2):
+            terminalLetter = "M"
+        else:
+            terminalLetter = "L"
+                        
+        try:
+            try:                    #search defaults
+                foundComp = Globals.getDefault().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                libraryName = "Default"
+            except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
+                foundComp = getSessionData().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                libraryName = "Personal"
+                
+            #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
             compsList.append(foundComp)
             #libraryName = "Personal"
             outputStr += ("Found: <a target = '_blank' href ='/components#" + libraryName + foundComp.getNameID() + "'>" + 
@@ -985,7 +1077,40 @@ def processAssembly():
 
 #get the zip for the assembled sequence
 @app.route("/assembledSequence.zip")
-def assemblyZIP():    
+def assemblyZIP():
+    try:
+        compsList = session["assemblyCompIDs"]
+    except KeyError:
+        print("FAILED TO CREATE ZIP BECAUSE NO ASSEMBLED SEQUENCE")
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+
+    try:
+        startEndComps = Globals.getDefault().getStartEndComps()
+
+        #start with element 0
+        fullSeq = ">CyanoConstruct sequence\n" + startEndComps[0].getFullSeq()
+
+        #add the sequence of the component
+        for compID in compsList:
+            comp = ComponentDB.query.get(compID)
+            fullSeq += comp.getFullSeq()
+        
+        #finish fullSeq with element T
+        fullSeq += startEndComps[1].getFullSeq()
+
+        data = makeZIP({"fullSequence.fasta": fullSeq})
+
+    except Exception as e:
+        print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+    
+    if(data == None):
+        return render_template("noSeq.html", loggedIn = checkLoggedIn())    
+
+    return Response(data, headers = {"Content-Type": "application/zip",
+                                     "Condent-Disposition": "attachment; filename='sequences.zip';"})
+
+def assemblyZIP2():
     try:
         data = makeZIP(getSessionData().getAssemblyZIP()) #validate it first?
     except Exception as e:
@@ -1054,8 +1179,8 @@ def getComponentSequence():
             foundComp = Globals.getDefault().findComponent(elemType, name, pos, terminal)
         except (SequenceNotFoundError, ComponentNotFoundError):
             foundComp = getSessionData().findComponent(elemType, name, pos, terminal)
-                
-        addToZIP(foundComp.getCompZIP(), "componentForZIP")
+        
+        setOldCompForZIP(foundComp.getID())        
         
         succeeded = True
         
@@ -1071,7 +1196,10 @@ def getComponentZIPs():
     #sessionID = checkSessionID()
 
     try:
-        data = makeZIP(getSessionData().getComponentForZIP())
+        compZIP = ComponentDB.query.get(session["oldCompID"]).getCompZIP()
+
+        data = makeZIP(compZIP)
+
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
         return render_template("noSeq.html", loggedIn = checkLoggedIn())
@@ -1136,11 +1264,13 @@ def downloadLibrary():
     succeeded = False    
     
     if(libraryName == "Default"):
-        getSessionData().setLibraryName("Default")
+        session["libraryName"] = "Default"
+
         succeeded = True
         errorMessage = ""
     elif(libraryName == "Personal"):
-        getSessionData().setLibraryName("Personal")
+        session["libraryName"] = "Personal"
+
         succeeded = True
         errorMessage = ""
     else:
@@ -1150,20 +1280,27 @@ def downloadLibrary():
         
 @app.route("/library.zip")
 def libraryZIP():
-    libraryName = getSessionData().getLibraryName()
-    
-    if(libraryName == "Default"):
-        try:
-            data = makeAllLibraryZIP(Globals.getDefault())
-            succeeded = True
-        except Exception as e:
-            errorMessage = str(e)
-    elif(libraryName == "Personal"):
-        try:
-            data = makeAllLibraryZIP(getSessionData())
-            succeeded = True
-        except Exception as e:
-            errorMessage = str(e)
+    succeeded = False
+    try:
+        libraryName = session["libraryName"]
+
+        if(libraryName == "Default"):
+            try:
+                data = makeAllLibraryZIP(Globals.getDefault())
+                succeeded = True
+            except Exception as e:
+                errorMessage = str(e)
+        elif(libraryName == "Personal"):
+            try:
+                data = makeAllLibraryZIP(getSessionData())
+                succeeded = True
+            except Exception as e:
+                errorMessage = str(e)
+
+    except KeyError:
+        succeeded = False
+        errorMessage = "Library not found."
+
     
     if(succeeded):
         return Response(data, headers = {"Content-Type": "application/zip",
@@ -1182,7 +1319,14 @@ def libraryZIP():
 @app.route("/", methods = ["GET", "POST"], endpoint = "index")
 def index():    
     sessionID = checkSessionID()
-    return render_template("index.html", sessionID = sessionID, loggedIn = checkLoggedIn())
+
+    if(checkLoggedIn()):
+        logInMessage = "Logged in as: " + current_user.getEmail() + "."
+    else:
+        logInMessage = "Not logged in."
+
+
+    return render_template("index.html", logInMessage = logInMessage, loggedIn = checkLoggedIn())
 
 #sets session timeout
 @app.before_request

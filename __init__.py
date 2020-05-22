@@ -27,9 +27,9 @@ from cyanoConstruct.enumsExceptions import AlreadyExistsError, SequenceMismatchE
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
 db.create_all()
 from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, Component, checkType
-from cyanoConstruct.sessionUsers import SessionData, UserData, Globals
+from cyanoConstruct.sessionUsers import UserData, Globals
 
 from cyanoConstruct.routes import *
 
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
