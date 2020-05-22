@@ -900,6 +900,7 @@ def processAssembly():
     del dataDict["elemType0"]
     del dataDict["elemName999"]
     del dataDict["elemType999"]
+    del dataDict["backbone"]
     
     #go through the dataDict, creating an array of all elements with the format:
     #{'position': position, 'type': elemType, 'name': elemName}

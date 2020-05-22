@@ -14,6 +14,73 @@
 		return false;
 	}
 </script>
+
+<style>
+#longOuter {
+	overflow: auto;
+	height: 60px;
+	border: 2px inset black;
+	padding: 5px 0px;
+}
+
+#longDiagram {
+	position: relative;
+	white-space: nowrap;
+	display: inline-block;
+}
+
+#longDiagram div {
+	display: inline-block;
+	font-family: "Courier New", Courier, monospace;
+	border: 1px solid black;
+	margin: 0px 5px;
+	padding: 2px;
+}
+
+#backLine {
+	position: absolute;
+	top: 14px;
+	left: 0;
+	z-index: -100;
+	height: 2px;
+	width: 100%;
+	background: black;
+}
+
+.component {
+	background: rgba(0,0,0,0.2);
+}
+
+.enzymeRecog {
+	background: cornflowerblue;
+}
+
+.NN {
+	background: bisque;
+}
+
+.spacer {
+	background: violet;
+}
+
+.sequence {
+	background: lightgreen;
+}
+
+#diagramLegend {
+	border: 2px solid black;
+	overflow: auto;
+}
+
+#diagramLegend div {
+	display: inline-block;
+	font-family: "Courier New", Courier, monospace;
+	border: 1px solid black;
+	margin: 5px 5px;
+	padding: 2px;
+}
+
+</style>
 {% endblock %}
 
 {% block content %}
@@ -21,11 +88,26 @@
 
 <p>{{ logInMessage }}</p>
 
-<br><hr><br>
+<hr>
 
-<p>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tempus quam dictum, finibus augue vel, faucibus enim. Aliquam nibh mauris, bibendum at condimentum a, rutrum in metus. Sed at euismod neque. Aliquam dapibus ex faucibus tincidunt mattis. Fusce lobortis tellus eu nunc consequat, id aliquam tortor ornare. Aliquam non auctor tellus. Aliquam felis dui, maximus vitae hendrerit a, porttitor et ante. Ut ut orci at ipsum eleifend auctor. Nullam at scelerisque lacus. Donec imperdiet est eu odio malesuada elementum hendrerit nec tortor.
-<br><br>
-Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam vel massa eu nunc mattis convallis in id felis. Ut commodo eget leo non pulvinar. Morbi semper sem in laoreet finibus. In ac cursus risus, pulvinar suscipit mi. Phasellus convallis sit amet dui ut cursus. Suspendisse at felis velit. Donec eleifend ipsum eu turpis feugiat convallis. In hac habitasse platea dictumst. Aliquam ornare accumsan condimentum. Vestibulum pulvinar, libero luctus condimentum sollicitudin, erat libero imperdiet metus, a iaculis diam leo eget elit. Quisque pulvinar vestibulum vehicula. Curabitur ipsum leo, ultrices vel arcu ac, aliquet lacinia ipsum. Proin vestibulum iaculis felis at pulvinar. Aliquam in vulputate ex, ut elementum enim. Integer nec lectus sapien. 
-</p>
+<p>Theoretical layout of components & their respective parts: (using spacers TAGA, GATA, ATTA, and CTAA)</p>
+
+<div id = "longOuter">
+	<div id = "longDiagram">
+		<div id = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+		<div class = "component"><div class = "spacer">TAGA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT A SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div><div class = "spacer">GATA</div></div>
+		<div class = "component"><div class = "spacer">GATA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT B SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div><div class = "spacer">ATTA</div></div>
+		<div class = "component"><div class = "spacer">ATTA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT C SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div><div class = "spacer">CTAA</div></div>
+	</div>
+</div>
+
+<p>Legend</p>
+
+<div id = "diagramLegend">
+	<div class = "spacer">Spacer</div>
+	<div class = "NN">Randomly decided nucleotides</div>
+	<div class = "enzymeRecog">Enzyme recognition site</div>
+	<div class = "sequence">Component sequence</div>
+</div>
+
 {% endblock %}
