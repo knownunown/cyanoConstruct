@@ -117,9 +117,11 @@ function newNS(){
 		//only can proceed if successfully created
 		if(data.succeeded){
 			document.getElementById("NSfinish").disabled = false;
+			document.getElementById("newNSsubmit").disabled = true;
 		}
 		else{
 			document.getElementById("NSfinish").disabled = true;			
+			document.getElementById("newNSsubmit").disabled = false;
 		}
 	});
 	event.preventDefault();
@@ -358,7 +360,7 @@ function downloadZIPFile(){
 
 		window.location.href = "/domesticationZIPs.zip?id=" + newID.toString();
 		event.preventDefault();
-		
+
 		document.getElementById("downloadMessage").textContent = "Downloaded.";
 	}
 	else{
