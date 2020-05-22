@@ -4,9 +4,9 @@
 {% block pageName %}Components{% endblock %}
 
 {% block headContent %}
-	<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/componentsStyle.css') }}">
+	<link rel = "stylesheet" type = "text/css" href = "/static/styles/componentsStyle.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
-	<script src = "{{ url_for('static',filename='js/componentJS.js') }}" ></script>
+	<script src = "/static/js/componentJS.js" ></script>
 {% endblock %}
 
 {% block componentsClass %}active{% endblock %}
