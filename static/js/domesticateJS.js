@@ -1,5 +1,7 @@
 var submitted = false;
 
+var newID = -1;
+
 //smooth scrolling
 function scrollToId(id){
 	document.getElementById(id).scrollIntoView({block: "start", inline: "start", behavior: "smooth"})
@@ -322,6 +324,7 @@ function createComponent(){
 		if(data.succeeded){
 			//document.getElementById("primersFinish").disabled = false;
 			submitted = true;
+			newID = data.newID;
 
 			document.getElementById("createSubmit").disabled = true;
 			document.getElementById("downloadSeqs").disabled = false;
@@ -350,10 +353,12 @@ function goBackFinish(){
 }
 
 function downloadZIPFile(){
-	if(submitted){
+	if(submitted && (newID != -1)){
 		document.getElementById("downloadMessage").textContent = "Preparing files...";
-		window.location.href = "/domesticationZIPs.zip";
+
+		window.location.href = "/domesticationZIPs.zip?id=" + newID.toString();
 		event.preventDefault();
+		
 		document.getElementById("downloadMessage").textContent = "Downloaded.";
 	}
 	else{

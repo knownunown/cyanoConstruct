@@ -35,13 +35,6 @@ function bodyOnload(){
 	if(window.location.hash != ""){
 		var contentID = window.location.hash.substring(1) + "Data";
 
-
-		//it doesn't work because instead of returning null, it just aborts the script
-		/*if(document.getElementByID(contentID) == null){
-			loadNormal();
-			return;
-		}*/
-
 		document.getElementById(contentID).parentNode.style.display = "block";
 		document.getElementById(contentID).style.display = "block";
 
@@ -61,22 +54,24 @@ function bodyOnload(){
 	return false;
 }
 
-function downloadComponentSequence(elemType, name, pos, terminal){
-	var componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
+function downloadComponentSequence(id){
+	//var componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
 
-	$.ajax({
+	/*$.ajax({
 		data : {component: componentInfo},
 		type : 'POST',
 		url : '/locateComponentForZIP'
 		})
 	.done(function(data){
 		if(data.succeeded){
-			window.location.href = "/componentZIP.zip";
+			window.location.href = "/componentZIP.zip?id=help";
 		}
 
 	});
-	event.preventDefault();
+	event.preventDefault();*/
 
+
+	window.location.href = "/componentZIP.zip?id=" + id;
 
 	return false;
 }

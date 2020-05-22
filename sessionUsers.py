@@ -10,6 +10,7 @@ cyanoConstruct sessionUsers file (SessionData and UserData classes)
 from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
 from cyanoConstruct import NamedSequence, SpacerData, PrimerData, checkType
 from cyanoConstruct import  AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
+from time import time
 
 class UserData:
     def __init__(self):
@@ -107,10 +108,12 @@ class UserData:
         return self.getAllCompsQuery().all()
         
     def getSortedNS(self):
+        #the use of order_by is questionable (read: likely unnecessary), but not deeply detrimental
         allPr = self.getAllNSQuery().filter_by(elemType = "Pr").order_by(NamedSequenceDB.nameID.asc()).all()
         allRBS = self.getAllNSQuery().filter_by(elemType = "RBS").order_by(NamedSequenceDB.nameID.asc()).all()
         allGOI = self.getAllNSQuery().filter_by(elemType = "GOI").order_by(NamedSequenceDB.nameID.asc()).all()
         allTerm = self.getAllNSQuery().filter_by(elemType = "Term").order_by(NamedSequenceDB.nameID.asc()).all()
+
         return {"Pr": allPr, "RBS": allRBS, "GOI": allGOI, "Term": allTerm}
     
     def getSortedComps(self):
@@ -132,6 +135,26 @@ class UserData:
             retDict[nsGroupKey] = typeRow
 
         return retDict
+    
+    def getSortedNSandComps(self):
+        allNS = self.getSortedNS()
+
+        retDict = {}
+        
+        allComps = self.getAllCompsQuery()
+        
+        for nsGroupKey in allNS:
+            typeRow = {}
+            for ns in allNS[nsGroupKey]:
+                
+                #is this efficient? I don't know
+                sortedComps = allComps.filter_by(namedSequence_id = ns.getID()).all()
+                sortedComps.sort()
+                typeRow[ns.getName()] = sortedComps
+                
+            retDict[nsGroupKey] = typeRow
+
+        return (allNS, retDict)
     
     def findNamedSequence(self, NStype, NSname, NSseq):
         """Searches UserDataDB for named sequence with specifications"""

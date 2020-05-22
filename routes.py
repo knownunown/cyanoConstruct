@@ -29,6 +29,7 @@ from ast import literal_eval as leval
 from shutil import rmtree, make_archive
 from string import ascii_letters, digits
 from werkzeug.urls import url_parse #for redirect parsing
+from time import time
 
 ##########################################################################################
 #globals
@@ -104,35 +105,8 @@ def addToSelectedOriginal(newSelected):
     else:
         raise TypeError("can't add item of type " + type(newSelected))
 
-def setNewCompForZIP(id):
-    if(type(id) != int):
-        raise TypeError("id not an int")
-    else:
-        session["newCompID"] = id
-
-def setOldCompForZIP(id):
-    if(type(id) != int):
-        raise TypeError("id not an int")
-    else:
-        session["oldCompID"] = id
-
 def saveAssemblyZIP(): #how do handle this?
     pass
-
-def addToZIP(newFile, key):
-    if(type(newFile) != dict):
-        raise TypeError("newFile not a dict")
-
-    sessionData = getSessionData()
-
-    if(key == "newCompZIP"):
-        sessionData.setNewCompZIP(newFile)
-    elif(key == "assemblyZIP"):
-        sessionData.setAssemblyZIP(newFile)
-    elif(key == "componentForZIP"):
-        sessionData.setComponentForZIP(newFile)
-    else:
-        raise ValueError("key not valid")
 
 def makeAllLibraryZIP(user):
     if(type(user) != UserData):
@@ -772,7 +746,8 @@ def finishDomestication():
     validInput = getAllSelected()
     #validInput = (selectedDict["selectedNamedSequence"] != None and selectedDict["selectedPrimers"] != None and selectedDict["selectedSpacers"] != None)
     succeeded = False
-    
+    newID = -1
+
     outputStr = ""
     
     if(validInput):
@@ -818,8 +793,7 @@ def finishDomestication():
             outputStr = "<a target = '_blank' href = '/components#" + libraryName + newComponent.getNameID() + "'>" + newComponent.getNameID() + "</a> created."
             
             #set it as the tempComp (for the ZIP file)
-            #addToZIP(newComponent.getCompZIP(), "newCompZIP")
-            setNewCompForZIP(newComponent.getID());
+            newID = newComponent.getID()
 
             succeeded = True
             
@@ -829,14 +803,14 @@ def finishDomestication():
     else:
         outputStr + "ERROR: invalid input."
         
-    return jsonify({"output": outputStr, "succeeded": succeeded})
-    
+    return jsonify({"output": outputStr, "succeeded": succeeded, "newID": newID})
 
 #domestication ZIP file
 @app.route("/domesticationZIPs.zip")
 def domesticationZIPs():
     try:
-        compZIP = ComponentDB.query.get(session["newCompID"]).getCompZIP()
+        newCompID = request.args.get("id")
+        compZIP = ComponentDB.query.get(newCompID).getCompZIP()
 
         data = makeZIP(compZIP)
 
@@ -983,98 +957,6 @@ def processAssembly():
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-def processAssembly2(): #why yes I did change this entirely
-    #get info.
-    formData = request.form["assemblyData"]
-    dataDict = leval(formData)
-    
-    #Validation where?
-    
-    if(printActions):
-        print("ASSEMBLING SEQUENCE FROM:\n" + str(dataDict))
-    
-    #remove from the dict. the info. that doesn't need to be processed
-    del dataDict["fidelity"]
-    del dataDict["elemName0"]
-    del dataDict["elemType0"]
-    del dataDict["elemName999"]
-    del dataDict["elemType999"]
-    
-    #go through the dataDict, creating an array of all elements with the format:
-    #{'position': position, 'type': elemType, 'name': elemName}
-    gatheredElements = []
-    for key in dataDict.keys():
-        number = int(key[8:])
-        
-        if number > len(gatheredElements): #assumes the elements are in order
-            gatheredElements.append({"position": number}) #add a new element
-            
-        if(key[0:8] == "elemType"):
-            gatheredElements[number - 1]["type"] = dataDict[key]
-            
-        elif(key[0:8] == "elemName"):
-            gatheredElements[number - 1]["name"] = dataDict[key]
-
-    outputStr = ""
-
-    succeeded = True
-    compsList = []
-
-    #find the components of gatheredElements
-    for comp in gatheredElements:
-        if(comp["position"] < len(dataDict) / 2):
-            terminalLetter = "M"
-        else:
-            terminalLetter = "L"
-                        
-        try:
-            try:                    #search defaults
-                foundComp = Globals.getDefault().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
-                libraryName = "Default"
-            except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
-                foundComp = getSessionData().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
-                libraryName = "Personal"
-                
-            #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
-            compsList.append(foundComp)
-            #libraryName = "Personal"
-            outputStr += ("Found: <a target = '_blank' href ='/components#" + libraryName + foundComp.getNameID() + "'>" + 
-                          foundComp.getNameID() + "</a><br>")
-        except (SequenceNotFoundError, ComponentNotFoundError):
-            outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
-                          "<br>Position: " + str(comp["position"]) + "<br>Terminal letter: " + terminalLetter + "<br>")
-            
-            succeeded = False
-    
-    #start fullSeq with element 0
-    startEndComps = Globals.getDefault().getStartEndComps()
-    
-    fullSeq = startEndComps[0].getFullSeq()
-    
-    #proceed if found everything
-    if(succeeded):
-        outputStr += "<br>Sequences of each element (not including element 0 and element T):<br>"
-        
-        #add the sequence of the component to the output strings
-        for comp in compsList:
-            outputStr += "<br>" + comp.getNameID() + ":<br>" + comp.getFullSeq()
-            
-            fullSeq += comp.getFullSeq()
-        
-        #finish fullSeq with element T
-        fullSeq += startEndComps[1].getFullSeq()
-
-        #finish outputStr
-        outputStr += "<br><br>Full sequence:<br>"  + fullSeq
-        
-        #slap that sequence into the variable
-        addToZIP({"fullSequence.fasta": ">CyanoConstruct sequence\n" + fullSeq}, "assemblyZIP")
-        
-    else:
-        outputStr += "Errors in finding components are often due to not having a component with the right terminal letter.<br>Sequence not created."
-    
-    return jsonify({"output": outputStr, "succeeded": succeeded})
-
 #get the zip for the assembled sequence
 @app.route("/assembledSequence.zip")
 def assemblyZIP():
@@ -1131,12 +1013,12 @@ def assemblyZIP2():
 @login_required
 def displayComps():    
     sessionData = getSessionData()
-    
-    allComps = {"Default": Globals.getDefault().getSortedComps(), 
-                    "Personal": sessionData.getSortedComps()}
 
-    allNS = {"Default": Globals.getDefault().getSortedNS(),
-             "Personal": sessionData.getSortedNS()}
+    allNS = {}
+    allComps = {}
+
+    allNS["Default"], allComps["Default"] = Globals.getDefault().getSortedNSandComps()
+    allNS["Personal"], allComps["Personal"] = sessionData.getSortedNSandComps()
 
     #replace the NamedSequenceDBs with the name and sequence
     for libraryName in allNS.keys():
@@ -1153,50 +1035,13 @@ def displayComps():
                            longNames = longNames, longNamesSingular = longNamesSingular,
                            loggedIn = checkLoggedIn())
 
-#find the component to make ZIP file for
-@app.route("/locateComponentForZIP", methods = ["POST"])
-def getComponentSequence():
-    #get data
-    component = request.form["component"]
-
-    componentDict = leval(component)
-        
-    #validation?
-    succeeded = False
-    try:
-        #parse the data
-        elemType = componentDict["elemType"]
-        name = componentDict["name"]
-        pos = int(componentDict["pos"])
-        terminal = componentDict["terminal"] #? shouldn't it be:
-        #if(componentDict["terminal"]):
-        #    terminal = "L"
-        #else:
-        #    terminal = "M"
-        
-        try:
-            #defaults first
-            foundComp = Globals.getDefault().findComponent(elemType, name, pos, terminal)
-        except (SequenceNotFoundError, ComponentNotFoundError):
-            foundComp = getSessionData().findComponent(elemType, name, pos, terminal)
-        
-        setOldCompForZIP(foundComp.getID())        
-        
-        succeeded = True
-        
-    except Exception as e:
-        if(printActions):
-            print("ERROR GETTING ZIP FILE DUE TO: " + str(e))
-    
-    return jsonify({"succeeded": succeeded})
-
 #make and send the ZIP file for a component
 @app.route("/componentZIP.zip")
 def getComponentZIPs():
-    #sessionID = checkSessionID()
+    print(request.args)
 
     try:
-        compZIP = ComponentDB.query.get(session["oldCompID"]).getCompZIP()
+        compZIP = ComponentDB.query.get(request.args.get("id")).getCompZIP()
 
         data = makeZIP(compZIP)
 

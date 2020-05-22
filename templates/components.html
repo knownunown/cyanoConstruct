@@ -71,7 +71,7 @@
 
 									<br>
 
-									<input type = "button" class = "styledButton" value = "Download Sequences" onclick = "downloadComponentSequence('{{ typeKey }}', '{{ nameKey }}', '{{ component.getPosition() }}', '{{ component.getTerminalLetter() }}')"> <!-- that won't work anymore -->
+									<input type = "button" class = "styledButton" value = "Download Sequences" onclick = "downloadComponentSequence({{ component.getID() }})"> <!-- that won't work anymore -->
 
 									{% if libraryName|string() != "Default" %}
 										<br><hr>
