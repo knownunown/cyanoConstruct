@@ -29,7 +29,11 @@
 	display: inline-block;
 }
 
-#longDiagram div {
+.strand {
+	position: relative;
+}
+
+.strand div {
 	display: inline-block;
 	font-family: "Courier New", Courier, monospace;
 	border: 1px solid black;
@@ -51,22 +55,6 @@
 	background: rgba(0,0,0,0.2);
 }
 
-.enzymeRecog {
-	background: cornflowerblue;
-}
-
-.NN {
-	background: bisque;
-}
-
-.spacer {
-	background: violet;
-}
-
-.sequence {
-	background: lightgreen;
-}
-
 #diagramLegend {
 	border: 2px solid black;
 	overflow: auto;
@@ -79,8 +67,47 @@
 	margin: 5px 5px;
 	padding: 2px;
 }
-
 </style>
+
+<style>
+/* square color palette */
+.spacer {
+	background: #E6855F;
+}
+
+.NN {
+	background: #62E6D0;
+}
+
+.enzymeRecog {
+	background: #CFEC67;
+}
+
+.sequence {
+	background: #AB81E1;
+}
+</style>
+
+<style>
+/* analogous colors */
+.spacer {
+	background: #7396F0;
+	background: #6692CC;
+}
+
+.NN {
+	background: #A5C3E8;
+}
+
+.enzymeRecog {
+	background: #3ABDBD;
+}
+
+.sequence {
+	background: #73E686;
+}
+</style>
+
 {% endblock %}
 
 {% block content %}
@@ -94,10 +121,37 @@
 
 <div id = "longOuter">
 	<div id = "longDiagram">
-		<div id = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
-		<div class = "component"><div class = "spacer">TAGA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT A SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div><div class = "spacer">GATA</div></div>
-		<div class = "component"><div class = "spacer">GATA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT B SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div><div class = "spacer">ATTA</div></div>
-		<div class = "component"><div class = "spacer">ATTA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT C SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div><div class = "spacer">CTAA</div></div>
+		<div class = "strand">
+			<div id = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+			<div class = "spacer">TAGA</div>
+			<div class = "component">
+				<div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT A SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div>
+			</div>
+			<div class = "spacer">GATA</div>
+			<div class = "component">
+				<div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT B SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div>
+			</div>
+			<div class = "spacer">ATTA</div>
+			<div class = "component">
+				<div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT C SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div>
+			</div>
+			<div class = "spacer">CTAA</div>
+		</div>
+
+
+		<!--
+		<div class = "strand">
+			<div id = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+			<div class = "component">
+				<div class = "spacer">TAGA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT A SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div>
+				<div class = "spacer">GATA</div>
+			</div>
+			<div class = "component">
+				<div class = "spacer">GATA</div><div class = "NN">NN</div><div class = "enzymeRecog">GAAGAC</div><div class = "sequence">ELEMENT B SEQUENCE</div><div class = "enzymeRecog">GTCTTC</div><div class = "NN">NN</div>
+				<div class = "spacer">ATTA</div>
+			</div>
+		</div>-->
+
 	</div>
 </div>
 

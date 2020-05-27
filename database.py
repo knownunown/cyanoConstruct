@@ -9,6 +9,7 @@ cyanoConstruct database file (UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerD
 """
 
 from jinja2 import Markup #for HTML display of Component
+from datetime import datetime #for time in GenBank file
 
 from cyanoConstruct import db
 
@@ -388,8 +389,128 @@ class ComponentDB(db.Model):
         retDict[idStr + "-CompleteSequence.fasta"] = ">" + idStrAndName + " complete sequence\n" + self.getFullSeq()
         retDict[idStr + "-LeftPrimer.fasta"] = ">" + idStrAndName + " left primer\n" + self.getLeftPrimer()
         retDict[idStr + "-RightPrimer.fasta"] = ">" + idStrAndName + " right primer\n" + self.getRightPrimer()
+        retDict[idStr + "-CompleteSequence.gb"] = self.getGenBankFile()
         
         return retDict
+    
+    def getGenBankFile(self):
+        #lengths 
+        lenSpacerL = 4  #all of these are fixed
+        lenSpacerR = 4
+        lenNNL = 2
+        lenNNR = 2
+        lenEnzymeL = 6
+        lenEnzymeR = 6
+        lenSeq = len(self.getSeq())
+        lenTotal = lenSpacerL + lenSpacerR + lenNNL + lenNNR + lenEnzymeL + lenEnzymeR + lenSeq
+    
+        #date
+        date = datetime.today().strftime("%d-%b-%Y")
+    
+        fileByLines = []
+        fileByLines.append("LOCUS\t\t" + self.getNameID() + "\t" + str(lenTotal) + " bp\tDNA\tlinear\t" + date)#the date?
+        fileByLines.append("DEFINITION\t" + self.getNameID() + " (" + self.getName() + ") component from CyanoConstruct.")
+        fileByLines.append("FEATURES\tLocation/Qualifiers")
+        
+        i = 0
+        
+        #spacerLeft
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenSpacerL))
+        fileByLines.append("\t\t\t/note=\"spacer (left)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#E6855F") #color only for Benchling?
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#E6855F")
+        i += lenSpacerL
+        
+        #NNleft
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenNNL))
+        fileByLines.append("\t\t\t/note=\"NN (left)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#62E6D0")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#62E6D0")
+        i += lenNNL
+        
+        #EnzymeLeft
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenEnzymeL))
+        fileByLines.append("\t\t\t/note=\"enzyme recog. site (left) (WHICH?)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#CFEC67")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#CFEC67")
+        i += lenEnzymeL
+        
+        #sequence
+        if(self.getType() == "GOI"):
+            fileByLines.append("\tgene\t\t" + str(i + 1) + ".." + str(i + lenSeq))
+            fileByLines.append("\t\t\t/gene=\"" + self.getName() + "\"")
+        else:
+            regTypes = {"Pr": "promoter", "RBS" : "ribosome_binding_site", "Term": "terminator"}
+            regName = regTypes[self.getType()]
+            fileByLines.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
+            fileByLines.append("\t\t\t/regulatory_class=" + regName)
+            fileByLines.append("\t\t\t/note=\"" + self.getType() + " " + self.getName() + "\"")
+        
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#AB81E1")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#AB81E1")
+        
+        i += lenSeq
+        
+        #EnzymeRight
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenEnzymeR))
+        fileByLines.append("\t\t\t/note=\"enzyme recog. site (right) (WHICH?)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#CFEC67")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#CFEC67")
+        i += lenEnzymeL
+
+        #NNright
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenNNR))
+        fileByLines.append("\t\t\t/note=\"NN (right)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#62E6D0")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#62E6D0")
+        i += lenNNL
+
+        #spacerRight
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenSpacerR))
+        fileByLines.append("\t\t\t/note=\"spacer (right)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#E6855F")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#E6855F")
+        i += lenSpacerL
+        
+        #the sequence
+        fileByLines.append("ORIGIN")
+        
+        i = 0 #re-use of i
+        
+        seq = self.getFullSeq().lower()
+        
+        while(i < (len(seq) // 60)):
+            i60 = i * 60
+            line = "{number} {block1} {block2} {block3} {block4} {block5} {block6}".format(
+                    **{"number" : str(i60 + 1).rjust(9, " "),
+                    "block1" : seq[i60 : i60 + 10],
+                    "block2" : seq[i60 + 10 : i60 + 20],
+                    "block3" : seq[i60 + 20 : i60 + 30],
+                    "block4" : seq[i60 + 30 : i60 + 40],
+                    "block5" : seq[i60 + 40 : i60 + 50],
+                    "block6" : seq[i60 + 50 : i60 + 60]})
+    
+            fileByLines.append(line)
+    
+            i += 1
+            
+        remainder = len(seq) % 60
+        if(remainder != 0): #is not zero
+            
+            line = str(i * 60 + 1).rjust(9, " ") + " "
+            for j in range(remainder):
+                line += seq[i * 60 + j]
+                if((j + 1) % 10 == 0):
+                    line += " "
+            
+            fileByLines.append(line)
+            
+        
+        #finish file
+        fileByLines.append("//")
+        
+        return "\n".join(fileByLines)
+        
     
     #basic getters    
     def getNameID(self):

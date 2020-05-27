@@ -8,10 +8,10 @@ from time import time
 
 DIR = os.path.join(os.path.expanduser("~"), "cyanoDBbackups")
 FILE_PREFIX = "cyanoConstructDB"
-FILE_SUFFIX_DATE_FORMAT = "%Y-%m-%d-%H:%M"
+FILE_SUFFIX_DATE_FORMAT = "%Y-%m-%d-%H:%MUTC"
 USERNAME = "cyanogate"
 DBNAME = USERNAME + "$cyanoconstruct"
-DAYS_TO_KEEP = 7
+DAYS_TO_KEEP = 3
 
 #make today's backup
 timestamp = datetime.datetime.now().strftime(FILE_SUFFIX_DATE_FORMAT)

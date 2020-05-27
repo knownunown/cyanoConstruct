@@ -21,6 +21,11 @@ p, span, label {
 	font-size: small;
 }
 
+hr {
+	border: 1px solid black;
+	height: 0px;
+}
+
 a:link {
 	text-decoration: none;
 	color: #3C74BD;
@@ -99,7 +104,7 @@ a:active {
 
 #showOutput {
 	padding: 5px;
-	background: #eee;
+	background: #F0F6FB;
 	border: 1px solid #333;
 
 	overflow: auto;
@@ -129,7 +134,7 @@ textarea {
 
 select {
 	background-color: #fff;
-	border: 1px solid #bbb;
+	border: 1px solid #0C2443;
 	padding: 3px 5px;
 }
 
@@ -152,6 +157,12 @@ input[type=text]:focus, textarea:focus, input[type=number]:focus {
 	background-color: #D5E0ED;
 }
 
+/*
+input[type=button]:active, input[type=button]:focus, input[type=submit]:active, input[type=submit]:focus {
+	outline: 3px solid #439326;
+	outline-offset: -3px;
+}*/
+
 .styledButton {
 	background-color: white;
 	color: black;
@@ -162,9 +173,10 @@ input[type=text]:focus, textarea:focus, input[type=number]:focus {
 	padding: 5px 10px;
 }
 
-.styledButton:hover, .styledButton:focus {
+.styledButton:hover, .styledButton:focus, .styledButton:active {
 	background-color: #064235;
 	color: white;
+	outline: none;
 }
 
 .styledButton:disabled {
@@ -185,11 +197,15 @@ input[type=text]:focus, textarea:focus, input[type=number]:focus {
 
 div.elemDiv {
 	border: 1px solid #333;
-	background: #eee;
+	background: #F0F6FB;
 	padding: 5px;
 	margin: 5px;
 	text-align: center;
 	max-width: 580px;
+}
+
+#elements .elemDiv {
+	background: #BEE3FF;
 }
 
 div.elemDiv > span{
@@ -230,31 +246,42 @@ div.elemDiv > div{
 /* navigation */
 #navigation {
 	overflow: hidden;
-	border-bottom: 2px solid black;
+	/*border-bottom: 2px solid black;*/
+	display: flex;
 }
 
 #navigation a {
-	float: left;
+	/*float: left;*/
 	text-align: center;
 	color: #000;
   	text-decoration: none;
 	padding: 10px;
+	outline: none;
+	border-bottom: 2px solid black;
 }
 
-#navigation a:hover {
-	font-style: italic;
+#navigation a:hover, #navigation a:focus {
+	font-style: normal;
+	background: #eee;
+	border-bottom: 2px solid #68BF48;
+}
+
+#navigation div.shouldGrow {
+	border-bottom: 2px solid black;
 }
 
 #navigation a:active {
 	font-weight: normal;
+	border-bottom: 2px solid #439326;
 }
 
 #navigation a.active {
 	font-weight: bold;
+	border-bottom: 2px solid #439326;
 }
 
 #navigation a#logInOut, #navigation a#accountNav {
-	float: right;
+	/*float: right;*/
 }
 
 /* form stuff */

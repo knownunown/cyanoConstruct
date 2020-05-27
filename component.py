@@ -12,6 +12,7 @@ from cyanoConstruct import NamedSequenceDB, SpacerDataDB, PrimerDataDB
 
 
 def checkType(elemType, typeName):
+    """Check if string elemType is valid, and raises Error with typeName as part of the message if not."""
     if(type(typeName) != str):
         raise TypeError("typeName not a string")
         
@@ -19,6 +20,29 @@ def checkType(elemType, typeName):
         raise TypeError(typeName + " not a string")
     if(elemType not in ["Pr", "RBS", "GOI", "Term"]):
         raise ValueError(typeName + " not valid")
+
+def inverseSeq(sequence):
+    """Return complementary strand to an all-caps 5' to 3' sequence."""
+    if(type(sequence) != str):
+        raise TypeError("sequence not a string")
+    
+    #dict containing all pairings
+    pairs = {'A': 'T', 'C': 'G', 'B': 'V', 'D': 'H', 'K': 'M', 'N': 'N', 'R': 'Y', 'S': 'S', 'W': 'W', 'T': 'A', 'G': 'C', 'V': 'B', 'H': 'D', 'M': 'K', 'Y': 'R'}
+
+    array = []
+    
+    try:
+        i = len(sequence) - 1
+        #traverse sequence from end to start
+        while(i >= 0):
+            array.append(pairs[sequence[i]])
+            i -= 1
+    except KeyError:
+        raise ValueError("sequence has invalid nucleotide")
+    
+    finalSeq = "".join(array)
+    
+    return finalSeq
 
 class NamedSequence:
     #why is this here
@@ -433,10 +457,15 @@ class PrimerData:
         if(type(spacerData) != SpacerData):
             raise TypeError("spacerData not a SpacerData")
             
-        #add them; again, complementary, inversion, etc. needed somewhere, I just don't know where
         self.__seqLeft = spacerData.getFullSeqLeft() + self.getSeqLeft()
 
         self.__seqRight = self.getSeqRight() + spacerData.getFullSeqRight() 
+        
+        self.invertRightPrimer() #because I'm lazy
+                                    #need to apply on all previous entries? is it worth it
+    
+    def invertRightPrimer(self):
+        self.__seqRight = inverseSeq(self.getSeqRight())
     
     def findPrimers(self, seq, TMgoal, TMrange):
         if(TMgoal <= TMrange):

@@ -57,6 +57,14 @@ def checkSessionID():               #####<----- only used for naming folders rig
 def getSessionData():
     return current_user
 
+def checkPermission(comp):
+    if(type(comp) != ComponentDB):
+        raise TypeError("comp not a ComponentDB")
+    
+    if(comp.getUserID() != current_user.getID() and comp.getUserID() != Globals.getDefault().getID()):
+        raise Exception("Do not have permission to access component.")
+    
+
 def getSelectedNS():
     try:
         NSID = session["selectedNS"]
@@ -550,7 +558,6 @@ def newNamedSeq():
 #in order to set it to the global
 @app.route("/findNamedSeq", methods = ["POST"])
 def findNamedSeq():
-    #sessionID = checkSessionID()
     sessionData = getSessionData()
     #get data
     namedSeqData = leval(request.form["namedSeqData"])
@@ -958,6 +965,72 @@ def processAssembly():
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
+def startAssemblyGB():
+    fileHead = []
+    fileHead.append("LOCUS\tAssembled seq\t" + str(25) + " bp\tDNA\tlinear\t" + "26-MAY-2020")
+    fileHead.append("DEFINITION\tSequence assembled from CyanoConstruct")
+    fileHead.append("FEATURES\tLocation/Qualifiers")
+    
+    return fileHead
+
+def startOrigin():
+    return ["ORIGIN"]
+
+def addCompAssemblyGB(comp, features, i):
+    lenSeq = len(comp.getFullSeq())
+    
+    if(comp.getType() == "GOI"):
+        features.append("\tgene\t\t" + str(i + 1) + ".." + str(i + lenSeq))
+        features.append("\t\t\t/gene=\"" + comp.getName() + "\"")
+    else:
+        regTypes = {"Pr": "promoter", "RBS" : "ribosome_binding_site", "Term": "terminator"}
+        regName = regTypes[comp.getType()]
+        features.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
+        features.append("\t\t\t/regulatory_class=" + regName)
+                                            #get a longer thing to say here
+        features.append("\t\t\t/note=\"" + comp.getType() + " " + comp.getName() + "\"")
+    
+    return i + lenSeq
+
+def finishCompAssemblyGB(features, origin, fullSeq):
+    #paste features and origin section together, add a // and join it into a thing
+    
+    seq = fullSeq.lower()
+    
+    i = 0
+    
+    while(i < (len(seq) // 60)):
+        i60 = i * 60
+        line = "{number} {block1} {block2} {block3} {block4} {block5} {block6}".format(
+                **{"number" : str(i60 + 1).rjust(9, " "),
+                "block1" : seq[i60 : i60 + 10],
+                "block2" : seq[i60 + 10 : i60 + 20],
+                "block3" : seq[i60 + 20 : i60 + 30],
+                "block4" : seq[i60 + 30 : i60 + 40],
+                "block5" : seq[i60 + 40 : i60 + 50],
+                "block6" : seq[i60 + 50 : i60 + 60]})
+
+        origin.append(line)
+
+        i += 1
+        
+    remainder = len(seq) % 60
+    if(remainder != 0): #is not zero
+        
+        line = str(i * 60 + 1).rjust(9, " ") + " "
+        for j in range(remainder):
+            line += seq[i * 60 + j]
+            if((j + 1) % 10 == 0):
+                line += " "
+        
+        origin.append(line)
+
+    features.extend(origin)
+    
+    features.append("//")
+    
+    return "\n".join(features)    
+
 #get the zip for the assembled sequence
 @app.route("/assembledSequence.zip")
 def assemblyZIP():
@@ -971,17 +1044,31 @@ def assemblyZIP():
         startEndComps = Globals.getDefault().getStartEndComps()
 
         #start with element 0
-        fullSeq = ">CyanoConstruct sequence\n" + startEndComps[0].getFullSeq()
+        fullSeq = startEndComps[0].getFullSeq()
+
+        fileGB = startAssemblyGB()
+        originSection = startOrigin()
+        i = 0 #index (starting at zero) of the fullSeq to add at
+
+        i = addCompAssemblyGB(startEndComps[0], fileGB, i)
 
         #add the sequence of the component
-        for compID in compsList:
+        for compID in compsList: #I hope this is in order
             comp = ComponentDB.query.get(compID)
+            print(comp.getName())
+            print(i)
             fullSeq += comp.getFullSeq()
+            i = addCompAssemblyGB(comp, fileGB, i)
         
         #finish fullSeq with element T
         fullSeq += startEndComps[1].getFullSeq()
+        i = addCompAssemblyGB(startEndComps[1], fileGB, i)
+                
+    
+        fileGB = finishCompAssemblyGB(fileGB, originSection, fullSeq)
+        fileFASTA = ">CyanoConstruct sequence\n" + fullSeq
 
-        data = makeZIP({"fullSequence.fasta": fullSeq})
+        data = makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
 
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
@@ -1012,14 +1099,20 @@ def assemblyZIP2():
 #components page
 @app.route("/components", methods = ["GET"])
 @login_required
-def displayComps():    
+def displayComps():
+    array = [time()]
+    
     sessionData = getSessionData()
+
+    array.append(time())
 
     allNS = {}
     allComps = {}
 
     allNS["Default"], allComps["Default"] = Globals.getDefault().getSortedNSandComps()
     allNS["Personal"], allComps["Personal"] = sessionData.getSortedNSandComps()
+
+    array.append(time())
 
     #replace the NamedSequenceDBs with the name and sequence
     for libraryName in allNS.keys():
@@ -1029,20 +1122,34 @@ def displayComps():
                 typeNS[ns.getName()] = ns.getSeq()
             allNS[libraryName][typeKey] = typeNS
 
+    array.append(time())
+
     #used for formatting
     longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators"}
     longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
-    return render_template("components.html", allComps = allComps, allNS = allNS,
+
+    rendered = render_template("components.html", allComps = allComps, allNS = allNS,
                            longNames = longNames, longNamesSingular = longNamesSingular,
                            loggedIn = checkLoggedIn())
 
+    array.append(time())
+    
+    explanations = ["getSessionData()", "getSortedNSandComps()", "replace NS with seqs", "render_template"]
+    
+    for i in range(len(array) - 1):
+        print(explanations[i] + ":\t" + str(array[i+1]-array[i]))
+
+    return rendered
+
 #make and send the ZIP file for a component
 @app.route("/componentZIP.zip")
-def getComponentZIPs():
-    print(request.args)
-
+def getComponentZIP():
     try:
-        compZIP = ComponentDB.query.get(request.args.get("id")).getCompZIP()
+        comp = ComponentDB.query.get(request.args.get("id"))
+        
+        checkPermission(comp)
+        
+        compZIP = comp.getCompZIP()
 
         data = makeZIP(compZIP)
 
@@ -1056,7 +1163,7 @@ def getComponentZIPs():
     else:
         return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='componentZIP.zip';"})
-
+    
 @app.route("/removeComponent", methods = ["POST"])
 def removeComponent():
     succeeded = False
@@ -1164,8 +1271,6 @@ def libraryZIP():
 @app.route("/index", methods = ["GET", "POST"], endpoint = "index")
 @app.route("/", methods = ["GET", "POST"], endpoint = "index")
 def index():    
-    sessionID = checkSessionID()
-
     if(checkLoggedIn()):
         logInMessage = "Logged in as: " + current_user.getEmail() + "."
     else:
@@ -1174,6 +1279,7 @@ def index():
 
     return render_template("index.html", logInMessage = logInMessage, loggedIn = checkLoggedIn())
 
+"""
 #sets session timeout
 @app.before_request
 def before_request():
@@ -1181,7 +1287,7 @@ def before_request():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(days=30)
     session.modified = True
-
+"""
 
 #############################################
 
