@@ -5,23 +5,26 @@ Created on Sun May  3 19:58:38 2020
 
 @author: Lia Thomson
 
-cyanoConstruct sessionUsers file (SessionData and UserData classes)
+cyanoConstruct sessionUsers file (UserData class)
 """
+from cyanoConstruct import printActions
 from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
 from cyanoConstruct import NamedSequence, SpacerData, PrimerData, checkType
-from cyanoConstruct import  AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
-from time import time
+from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
 
 class UserData:
     def __init__(self):
-        """Creates an empty UserData. Should not be accessed except through makeNew or load"""
+        """Creates an empty UserData. Should not be accessed except through new or load"""
         self.__DBid = -1
         self.__entryDB = None
         return
     
     @classmethod
     def new(cls, email):
-        print("Calling UserData.new(" + str(email) + ").\n")        
+        """Create a new user: creates a UserData and a UserDataDB. Return the created userData."""
+        if(printActions):
+            print("Calling UserData.new(" + str(email) + ").\n")
+
         #type validation
         if(type(email) != str):
             raise TypeError("email not a str")
@@ -53,8 +56,10 @@ class UserData:
 
     @classmethod
     def load(cls, email):
+        """Load a user from the UserDataDB table."""
         queryResults = UserDataDB.query.filter_by(email = email).all()
         
+        #check results
         if(len(queryResults) == 0):
             raise UserNotFoundError("Could not find user.")
         elif(len(queryResults) > 1):
@@ -69,7 +74,7 @@ class UserData:
             
             return newUserData
 
-    #things for Flask-Login
+    #properties for Flask-Login
     @property
     def is_active(self):
         return True
@@ -85,30 +90,44 @@ class UserData:
     def get_id(self):
         return self.getEmail()
 
-    #getters    
-    def getID(self): #potentially superfluous, not currently in use
+    #getters
+    def getID(self):
         return self.__DBid
     
     def getEntry(self):
         return self.__entryDB
 
     def getEmail(self):
-        return self.getEntry().getEmail()    
+        return self.getEntry().getEmail()
 
-    def getAllNSQuery(self):
+    def getNextNSid(self):
+        return self.getEntry().getNextNSid()
+
+    def getStartEndComps(self):
+        """Return StartEndComps; only works for default user."""
+        if(self.getEntry().getEmail() != "default"):
+            raise Exception("can't get StartEndComps from non-default session")
+        
+        startComp = self.findComponent("Pr", "psbA", 0, "S")
+        endComp = self.findComponent("Term", "T1", 999, "T")
+        
+        return (startComp, endComp)
+
+    def getAllNSQuery(self): #a query
         return self.getEntry().getAllNamedSeqs()
     
-    def getAllCompsQuery(self):
+    def getAllCompsQuery(self): #a query
         return self.getEntry().getAllComponents()
     
-    def getAllNS(self):
+    def getAllNS(self): #an array
         return self.getAllNSQuery().all()
             
-    def getAllComps(self):
+    def getAllComps(self): #an array
         return self.getAllCompsQuery().all()
         
     def getSortedNS(self):
-        #the use of order_by is questionable (read: likely unnecessary), but not deeply detrimental
+        """Return dict, key: type, value: sorted array of all NamedSequenceDB of the type."""
+        #the use of order_by is likely unnecessary, but not deeply detrimental
         allPr = self.getAllNSQuery().filter_by(elemType = "Pr").order_by(NamedSequenceDB.nameID.asc()).all()
         allRBS = self.getAllNSQuery().filter_by(elemType = "RBS").order_by(NamedSequenceDB.nameID.asc()).all()
         allGOI = self.getAllNSQuery().filter_by(elemType = "GOI").order_by(NamedSequenceDB.nameID.asc()).all()
@@ -156,41 +175,15 @@ class UserData:
 
         return (allNS, retDict)
     
-    def findNamedSequence(self, NStype, NSname, NSseq):
-        """Searches UserDataDB for named sequence with specifications"""
-        checkType(NStype, "NStype")
-
-        if(type(NSname) != str):
-            raise TypeError("name not a string")
-        if(type(NSseq) != str):
-            raise TypeError("seq not a string")
-
-        #some preprocessing of the input
-        seq = NSseq.upper()
-        
-        #query the database for actual searching
-        namedSeqList = self.getAllNSQuery().filter_by(elemType = NStype, name = NSname).all()
-                
-        #handle the results from the query
-        if(len(namedSeqList) == 0):
-            raise SequenceNotFoundError("Could not find sequence.")
-        if(len(namedSeqList) > 1):
-            raise Exception("Multiple sequences found.")
-        else:
-            namedSeq = namedSeqList[0]
-            #check sequence
-            if(namedSeq.getSeq() == seq):
-                return namedSeq #return the NamedSequence database entry. This is okay?
-            else:
-                raise SequenceMismatchError("Sequence does not match stored sequence.")
-    
+    #find
     def findNamedSequenceNoSeq(self, NStype, NSname):
+        """Searches UserDataDB for NamedSequenceDB with specifications; don't need sequence."""
+        #type checking
         checkType(NStype, "NStype")
-
         if(type(NSname) != str):
             raise TypeError("name not a string")
 
-        #query the database for actual searching
+        #query database
         namedSeqList = self.getAllNSQuery().filter_by(elemType = NStype, name = NSname).all()
                 
         #handle the results from the query
@@ -200,11 +193,27 @@ class UserData:
             raise Exception("Multiple sequences found.")
         else:
             return namedSeqList[0]
-    
+
+    def findNamedSequence(self, NStype, NSname, NSseq):
+        """Searches UserDataDB for named sequence with specifications; checks sequence."""
+        foundNS = self.findNamedSequenceNoSeq(NStype, NSname)
+
+        #type check & pre-process sequence
+        if(type(NSseq) != str):
+            raise TypeError("NSseq not a string")
+
+        seq = NSseq.upper()
+        
+        #check sequence
+        if(foundNS.getSeq() == seq):
+            return foundNS
+        else:
+            raise SequenceMismatchError("Sequence does not match stored sequence.")
+
     def findComponent(self, compType, compName, compPos, compTerminalLetter):
         """Searches UserDataDB for component with specifications"""
+        #type checking
         checkType(compType, "compType")
-
         if(type(compName) != str):
             raise TypeError("compName not a string")
         if(type(compPos) != int):
@@ -212,39 +221,33 @@ class UserData:
         if(type(compTerminalLetter) != str):
             raise TypeError("compTerminalLetter not a string")
 
+        foundNS = self.findNamedSequenceNoSeq(compType, compName)
 
-        #search for the NamedSequence
-        possibleNS = self.getAllNSQuery().filter_by(elemType = compType, name = compName).all()
+        #search for the Component
+        for comp in foundNS.getAllComponents():
+            if((comp.getPosition() == compPos) and (comp.getTerminalLetter() == compTerminalLetter)):
+                   return comp
         
-        
-        if(len(possibleNS) == 0):
-            raise SequenceNotFoundError("No sequence of type " + compType + " ID " + str(compName) + " found.")
-        elif(len(possibleNS) > 1):
-            raise Exception("Multiple sequences of type " + compType + " ID " + str(compName) + " found.")
-        else:
-            ns = possibleNS[0]
-            
-            #search for the Component
-            for comp in ns.getAllComponents():
-                if((comp.getPosition() == compPos) and (comp.getTerminalLetter() == compTerminalLetter)):
-                       return comp
-                            
         #did not find it
         raise ComponentNotFoundError("Could not find component.")
-        
+    
+    #remove
     def removeComponent(self, compType, compName, compPos, compTerminalLetter):
-        """Removes component from UserDataDB by finding it and calling on removeFoundComp"""
+        """Removes component from UserDataDB by finding it and calling on removeFoundComp."""
         #find component
         foundComp = self.findComponent(compType, compName, compPos, compTerminalLetter)
 
         self.removeFoundComponent(foundComp)
+
+    def removeComponentByID(self, id):
+        foundComp = ComponentDB.query.get(id) #i'm not sure I like how this accesses it
+
+        self.removeFoundComp(foundComp)
         
     def removeFoundComponent(self, foundComp):
-        """Removes component and its associated primerData and spacerData from the database"""
+        """Removes component and its associated primerData and spacerData from the database."""
         foundSpacerData = foundComp.getSpacerData()
         foundPrimerData = foundComp.getPrimerData()
-
-        #check if foundPrimerData is actually the null primer; do not delete it then
 
         #remove them from database
         db.session.delete(foundComp)
@@ -252,10 +255,17 @@ class UserData:
         db.session.delete(foundPrimerData)
         db.session.commit()
         
-    def removeSequence(self, seqType, seqName):
-        """Removes namedSequence from UserDataDB by finding it, removing all its components, and removing it."""
-        foundNS = self.findNamedSequenceNoSeq(seqType, seqName)
-        
+    def removeSequenceByID(self, id):
+        """Removes namedSequence from database based on its ID"""
+        foundNS = NamedSequenceDB.query.get(id)
+
+        for foundComp in foundNS.getAllComponents():
+            self.removeFoundComponent(foundComp)
+
+        db.session.delete(foundNS)
+        db.session.commit()
+
+    def removeFoundSequence(self, foundNS):
         #remove all components using the NamedSequence
         for foundComp in foundNS.getAllComponents():
             self.removeFoundComponent(foundComp)
@@ -264,7 +274,15 @@ class UserData:
         db.session.delete(foundNS)
         
         db.session.commit()
+
+
+    def removeSequence(self, seqType, seqName):
+        """Removes namedSequence from UserDataDB by finding it, removing all its components, and removing it."""
+        foundNS = self.findNamedSequenceNoSeq(seqType, seqName)
+        
+        self.removeFoundSequence(foundNS)
     
+    #add, create, make
     def addNSDB(self, namedSeq):
         """Pass in a NamedSequenceDB, will create a copy in current user."""
         
@@ -275,7 +293,7 @@ class UserData:
         try:
             self.findNamedSequence(namedSeq.getType(), namedSeq.getName(), namedSeq.getSeq())
             
-            #an error will be raised if it exists
+            #raise error if it exists
             raise AlreadyExistsError("Sequence already exists.")
             
         except SequenceNotFoundError:
@@ -286,23 +304,22 @@ class UserData:
         NSname = namedSeq.getName()
         NSseq = namedSeq.getSeq()
         
-        nameID = namedSeq.getNameID() #self.getEntry().getNextNSid()[NStype]
+        nameID = namedSeq.getNameID() #####<----- What if, somehow, that NameID already exists in the personal library?
         
-        n = NamedSequenceDB(elemType = NStype, name = NSname, seq = NSseq, nameID = nameID, user_id = self.getEntry().getID())
+        ns = NamedSequenceDB(elemType = NStype, name = NSname, seq = NSseq, nameID = nameID, user_id = self.getID())
         
         #add to database
-        db.session.add(n)
+        db.session.add(ns)
         
         self.getEntry().incrementID(NStype)
         
         db.session.commit()
         
-        return n
+        return ns
         
-    
     def addNS(self, namedSeq):
         """Pass in a NamedSequence, will create a NamedSequenceDB and add it to the database."""
-        
+        #type checking
         if(type(namedSeq) != NamedSequence):
             raise TypeError("namedSeq not a NamedSequence.")
         
@@ -311,7 +328,6 @@ class UserData:
             self.findNamedSequence(namedSeq.getType(), namedSeq.getName(), namedSeq.getSeq())
             
             #an error will be raised if it exists
-            
             raise AlreadyExistsError("Sequence already exists.")
             
         except SequenceNotFoundError:
@@ -324,27 +340,21 @@ class UserData:
         
         nameID = self.getEntry().getNextNSid()[NStype]
         
-        n = NamedSequenceDB(elemType = NStype, name = NSname, seq = NSseq, nameID = nameID, user_id = self.getEntry().getID())
+        ns = NamedSequenceDB(elemType = NStype, name = NSname, seq = NSseq, nameID = nameID, user_id = self.getID())
         
         #add to database
-        db.session.add(n)
+        db.session.add(ns)
         
         self.getEntry().incrementID(NStype)
         
         db.session.commit()
         
-        return n
+        return ns
             
     def createNS(self, NStype, NSname, NSseq):
         """Pass in raw data, creates a NamedSequence and then makes NamedSequenceDB via self.addNS(newNS)"""
         #type checking
         checkType(NStype, "NStype")
-
-        if(type(NSname) != str):
-            raise TypeError("NSname not a string")
-        if(type(NSseq) != str):
-            raise TypeError("NSseq not a string")
-
 
         #get the nameID
         nameID = self.getEntry().getNextNSid()[NStype]
@@ -354,13 +364,12 @@ class UserData:
         
         #add it to self
         NSentry = self.addNS(newNS)
-        
-        #change newNS so it knows it's been loaded into the database
-        newNS.setDBid(NSentry.id) #####<----- why? It works but is inefficient
-        
+                
         return NSentry
     
     def createComp(self, NSentry, spacerData, primerData):
+        """Make a ComponentDB and associated SpacerDataDB, PrimerDataDB in database."""        
+        #type checking
         if(type(NSentry) != NamedSequenceDB):
             raise TypeError("NSentry not a NamedSequenceDB")
         if(type(spacerData) != SpacerData):
@@ -368,7 +377,6 @@ class UserData:
         if(type(primerData) != PrimerData):
             raise TypeError("primerData not a PrimerData")
                     
-        """Make a ComponentDB and associated SpacerDataDB, PrimerDataDB in database."""        
         #check if it already exists
         try:
             self.findComponent(NSentry.getType(), NSentry.getName(), spacerData.getPosition(), spacerData.getTerminalLetter())
@@ -376,7 +384,8 @@ class UserData:
             raise AlreadyExistsError("Component already exists.")
         except ComponentNotFoundError:
             pass
-                
+        
+        #create database entries
         s = SpacerDataDB(position = spacerData.getPosition(), spacerLeft = spacerData.getSpacerLeft(), spacerRight = spacerData.getSpacerRight(),
                  isTerminal = spacerData.getIsTerminal(), terminalLetter = spacerData.getTerminalLetter(),
                  leftNN = spacerData.getLeftNN(), rightNN = spacerData.getRightNN())
@@ -384,10 +393,7 @@ class UserData:
         p = PrimerDataDB(primersFound = primerData.getPrimersFound(), seqLeft = primerData.getSeqLeft(), seqRight = primerData.getSeqRight(),
                  GCleft = primerData.getGCleft(), GCright = primerData.getGCright(), TMleft = primerData.getTMleft(), TMright = primerData.getTMright())
 
-        c = ComponentDB(namedSequence_id = NSentry.getID(), user_id = self.getEntry().getID())
-
-        #s.comp = c
-        #p.comp = c
+        c = ComponentDB(namedSequence_id = NSentry.getID(), user_id = self.getID())
         
         #add to the database
         db.session.add(c)
@@ -396,10 +402,7 @@ class UserData:
         
         db.session.commit()
         
-        #of questionable use, but regardless
-#        spacerData.setDBid(s.id)
-#        primerData.setDBid(p.id)
-
+        #edit database entries so they have proper relations
         c.setSpacerDataID(s.getID())
         c.setPrimerDataID(p.getID())
         s.setCompID(c.getID())
@@ -410,10 +413,10 @@ class UserData:
         return c
         
     def makeWithNamedSequence(self, ns, position, isTerminal, TMgoal, TMrange):
-        if(type(ns) != NamedSequenceDB):
-            raise TypeError("ns not a NamedSequenceDB")
-        
+        """Make a ComponentDB with a NamedSequenceDB, but no PrimerData or SpacerData, which are made here."""
         #type checking
+        if(type(ns) != NamedSequenceDB):
+            raise TypeError("ns not a NamedSequenceDB")        
         if(type(position) != int):
             raise TypeError("position not an int")
         if(type(isTerminal) != bool):
@@ -434,31 +437,20 @@ class UserData:
     
     #creates a new component and adds it
     def makeFromNew(self, elemType, name, seq, position, isTerminal, TMgoal, TMrange):
-        #NamedSequenceDB
+        """Make a ComponentDB with no pre-existing NamedSequenceDB, PrimerData, or SpacerData. (Used for default user.)"""
         ns = self.createNS(elemType, name, seq)
         
         return self.makeWithNamedSequence(ns, position, isTerminal, TMgoal, TMrange)
-        
-    def getNextNSid(self):
-        return self.getEntry().getNextNSid()
 
-    def getStartEndComps(self):
-        if(self.getEntry().getEmail() != "default"):
-            raise Exception("can't get StartEndComps from non-default session")
-        
-        startComp = self.findComponent("Pr", "psbA", 0, "S")
-        endComp = self.findComponent("Term", "T1", 999, "T")
-        
-        return (startComp, endComp)
-    
-class Globals:
-    defaultSession = UserData.load("default")
-    nullPrimerData = PrimerData.makeNull()
 
-    @classmethod
-    def getDefault(cls):
-        return cls.defaultSession
 
-    @classmethod
-    def getNullPrimerData(cls):
-        return cls.nullPrimerData
+
+
+
+
+
+
+try:
+    defaultUser = UserData.load("default")
+except UserNotFoundError:
+    defaultUser = UserData.new("default")

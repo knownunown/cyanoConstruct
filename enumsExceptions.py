@@ -37,3 +37,6 @@ class UserNotFoundError(Error):
 
 class NotLoggedInError(Error):
     pass
+
+class AccessError(Error):
+    pass

@@ -8,34 +8,26 @@ Created on Wed Apr  1 14:54:27 2020
 
 cyanoConstruct routes file
 """
-
-import os
-
-from cyanoConstruct import app, UserData, SpacerData, PrimerData, AlreadyExistsError, SequenceMismatchError,  SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NamedSequenceDB, UserDataDB, ComponentDB, Globals, session
-from cyanoConstruct import login, current_user, login_user, logout_user, login_required #import statements are messy
-
+from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, AccessError
+from cyanoConstruct import app, UserData, SpacerData, PrimerData, NamedSequenceDB, UserDataDB, ComponentDB, session
+from cyanoConstruct import login, current_user, login_user, logout_user, login_required
+from cyanoConstruct import boolJS, validateNewNS, validateSpacers, validatePrimers, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
+from cyanoConstruct import defaultUser, nullPrimerData, printActions
 
 #flask
 from flask import request, render_template, jsonify, Response, redirect
-#import json
-#from jinja2 import Markup
 
 #session stuff
-from uuid import uuid1
 from datetime import timedelta
 
 #misc.
 from ast import literal_eval as leval
-from shutil import rmtree, make_archive
-from string import ascii_letters, digits
 from werkzeug.urls import url_parse #for redirect parsing
 from time import time
 
 ##########################################################################################
-#globals
-printActions = True
-##########################################################################################
 
+#user-related funcs
 @login.user_loader
 def load_user(user_id):
     try:
@@ -45,26 +37,34 @@ def load_user(user_id):
 
 login.login_view = "login" #for redirecting if not logged in
 
-######
-
 def checkLoggedIn():
-    return not getSessionData().is_anonymous
+    return not getCurrUser().is_anonymous
 
-#sets sessionID if there isn't one
-def checkSessionID():               #####<----- only used for naming folders right now
-    return uuid1().hex
-
-def getSessionData():
+def getCurrUser():
     return current_user
 
 def checkPermission(comp):
     if(type(comp) != ComponentDB):
         raise TypeError("comp not a ComponentDB")
     
-    if(comp.getUserID() != current_user.getID() and comp.getUserID() != Globals.getDefault().getID()):
-        raise Exception("Do not have permission to access component.")
-    
+    if(comp.getUserID() != current_user.getID() and comp.getUserID() != defaultUser.getID()):
+        raise AccessError("Do not have permission to access component.")
 
+def permissionOwnNS(ns):
+    if(type(ns) != NamedSequenceDB):
+        raise TypeError("ns not a NamedSequenceDB")
+
+    if(ns.getUserID() != current_user.getID()):
+        raise AccessError("Do not have permission to access this sequence.")
+
+def permissionOwnComp(comp):
+    if(type(comp) != ComponentDB):
+        raise TypeError("comp not a ComponentDB")
+
+    if(comp.getUserID() != current_user.getID()):
+        raise AccessError("Do not have permission to access component.")
+
+#Selected objects (on the domesticate page)
 def getSelectedNS():
     try:
         NSID = session["selectedNS"]
@@ -90,7 +90,7 @@ def getAllSelected():
     return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
 
 def addToSelected(newSelected):
-    if(type(newSelected) == NamedSequenceDB): #####<----- edit to store an int ID of the NSDB instead
+    if(type(newSelected) == NamedSequenceDB):
         session["selectedNS"] = newSelected.getID()
     elif(type(newSelected) == SpacerData):
         session["selectedSD"] = newSelected.toJSON()
@@ -101,181 +101,10 @@ def addToSelected(newSelected):
     
     session.modified = True
 
-def addToSelectedOriginal(newSelected):
-    sessionData = getSessionData()
-    
-    if(type(newSelected) == NamedSequenceDB): #####<----- edit to store an int ID of the NSDB instead
-        sessionData.setSelectedNS(newSelected)
-    elif(type(newSelected) == SpacerData):
-        sessionData.setSelectedSpacers(newSelected)
-    elif(type(newSelected) == PrimerData):
-        sessionData.setSelectedPrimers(newSelected)
-    else:
-        raise TypeError("can't add item of type " + type(newSelected))
-
-def saveAssemblyZIP(): #how do handle this?
-    pass
-
-def makeAllLibraryZIP(user):
-    if(type(user) != UserData):
-        raise TypeError("user not a UserData")
-
-    filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
-    sessionDir = os.path.join(filesDirPath, checkSessionID())
-    libraryDir = os.path.join(sessionDir, user.getEmail() + "Library")
-
-    try:
-        os.mkdir(sessionDir)
-    except OSError: #if it exists
-        pass
-    os.mkdir(libraryDir)
-    
-    if(printActions):
-        print("MADE DIRECTORY: " + libraryDir)
-        
-    #great now what?
-    sortedNS = user.getSortedNS()
-    for typeKey in sortedNS:
-        if(sortedNS[typeKey] == []): #do nothing if the folder would be empty
-            continue
-
-        #make folder for the type        
-        typeDir = os.path.join(libraryDir, typeKey)
-        os.mkdir(typeDir)
-        
-        for ns in sortedNS[typeKey]:
-            nsComps = ns.getAllComponents()
-            
-            if(nsComps == []): #do nothing if the folder would be empty
-                continue
-
-            #make folder for the sequence
-            nameDir = os.path.join(typeDir, ns.getName())
-            os.mkdir(nameDir)
-            
-            nsComps.sort() #is this necessary?
-            
-            for comp in nsComps:
-                #make folder for the component
-                compDir = os.path.join(nameDir, comp.getNameID())
-                os.mkdir(compDir)
-                
-                compZIP = comp.getCompZIP()
-
-                #make the files for the component
-                for fileName in compZIP:
-                    filePath = os.path.join(compDir, fileName)
-
-                    with open(filePath, "w") as f:
-                        f.write(compZIP[fileName])
-    
-    #make the zip
-    zipPath = os.path.join(sessionDir, "libraryZIP")
-    
-    make_archive(zipPath, "zip", libraryDir)
-    
-    #read zip as a byte file
-    with open(zipPath + ".zip", "rb") as f:
-        data = f.readlines()
-        
-    rmtree(sessionDir)
-
-    if(printActions):
-        print("FINISHED CREATING LIBRARY ZIP FOR USER " + user.getEmail())
-    
-    return data
-
-def makeZIP(filesDict):
-    if(type(filesDict) != dict):
-        raise TypeError("files not a dict")
-        
-    if(printActions):
-        print("CREATING FASTA AND ZIP FILES")
-    
-    #check if no files have been produced
-    if(filesDict == {}):
-        if(printActions):
-            print("NO SEQUENCE; NO FILES CREATED")
-        
-        return None
-    
-    submissionID = checkSessionID()
-    
-    #paths
-    filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
-    sessionDir = os.path.join(filesDirPath, submissionID)
-    
-    os.mkdir(sessionDir)
-    
-    if(printActions):
-        print("MADE DIRECTORY: " + sessionDir)    
-    
-    #write files
-    for fileName in filesDict:
-        newName = os.path.join(sessionDir, fileName)
-        with open(newName, "w") as f:
-            f.write(filesDict[fileName])
-            
-    #make zip
-    zipPath = os.path.join(os.path.join(filesDirPath, "zips"), submissionID)
-    make_archive(zipPath, "zip", sessionDir)
-    
-    #read zip as a byte file
-    with open(zipPath + ".zip", "rb") as f:
-        data = f.readlines()
-    
-    #delete the session directory & zip file
-    rmtree(sessionDir)
-    os.remove(zipPath + ".zip")
-    
-    if(printActions):
-        print("FINISHED CREATING FILES FOR SESSION " + submissionID)
-
-    return data
-
-
-def addToNS(NS):
-    sessionData = getSessionData()
-    
-    return sessionData.addNSDB(NS)
-
-def addDefaultComp(comp):
-    Globals.getDefault().addComp(comp)
-
-def addDefaultNS(NS):
-    Globals.getDefault().addNS(NS)
-
-def makeDefaults():
-    Globals.getDefault().makeFromNew("Pr", "psbA", "ATTTAGCGTCTTCTAATCCAGTGTAGACAGTAGTTTTGGCTCCGTTGAGCACTGTAGCCTTGGGCGATCGCTCTAAACATTACATAAATTCACAAAGTTTTCGTTACATAAAAATAGTGTCTACTTAGCTAAAAATTAAGGGTTTTTTACACCTTTTTGACAGTTAATCTCCTAGCCTAAAAAGCAAGAGTTTTTAACTAAGACTCTTGCCCTTTACAACCTC",
-                                                                     0, False, 45.0, 2)
-    
-    Globals.getDefault().makeFromNew("Term", "T1", "ATTTGTCCTACTCAGGAGAGCGTTCACCGACAAACAACAGATAAAACGAAAGGCCCAGTCTTTCGACTGAGCCTTTCGTTTTATTTG",
-                                                                         999, False, 45.0, 2)
-
-def makeMore():
-    Globals.getDefault().makeFromNew("RBS", "S3", "AGTCAAGTAGGAGATTAATTCAATG",
-                                               1, False, 45.0, 2)
-    
-    Globals.getDefault().makeFromNew("RBS", "A", "AACAAAATGAGGAGGTACTGAGATG",
-                                             1, False, 45.0, 2)
-        
-    adhNS = Globals.getDefault().createNS("GOI", "adh", "ATGCATATTAAAGCCTACGCTGCCCTGGAAGCCAACGGAAAACTCCAACCCTTTGAATACGACCCCGGTGCCCTGGGTGCTAATGAGGTGGAGATTGAGGTGCAGTATTGTGGGGTGTGCCACAGTGATTTGTCCATGATTAATAACGAATGGGGCATTTCCAATTACCCCCTAGTGCCGGGTCATGAGGTGGTGGGTACTGTGGCCGCCATGGGCGAAGGGGTGAACCATGTTGAGGTGGGGGATTTAGTGGGGCTGGGTTGGCATTCGGGCTACTGCATGACCTGCCATAGTTGTTTATCTGGCTACCACAACCTTTGTGCCACGGCGGAATCGACCATTGTGGGCCACTACGGTGGCTTTGGCGATCGGGTTCGGGCCAAGGGAGTCAGCGTGGTGAAATTACCTAAAGGCATTGACCTAGCCAGTGCCGGGCCCCTTTTCTGTGGAGGAATTACCGTTTTCAGTCCTATGGTGGAACTGAGTTTAAAGCCCACTGCAAAAGTGGCAGTGATCGGCATTGGGGGCTTGGGCCATTTAGCGGTGCAATTTCTCCGGGCCTGGGGCTGTGAAGTGACTGCCTTTACCTCCAGTGCCAGGAAGCAAACGGAAGTGTTGGAATTGGGCGCTCACCACATACTAGATTCCACCAATCCAGAGGCGATCGCCAGTGCGGAAGGCAAATTTGACTATATTATCTCCACTGTGAACCTGAAGCTTGACTGGAACTTATACATCAGCACCCTGGCGCCCCAGGGACATTTCCACTTTGTTGGGGTGGTGTTGGAGCCTTTGGATCTAAATCTTTTTCCCCTTTTGATGGGACAACGCTCCGTTTCTGCCTCCCCAGTGGGTAGTCCCGCCACCATTGCCACCATGTTGGACTTTGCTGTGCGCCATGACATTAAACCCGTGGTGGAACAATTTAGCTTTGATCAGATCAACGAGGCGATCGCCCATCTAGAAAGCGGCAAAGCCCATTATCGGGTAGTGCTCAGCCATAGTAAAAATTAG")
-    Globals.getDefault().makeWithNamedSequence(adhNS, 2, False, 45.0, 2)
-    Globals.getDefault().makeWithNamedSequence(adhNS, 2, True, 45.0, 2)
-        
-    Globals.getDefault().makeFromNew("GOI", "pdc", "ATGCATAGTTATACTGTCGGTACCTATTTAGCGGAGCGGCTTGTCCAGATTGGTCTCAAGCATCACTTCGCAGTCGCGGGCGACTACAACCTCGTCCTTCTTGACAACCTGCTTTTGAACAAAAACATGGAGCAGGTTTATTGCTGTAACGAACTGAACTGCGGTTTCAGTGCAGAAGGTTATGCTCGTGCCAAAGGCGCAGCAGCAGCCGTCGTTACCTACAGCGTTGGTGCGCTTTCCGCATTTGATGCTATCGGTGGCGCCTATGCAGAAAACCTTCCGGTTATCCTGATCTCCGGTGCTCCGAACAACAACGACCACGCTGCTGGTCATGTGTTGCATCATGCTCTTGGCAAAACCGACTATCACTATCAGTTGGAAATGGCCAAGAACATCACGGCCGCCGCTGAAGCGATTTACACCCCGGAAGAAGCTCCGGCTAAAATCGATCACGTGATCAAAACTGCTCTTCGCGAGAAGAAGCCGGTTTATCTCGAAATCGCTTGCAACACTGCTTCCATGCCCTGCGCCGCTCCTGGACCGGCAAGTGCATTGTTCAATGACGAAGCCAGCGACGAAGCATCCTTGAATGCAGCGGTTGACGAAACCCTGAAATTCATCGCCAACCGCGACAAAGTTGCCGTCCTCGTCGGCAGCAAGCTGCGCGCTGCTGGTGCTGAAGAAGCTGCTGTTAAATTCACCGACGCTTTGGGCGGTGCAGTGGCTACTATGGCTGCTGCCAAGAGCTTCTTCCCAGAAGAAAATGCCAATTACATTGGTACCTCATGGGGCGAAGTCAGCTATCCGGGCGTTGAAAAGACGATGAAAGAAGCCGATGCGGTTATCGCTCTGGCTCCTGTCTTCAACGACTACTCCACCACTGGTTGGACGGATATCCCTGATCCTAAGAAACTGGTTCTCGCTGAACCGCGTTCTGTCGTTGTCAACGGCATTCGCTTCCCCAGCGTTCATCTGAAAGACTATCTGACCCGTTTGGCTCAGAAAGTTTCCAAGAAAACCGGTTCTTTGGACTTCTTCAAATCCCTCAATGCAGGTGAACTGAAGAAAGCCGCTCCGGCTGATCCGAGTGCTCCGTTGGTCAACGCAGAAATCGCCCGTCAGGTCGAAGCTCTTCTGACCCCGAACACGACGGTTATTGCTGAAACCGGTGACTCTTGGTTCAATGCTCAGCGCATGAAGCTCCCGAACGGTGCTCGCGTTGAATATGAAATGCAGTGGGGTCACATTGGTTGGTCCGTTCCTGCCGCCTTCGGTTATGCCGTCGGTGCTCCGGAACGTCGCAACATCCTCATGGTTGGTGATGGTTCCTTCCAGCTGACGGCTCAGGAAGTTGCTCAGATGGTTCGCCTGAAACTGCCGGTTATCATCTTCTTGATCAATAACTATGGTTACACCATCGAAGTTATGATCCATGATGGTCCGTACAACAACATCAAGAACTGGGATTATGCCGGTCTGATGGAAGTGTTCAACGGTAACGGTGGTTATGACAGCGGTGCTGCTAAAGGCCTGAAGGCTAAAACCGGTGGCGAACTGGCAGAAGCTATCAAGGTTGCTCTGGCAAACACCGACGGCCCAACCCTGATCGAATGCTTCATCGGTCGTGAAGACTGCACTGAAGAATTGGTCAAATGGGGTAAGCGCGTTGCTGCCGCCAACAGCCGTAAGCCTGTTAACAAGCTCCTCTAG",
-                                                 3, True, 45.0, 2)
-
-try:
-    makeDefaults()
-    makeMore()
-except AlreadyExistsError:
-    pass
-
 ##################################     ERRORS     ################################
 ##################################################################################
 
-#temp disabled because called on js files
+#temp disabled because it's called on js files: how to fix?
 
 """
 @app.errorhandler(404)
@@ -304,12 +133,7 @@ def login():
     for user in UserDataDB.query.order_by(UserDataDB.email).all():
         allEmails.append(user.getEmail())
     
-    #get the returnURL to use after a successful log in.
-    """if("returnURL" in session):
-        returnURL = session["returnURL"]
-    else:
-        returnURL = "index"""
-
+    #get returnURL
     returnURL = request.args.get('next')
     if(not returnURL or (url_parse(returnURL).netloc != '')):
         returnURL = "/index"
@@ -327,11 +151,9 @@ def loginProcess():
         loginData = leval(request.form["loginData"])
         email = loginData["email"]
 
-        if(loginData["remember"] == "true"):
-            remember = True
-        elif(loginData["remember"] == "false"):
-            remember = False
-        else:
+        try:    #I'd prever something better than this
+            remember = boolJS(loginData["remember"])
+        except Exception:
             raise ValueError("invalid remember me")
 
         validInput = True
@@ -339,17 +161,7 @@ def loginProcess():
         outputStr = "ERROR: could not get valid data from form.<br>"
     
     if(validInput):
-        try:
-            #load the user
-            """
-            sessionData = getSessionData()
-            user = UserData.load(loginData["email"])
-            sessionData.setUser(user)
-            
-            #alter globals
-            session["loggedIn"] = True
-            """
-            
+        try:            
             user = UserData.load(email)
             
             login_user(user, remember = remember) #add remember me functionality
@@ -364,9 +176,6 @@ def loginProcess():
 
 @app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():
-    if("loggedIn" in session):
-        session.pop("loggedIn", False) ####<----- keep? or will Flask-Login do this
-        
     logout_user()
     return redirect("/index")
         
@@ -380,11 +189,9 @@ def registerProcess():
     try:
         registrationData = leval(request.form["registrationData"])
         email = registrationData["email"]
-        if(registrationData["remember"] == "true"):
-            remember = True
-        elif(registrationData["remember"] == "false"):
-            remember = False
-        else:
+        try:
+            remember = boolJS(registrationData["remember"])
+        except Exception:
             raise ValueError("invalid remember me")
 
         validInput = True
@@ -394,15 +201,9 @@ def registerProcess():
     
     if(validInput):    
         try:
-            #create UserData
-            #sessionData = getSessionData()
             user = UserData.new(email)
             login_user(user, remember = remember)
-            #sessionData.setUser(user)
-            
-            #alter globals
-            session["loggedIn"] = True
-            
+                        
             #indicate success
             outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
             succeeded = True
@@ -418,8 +219,8 @@ def registerProcess():
 @app.route("/account", methods = ["POST", "GET"])
 @login_required
 def accountInfo():
-    sessionData = getSessionData()
-    email = sessionData.getEmail()
+    currUser = getCurrUser()
+    email = currUser.getEmail()
     
     return render_template("account.html", email = email,
                            loggedIn = checkLoggedIn())
@@ -429,14 +230,14 @@ def accountInfo():
 ###################################################################################
 
 #the page for domestication
-@app.route("/domesticate", methods = ["POST", "GET"], endpoint = "domesticate")
+@app.route("/design", methods = ["POST", "GET"])
 @login_required
 def domesticate():
     
-    sessionData = getSessionData()
+    currUser = getCurrUser()
         
-    sessionNamedSequences = sessionData.getSortedNS()
-    defaultNamedSequences = Globals.getDefault().getSortedNS()
+    sessionNamedSequences = currUser.getSortedNS()
+    defaultNamedSequences = defaultUser.getSortedNS()
     
     #make the named sequences more friendly to javascript
     NSNamesJSONifiable = {}
@@ -466,82 +267,31 @@ def domesticate():
 #make a new NamedSequence
 @app.route("/newNamedSeq", methods = ["POST"])
 def newNamedSeq():
-    #get data
-    newNSData = leval(request.form["newNSData"]) #do not do this all in one step w/out error handling
-
-    newNSType = newNSData["NStype"]
-    newNSName = newNSData["NSname"]
-    newNSSeq = newNSData["NSseq"].upper()
-
-    #validation
     outputStr = ""
     validInput = True
     succeeded = False
 
-    #type
-    if(type(newNSType) != type(newNSName) != type(newNSSeq) != str):
-        validInput = False
-        outputStr += "ERROR: input received not all strings.<br>"
-    
-    #validate type
-    if(newNSType not in ["Pr", "RBS", "GOI", "Term"]):
-        validInput = False
-        outputStr += "ERROR: '" + newNSType + "' is not a valid type.<br>"
-    
-    #validate name
-    #length
-    if(len(newNSName) < 1 or len(newNSName) > 20):
-        validInput = False
-        outputStr += "ERROR: Sequence name must be 1-20 characters.<br>"
-    
-    #check if it already exists in default:
-    for elemType in ["Pr", "RBS", "GOI", "Term"]:
-        longNames = {"Pr": "promoter", "RBS": "ribosome binding site", "GOI": "gene", "Term": "terminator"}
-        try:
-            Globals.getDefault().findNamedSequence(elemType, newNSName, newNSSeq)
-                        
-            validInput = False
-            outputStr += "ERROR: " + newNSName + " already exists in the default library as a " + longNames[elemType] + ".<br>"
-            break
-        except SequenceMismatchError:
-            validInput = False
-            outputStr += "ERROR: " + newNSName + " already exists in the default library as a " + longNames[elemType] + ", and with a different sequence.<br>"
-            break
-        except SequenceNotFoundError:
-            pass
+    #get data
+    try:
+        newNSData = leval(request.form["newNSData"])
 
-    
-    #characters
-    validCharacters = ascii_letters + digits + "_-. "
-    
-    invalidCharactersName = []
-    
-    for character in newNSName:
-        if(character not in validCharacters and character not in invalidCharactersName):
-            validInput = False
-            outputStr += "ERROR: '" + character + "' is not allowed in a sequence's name.<br>"
-            invalidCharactersName.append(character)
+        newNSType = newNSData["NStype"]
+        newNSName = newNSData["NSname"]
+        newNSSeq = newNSData["NSseq"].upper()
 
-    #validate sequence
-    #length
-    if(len(newNSSeq) < 1 or len(newNSSeq) > 99999): #I don't know what limits should be used
+    except Exception:
         validInput = False
-        outputStr += "ERROR: Sequence must be 1-99999 nucleotides.<br>"
-    
-    #characters/nucleotides
-    validNucleotides = "AGTCBDHKMNRSVWY"
-    
-    invalidCharactersSeq = []
-    for character in newNSSeq.upper():
-        if((character not in validNucleotides) and (character not in invalidCharactersSeq)):
-            validInput = False
-            outputStr += "ERROR: '" + character + "' is not an allowed nucleotide.<br>"
-            invalidCharactersSeq.append(character)
+        outputStr = "ERROR: invalid input received.<br>"
+
+
+    #validation
+    if(validInput):
+        validInput, outputStr = validateNewNS(newNSType, newNSName, newNSSeq)
     
     #finish validation
     if(validInput):
         try:
-            getSessionData().createNS(newNSType, newNSName, newNSSeq)
+            getCurrUser().createNS(newNSType, newNSName, newNSSeq)
 
             outputStr += "Successfully created sequence " + newNSName + "."
             
@@ -558,7 +308,7 @@ def newNamedSeq():
 #in order to set it to the global
 @app.route("/findNamedSeq", methods = ["POST"])
 def findNamedSeq():
-    sessionData = getSessionData()
+    currUser = getCurrUser()
     #get data
     namedSeqData = leval(request.form["namedSeqData"])
         
@@ -566,13 +316,11 @@ def findNamedSeq():
     NSname = namedSeqData["NSname"]
     NSseq = namedSeqData["NSseq"]
 
-    #try:
-        #search for it
-        #foundNamedSequence = NamedSequence.findNamedSequence(NStype, NSname, NSseq, sessionID)
+    #search for sequence
     try:        #search default first
-        foundNamedSequence = Globals.getDefault().findNamedSequence(NStype, NSname, NSseq)
+        foundNamedSequence = defaultUser.findNamedSequence(NStype, NSname, NSseq)
     except Exception:
-        foundNamedSequence = sessionData.findNamedSequence(NStype, NSname, NSseq)
+        foundNamedSequence = currUser.findNamedSequence(NStype, NSname, NSseq)
         
     #add to session selected
     addToSelected(foundNamedSequence) #####<----- strange way to call, but I think it works
@@ -580,55 +328,28 @@ def findNamedSeq():
     outputStr = ""
     
     succeeded = True
-    
-    #except Exception as e:
-    #    outputStr = "ERROR: " + str(e)
-    #    succeeded = False
-    
+        
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
 #really, it's making spacers
 @app.route("/findSpacers", methods = ["POST"])
 def findSpacers():
-    #get data
-    spacersData = leval(request.form["spacersData"])
-    
-    newPosStr = spacersData["componentPos"]
-    newTerminalStr = spacersData["isTerminal"]
-    
     #validation
-    outputStr = ""
     validInput = True
     succeeded = False
 
-    #position
+    #get data
     try:
-        newPos = int(newPosStr)
+        spacersData = leval(request.form["spacersData"])
+        
+        newPosStr = spacersData["componentPos"]
+        newTerminalStr = spacersData["isTerminal"]
     except Exception:
         validInput = False
-        outputStr += "ERROR: position not an integer.<br>"
-    
-    #position
-    maxPosition = SpacerData.getMaxPosition()
-    
-    if(validInput):            
-        if((newPos <= 0) or (newPos > maxPosition)):
-            validInput = False
-            outputStr += "ERROR: Position must be in range 1-" + str(maxPosition) + ".<br>"
-                        
-    #isTerminal
-    if(newTerminalStr == "false"):  #because JavaScript uses true & false in all lower-case
-        isTerminal = False          #but Python capitlizes them
-    elif(newTerminalStr == "true"):
-        isTerminal = True
-    else:
-        validInput = False
-        outputStr += "ERROR: Terminal value not valid.<br>"
+        outputStr = "ERROR: invalid input received.<br>"
 
-    #if the position is the maximum allowed position, it must be terminal
-    if(validInput and (newPos == maxPosition) and (not isTerminal)):
-        validInput = False
-        outputStr += "ERROR: " + str(newPos) + " is the last allowed position, so it must be terminal.<br>"
+    if(validInput):
+        validInput, outputStr, newPos, isTerminal = validateSpacers(newPosStr, newTerminalStr)
     
     #obtain the actual spacers
     if(validInput):
@@ -660,73 +381,56 @@ def findSpacers():
 #make PrimerData
 @app.route("/findPrimers", methods = ["POST"])
 def findPrimers():
-    #get form data
-    primersData = leval(request.form["primersData"])
-
-    outputStr = ""
     validInput = True
     succeeded = False
-    
-    TMstr = primersData["meltingPoint"]
-    rangeStr = primersData["meltingPointRange"]
-    if(primersData["skipPrimers"] == "true"):
-        skipPrimers = True
-    elif(primersData["skipPrimers"] == "false"):
-        skipPrimers = False
-    else:
+
+    #get form data
+    try:
+        primersData = leval(request.form["primersData"])
+        TMstr = primersData["meltingPoint"]
+        rangeStr = primersData["meltingPointRange"]
+        skipStr = primersData["skipPrimers"]
+
+    except Exception:
+        validInput = False
+        outputStr = "ERROR: invalid input received."
+
+    #skip primers if relevant
+    try:
+        skipPrimers = boolJS(skipStr)
+    except Exception:
         validInput = False
         outputStr += "ERROR: Skip primers value not true or false.<br>"
     
     #skip primers if so
     if(skipPrimers):
         outputStr += "Chose not to make primers.<br>"
-        addToSelected(Globals.getNullPrimerData())
+        addToSelected(nullPrimerData)
         
         succeeded = True
         
-        
-    else:
+    elif(validInput):
         #that thrilling data validation
+        if(validInput):
+            validInput, outputStr, TMnum, rangeNum = validatePrimers(TMstr, rangeStr)
         
-        #type
-        try:
-            TMnum = float(TMstr)
-        except Exception:
-            validInput = False
-            outputStr += "ERROR: TM not a number.<br>"
-        
-        try:
-            rangeNum = float(rangeStr)
-        except Exception:
-            validInput = False
-            outputStr += "ERROR: TM range not a number.<br>"
-        
-        #proper ranges
-        if(validInput):    
-            if(TMnum < 20 or TMnum > 80): #I don't know what to actually limit it by
+        if(validInput):        
+            #is there a spacer selected
+            selectedSpacers = getSelectedSD()
+            if(selectedSpacers == None):
                 validInput = False
-                outputStr += "ERROR: Melting point out of range 20-80<br>"
+                outputStr += "ERROR: No spacers selected.<br>"
             
-            if(rangeNum < 1 or rangeNum > 10):
-                validInput = False
-                outputStr += "ERROR: Range for melting point must be in range 1-10.<br>"
-        
-        #is there a spacer selected
-        selectedSpacers = getSelectedSD()
-        if(selectedSpacers == None):
-            validInput = False
-            outputStr += "ERROR: No spacers selected."
-        
-        selectedSpacers = SpacerData.fromJSON(selectedSpacers)
+            selectedSpacers = SpacerData.fromJSON(selectedSpacers)
 
         #find the primers
         if(validInput):
             try:
-                seqToEvaluate = getSelectedNS().getSeq() #fix this
+                seqToEvaluate = getSelectedNS().getSeq() #fix this --- how?
                 newPrimerData = PrimerData.makeNew(seqToEvaluate, TMnum, rangeNum)
                 newPrimerData.addSpacerSeqs(selectedSpacers)
                 
-                if(newPrimerData.getPrimersFound()): #returns False if no primers, a string otherwise
+                if(newPrimerData.getPrimersFound()):
                     #outputStr
                     outputStr += str(newPrimerData).replace("\n", "<br>")
                     
@@ -736,7 +440,7 @@ def findPrimers():
                     succeeded = True
                     
                 else:
-                    outputStr += "Couldn't find primers for the specified sequence, melting point & range.<br>"
+                    outputStr += "Couldn't find primers for the specified sequence, melting point, and range.<br>"
             
             except Exception as e:
                 outputStr += "ERROR: " + str(e) + "<br>"
@@ -751,7 +455,6 @@ def findPrimers():
 def finishDomestication():
     #validation
     validInput = getAllSelected()
-    #validInput = (selectedDict["selectedNamedSequence"] != None and selectedDict["selectedPrimers"] != None and selectedDict["selectedSpacers"] != None)
     succeeded = False
     newID = -1
 
@@ -759,43 +462,35 @@ def finishDomestication():
     
     if(validInput):
         try:
-            sessionData = getSessionData()
+            currUser = getCurrUser()
             selectedNS = getSelectedNS()
             selectedSpacers = SpacerData.fromJSON(getSelectedSD())
             selectedPrimers = PrimerData.fromJSON(getSelectedPD())
-
-            print("trying to make a component from:")
-            print(sessionData)
-            print(selectedNS)
-            print(selectedSpacers)
-            print(selectedPrimers)
-            print("\n")
             
             #check if it already exists in defaults
             try:
-                Globals.getDefault().findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
+                defaultUser.findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
                 raise AlreadyExistsError("Component already exists as a default component.")
             except (SequenceNotFoundError, ComponentNotFoundError):
                 pass
             
             #check if it already exists in personal library
             try:
-                getSessionData().findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
+                getCurrUser().findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
                 raise AlreadyExistsError("Component already exists as a user-made component.")
             except (SequenceNotFoundError, ComponentNotFoundError):
                 pass
             
             #add NS to personal library if it's not from there
             try:
-                tempNS = addToNS(selectedNS)
+                tempNS = currUser.addNSDB(selectedNS)
                 selectedNS = tempNS
             except AlreadyExistsError:
                 pass
     
-            newComponent = sessionData.createComp(selectedNS, selectedSpacers, selectedPrimers)
+            newComponent = currUser.createComp(selectedNS, selectedSpacers, selectedPrimers)
             
             #modify output string
-            #outputStr = newComponent.getID() + " created."
             libraryName = "Personal"
             outputStr = "<a target = '_blank' href = '/components#" + libraryName + newComponent.getNameID() + "'>" + newComponent.getNameID() + "</a> created."
             
@@ -817,7 +512,9 @@ def finishDomestication():
 def domesticationZIPs():
     try:
         newCompID = request.args.get("id")
-        compZIP = ComponentDB.query.get(newCompID).getCompZIP()
+        comp = ComponentDB.query.get(newCompID)
+        checkPermission(comp)
+        compZIP = comp.getCompZIP()
 
         data = makeZIP(compZIP)
 
@@ -841,8 +538,8 @@ def domesticationZIPs():
 @app.route("/assemble", methods = ["POST", "GET"])
 @login_required
 def assemble():       
-    allDefaultNS = Globals.getDefault().getSortedNS()
-    allSessionNS = getSessionData().getSortedNS()
+    allDefaultNS = defaultUser.getSortedNS()
+    allSessionNS = getCurrUser().getSortedNS()
     
     #dict of all components
     allAvailableNames = {}
@@ -938,10 +635,10 @@ def processAssembly():
                         
         try:
             try:                    #search defaults
-                foundComp = Globals.getDefault().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                foundComp = defaultUser.findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
                 libraryName = "Default"
             except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
-                foundComp = getSessionData().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                foundComp = getCurrUser().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
                 libraryName = "Personal"
                 
             #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
@@ -965,72 +662,6 @@ def processAssembly():
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-def startAssemblyGB():
-    fileHead = []
-    fileHead.append("LOCUS\tAssembled seq\t" + str(25) + " bp\tDNA\tlinear\t" + "26-MAY-2020")
-    fileHead.append("DEFINITION\tSequence assembled from CyanoConstruct")
-    fileHead.append("FEATURES\tLocation/Qualifiers")
-    
-    return fileHead
-
-def startOrigin():
-    return ["ORIGIN"]
-
-def addCompAssemblyGB(comp, features, i):
-    lenSeq = len(comp.getFullSeq())
-    
-    if(comp.getType() == "GOI"):
-        features.append("\tgene\t\t" + str(i + 1) + ".." + str(i + lenSeq))
-        features.append("\t\t\t/gene=\"" + comp.getName() + "\"")
-    else:
-        regTypes = {"Pr": "promoter", "RBS" : "ribosome_binding_site", "Term": "terminator"}
-        regName = regTypes[comp.getType()]
-        features.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
-        features.append("\t\t\t/regulatory_class=" + regName)
-                                            #get a longer thing to say here
-        features.append("\t\t\t/note=\"" + comp.getType() + " " + comp.getName() + "\"")
-    
-    return i + lenSeq
-
-def finishCompAssemblyGB(features, origin, fullSeq):
-    #paste features and origin section together, add a // and join it into a thing
-    
-    seq = fullSeq.lower()
-    
-    i = 0
-    
-    while(i < (len(seq) // 60)):
-        i60 = i * 60
-        line = "{number} {block1} {block2} {block3} {block4} {block5} {block6}".format(
-                **{"number" : str(i60 + 1).rjust(9, " "),
-                "block1" : seq[i60 : i60 + 10],
-                "block2" : seq[i60 + 10 : i60 + 20],
-                "block3" : seq[i60 + 20 : i60 + 30],
-                "block4" : seq[i60 + 30 : i60 + 40],
-                "block5" : seq[i60 + 40 : i60 + 50],
-                "block6" : seq[i60 + 50 : i60 + 60]})
-
-        origin.append(line)
-
-        i += 1
-        
-    remainder = len(seq) % 60
-    if(remainder != 0): #is not zero
-        
-        line = str(i * 60 + 1).rjust(9, " ") + " "
-        for j in range(remainder):
-            line += seq[i * 60 + j]
-            if((j + 1) % 10 == 0):
-                line += " "
-        
-        origin.append(line)
-
-    features.extend(origin)
-    
-    features.append("//")
-    
-    return "\n".join(features)    
-
 #get the zip for the assembled sequence
 @app.route("/assembledSequence.zip")
 def assemblyZIP():
@@ -1041,31 +672,28 @@ def assemblyZIP():
         return render_template("noSeq.html", loggedIn = checkLoggedIn())
 
     try:
-        startEndComps = Globals.getDefault().getStartEndComps()
+        startEndComps = defaultUser.getStartEndComps()
 
         #start with element 0
         fullSeq = startEndComps[0].getFullSeq()
 
-        fileGB = startAssemblyGB()
-        originSection = startOrigin()
+        features = []
         i = 0 #index (starting at zero) of the fullSeq to add at
 
-        i = addCompAssemblyGB(startEndComps[0], fileGB, i)
+        i = addCompAssemblyGB(startEndComps[0], features, i)
 
         #add the sequence of the component
-        for compID in compsList: #I hope this is in order
+        for compID in compsList:
             comp = ComponentDB.query.get(compID)
-            print(comp.getName())
-            print(i)
+            checkPermission(comp)
             fullSeq += comp.getFullSeq()
-            i = addCompAssemblyGB(comp, fileGB, i)
+            i = addCompAssemblyGB(comp, features, i)
         
         #finish fullSeq with element T
         fullSeq += startEndComps[1].getFullSeq()
-        i = addCompAssemblyGB(startEndComps[1], fileGB, i)
-                
+        i = addCompAssemblyGB(startEndComps[1], features, i)
     
-        fileGB = finishCompAssemblyGB(fileGB, originSection, fullSeq)
+        fileGB = finishCompAssemblyGB(features, fullSeq)
         fileFASTA = ">CyanoConstruct sequence\n" + fullSeq
 
         data = makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
@@ -1080,20 +708,6 @@ def assemblyZIP():
     return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='sequences.zip';"})
 
-def assemblyZIP2():
-    try:
-        data = makeZIP(getSessionData().getAssemblyZIP()) #validate it first?
-    except Exception as e:
-        print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
-    
-    if(data == None):
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
-    
-
-    return Response(data, headers = {"Content-Type": "application/zip",
-                                     "Condent-Disposition": "attachment; filename='sequences.zip';"})
-
 
 ##############################     COMPONENT LIST     ##############################
 #components page
@@ -1102,15 +716,15 @@ def assemblyZIP2():
 def displayComps():
     array = [time()]
     
-    sessionData = getSessionData()
+    currUser = getCurrUser()
 
     array.append(time())
 
     allNS = {}
     allComps = {}
 
-    allNS["Default"], allComps["Default"] = Globals.getDefault().getSortedNSandComps()
-    allNS["Personal"], allComps["Personal"] = sessionData.getSortedNSandComps()
+    allNS["Default"], allComps["Default"] = defaultUser.getSortedNSandComps()
+    allNS["Personal"], allComps["Personal"] = currUser.getSortedNSandComps()
 
     array.append(time())
 
@@ -1134,19 +748,53 @@ def displayComps():
 
     array.append(time())
     
-    explanations = ["getSessionData()", "getSortedNSandComps()", "replace NS with seqs", "render_template"]
+    explanations = ["getCurrUser()", "getSortedNSandComps()", "replace NS with seqs", "render_template"]
     
     for i in range(len(array) - 1):
         print(explanations[i] + ":\t" + str(array[i+1]-array[i]))
 
     return rendered
 
+@app.route("/library", methods = ["GET"])
+@login_required
+def displayCompLib():
+    array = [time()]
+    
+    currUser = getCurrUser()
+
+    array.append(time())
+
+    allNS = {"Default": defaultUser.getSortedNS(),
+            "Personal": currUser.getSortedNS()}
+
+    array.append(time())
+
+    array.append(time())
+
+    #used for formatting
+    longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators"}
+    longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
+
+    rendered = render_template("library.html", allNS = allNS,
+                           longNames = longNames, longNamesSingular = longNamesSingular,
+                           loggedIn = checkLoggedIn())
+
+    array.append(time())
+    
+    explanations = ["getCurrUser()", "getSortedNS()", "nothing", "render_template"]
+    
+    for i in range(len(array) - 1):
+        print(explanations[i] + ":\t" + str(array[i+1]-array[i]))
+
+    return rendered
+
+
 #make and send the ZIP file for a component
 @app.route("/componentZIP.zip")
 def getComponentZIP():
     try:
         comp = ComponentDB.query.get(request.args.get("id"))
-        
+
         checkPermission(comp)
         
         compZIP = comp.getCompZIP()
@@ -1164,49 +812,67 @@ def getComponentZIP():
         return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='componentZIP.zip';"})
     
-@app.route("/removeComponent", methods = ["POST"])
+@app.route("/removeComponent", methods = ["POST"]) #####<----- use ID INSTEAD
 def removeComponent():
+
     succeeded = False
     errorMessage = ""
-    
-    component = request.form["componentToRemove"]
 
-    componentDict = leval(component)
-    
     try:
-        elemType = componentDict["elemType"]
-        name = componentDict["name"]
-        pos = int(componentDict["pos"])
-        terminal = componentDict["terminal"]              
-        
-        getSessionData().removeComponent(elemType, name, pos, terminal)
-        
-        succeeded = True
-    
-    except Exception as e:
-        errorMessage = str(e)
+        compID = request.form["compID"]
+
+        comp = ComponentDB.query.get(compID)
+
+        if(comp is None):
+            errorMessage = "Component does not exist."
+
+        else:
+            try:
+                permissionOwnComp(comp)
+                
+                getCurrUser().removeFoundComponent(comp)
+                
+                succeeded = True
+
+            except AccessError:
+                errorMessage = "You do not have permission to modify this component."
+                    
+            except Exception as e:
+                errorMessage = str(e)
+
+    except Exception:
+        errorMessage = "Bad input."
             
     return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
 
-@app.route("/removeSequence", methods = ["POST"])
+@app.route("/removeSequence", methods = ["POST"]) #####<----- use ID INSTEAD
 def removeSequence():
     succeeded = False
     errorMessage = ""
-    
-    namedSequence = request.form["sequenceToRemove"]
 
-    sequenceDict = leval(namedSequence)
-    
     try:
-        elemType = sequenceDict["elemType"]
-        name = sequenceDict["name"]
+        nsID = request.form["sequenceID"]
+
+        ns = NamedSequenceDB.query.get(nsID)
         
-        getSessionData().removeSequence(elemType, name)
-        
-        succeeded = True
-    
-    except Exception as e:
-        errorMessage = str(e)
+        if(ns is None):
+            errorMessage = "Sequence does not exist."
+        else:
+            try:
+                permissionOwnNS(ns)
+
+                getCurrUser().removeFoundSequence(ns)
+
+                succeeded = True
+
+            except AccessError:
+                errorMessage = "You do not have permission to modify this sequence."
+
+            except Exception as e:
+                errorMessage = str(e)
+
+    except Exception:
+        errorMessage = "Bad input."
             
     return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
 
@@ -1239,13 +905,13 @@ def libraryZIP():
 
         if(libraryName == "Default"):
             try:
-                data = makeAllLibraryZIP(Globals.getDefault())
+                data = makeAllLibraryZIP(defaultUser)
                 succeeded = True
             except Exception as e:
                 errorMessage = str(e)
         elif(libraryName == "Personal"):
             try:
-                data = makeAllLibraryZIP(getSessionData())
+                data = makeAllLibraryZIP(getCurrUser())
                 succeeded = True
             except Exception as e:
                 errorMessage = str(e)

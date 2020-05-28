@@ -18,6 +18,7 @@ class UserDataDB(db.Model):
     
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(254), unique = True)
+    #include name, institution, etc.?
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
     nextNSidGOI = db.Column(db.Integer)
@@ -104,6 +105,89 @@ class NamedSequenceDB(db.Model):
     
     def getNameID(self):
         return self.nameID
+
+    def getHTMLdisplay(self):
+        longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
+        longName = longNamesSingular[self.getType()]
+
+        if UserDataDB.query.get(self.getUserID()).getEmail() == "default":
+            libraryName = "Default"
+            isDefault = True
+        else:
+            libraryName = "Personal"
+            isDefault = False
+
+        retArray = []
+
+        retArray.append("""<div class = "hideableTitle nameTitle">
+                    <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{NSname}'); switchToggleText(this);" value = "Name: {NSname}">
+                    <span class = "titleRight monospaced">[Click to show]</span>
+                </div>
+
+                <div id = "{libraryName}{NSname}" class = "hideableDiv" style = "display: none">
+
+                        <!-- info about the named sequence -->
+                        <p>{longName}: {NSname}</p>
+
+                        <p>Sequence:</p>
+                        <div class = "sequence monospaced">{NSseq}</div>
+
+                        <br>""".format(libraryName = libraryName,
+                                        NSname = self.getName(),
+                                        longName = longName,
+                                        NSseq = self.getSeq(),
+                                        ))
+
+        allComps = self.getAllComponents()
+        allComps.sort()
+
+        for comp in allComps:
+            retArray.append("""<div class = "hideableTitle compTitle" id = "{libraryName}{compNameID}">
+                            <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{compNameID}Data'); switchToggleText(this);" value = "ID: {compNameID}">
+                            <span class = "titleRight monospaced">[Click to show]</span>
+                        </div>
+
+                        <div id = "{libraryName}{compNameID}Data" class = "hideableDiv componentData" style = "display: none">
+
+                            <p>
+                                {compHTML}
+                            </p>
+
+                            <hr>
+
+                            <p><span class = 'emphasized'>Complete Sequence:</span></p>
+                            <div class = "sequence monospaced">
+                                {fullSeq}
+                            </div>
+
+                            <br>
+
+                            <input type = "button" class = "styledButton" value = "Download Sequences" onclick = "downloadComponentSequence({compID})">""".format(
+                                                        libraryName = libraryName,
+                                                        compNameID = comp.getNameID(),
+                                                        compHTML = comp.getHTMLstr(),
+                                                        fullSeq = comp.getFullSeq(),
+                                                        compID = comp.getID()
+                                                        ))
+
+            if(not isDefault):
+                retArray.append("""<br><hr><input type = "button" class = "styledButton" value = "Remove Component" onclick = "removeComponent({compID})">""".format(
+                                                                                                compID = comp.getID()))
+
+
+            retArray.append("""</div><div class = "hideableBottom"></div>""")
+
+        if(not isDefault):
+            retArray.append("""<br><hr><input type = "button" class = "styledButton" value = "Remove Sequence" onclick = "removeSequence('{NSID}')">""".format(
+                NSID = self.getID()))
+
+
+        retArray.append("""</div><div class = "hideableBottom"></div>""")
+
+        retStr = "".join(retArray)
+
+        return Markup(retStr)
+
 
     #comparisons
     def __eq__(self, other):
@@ -357,9 +441,9 @@ class ComponentDB(db.Model):
     def getLongName(self):
         retStr = self.getType() + " " + self.getName() + " Position: " + str(self.getPosition())
         if(self.getTerminal()):
-            retStr += " terminal"
+            retStr += " last"
         else:
-            retStr += " non-terminal"
+            retStr += " not last"
         
         return retStr
 
@@ -367,7 +451,7 @@ class ComponentDB(db.Model):
         retStr = "ID: " + str(self.getNameID()) + "<br>"
 
         retStr += "Position: " + str(self.getPosition()) + "<br>"
-        retStr += "Terminal?: " + str(self.getTerminal()) + "<br>"
+        retStr += "Last?: " + str(self.getTerminal()) + "<br>"
 
         retStr += "<br><span class = 'emphasized'>Spacers:</span><br>"
         retStr += "Left: " + self.getLeftSpacer() + "<br>"
@@ -379,6 +463,21 @@ class ComponentDB(db.Model):
 
         return Markup(retStr)
     
+    def getHTMLstr(self):
+        retStr = "ID: " + str(self.getNameID()) + "<br>"
+
+        retStr += "Position: " + str(self.getPosition()) + "<br>"
+        retStr += "Last?: " + str(self.getTerminal()) + "<br>"
+
+        retStr += "<br><span class = 'emphasized'>Spacers:</span><br>"
+        retStr += "Left: " + self.getLeftSpacer() + "<br>"
+        retStr += "Right: " + self.getRightSpacer() + "<br>"
+        
+        retStr += "<br><span class = 'emphasized'>Primers:</span><br>"
+        retStr += "Left primer:<br>GC content: " + str(round(self.getLeftGC() * 100, 4)) + "%<br>TM: " + str(round(self.getLeftTM(), 4)) + "<br>Sequence:<br>" + self.getLeftPrimer() + "<br><br>"
+        retStr += "Right primer:<br>GC content: " + str(round(self.getRightGC() * 100, 4)) + "%<br>TM: " + str(round(self.getRightTM(), 4)) + "<br>Sequence:<br>" + self.getRightPrimer() + "<br>"
+
+        return retStr
     def getCompZIP(self):
         #primers and complete sequence
         retDict = {}

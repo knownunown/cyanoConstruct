@@ -4,7 +4,6 @@
 cyanoConstruct component file (NamedSequence, SpacerData, PrimerData, Component classes)
 """
 
-
 import random
 from jinja2 import Markup
 
@@ -71,31 +70,9 @@ class NamedSequence:
         newNS.__name = NSName
         newNS.__seq = NSSeq
         newNS.__nameID = nameID
-        
-        newNS.__inDatabase = False
-        
-        return newNS
-
-    @classmethod
-    def loadEntry(cls, newID):
-        if(type(newID) != int):
-            raise TypeError("NamedSequence newID not an int")
-            
-        newNS = cls()    
-        
-        #uhhhh
-        newNS.__DBid = newID
-        newNS.__inDatabase = True
-        
+                
         return newNS
                 
-    def setDBid(self, newID):
-        if(type(newID) != int):
-            raise TypeError("NamedSequence newID not an int")
-            
-        self.__DBid = newID
-        self.__inDatabase = True
-        
     #json stuff
     def toJSON(self):
         return vars(self)
@@ -111,7 +88,6 @@ class NamedSequence:
             newNS.__name = JSONDict[prefix + "name"]
             newNS.__seq = JSONDict[prefix + "seq"]
             newNS.__nameID = int(JSONDict[prefix + "nameID"])
-            newNS.__inDatabase = bool(JSONDict[prefix + "inDatabase"])
         except KeyError:
             raise Exception("Can't create a NamedSequence from this JSONDict.")
         
@@ -122,46 +98,18 @@ class NamedSequence:
     def __str__(self):
         return ("Named Sequence.\nType: " + self.getType() + "\nName: " + self.getName() + 
                 "\nName ID: " + str(self.getNameID()) + "\nSequence:\n" + self.getSeq())
-        
-    #getters
-    def getDBid(self):
-        if(self.getInDatabase):
-            return self.__DBid
-        else:
-            return -1 #I don't know what it should do here, actually
-    
-    def getInDatabase(self):
-        return self.__inDatabase
-    
-    def getEntry(self):
-        if(self.getInDatabase()):
-            return NamedSequenceDB.query.get(self.getDBID())
-        else:
-            raise Exception("Not in database")
-    
+                
     def getType(self):
-        if(self.getInDatabase()):
-            return NamedSequenceDB.query.get(self.getDBID()).getType()
-        else:
-            return self.__type
+        return self.__type
         
     def getName(self):
-        if(self.getInDatabase()):
-            return NamedSequenceDB.query.get(self.getDBID()).getName()
-        else:
-            return self.__name
+        return self.__name
     
     def getSeq(self):
-        if(self.getInDatabase()):
-            return NamedSequenceDB.query.get(self.getDBID()).getSeq()
-        else:
-            return self.__seq
+        return self.__seq
     
     def getNameID(self):
-        if(self.getInDatabase()):
-            return NamedSequenceDB.query.get(self.getDBID()).getNameID()
-        else:
-            return self.__nameID
+        return self.__nameID
 
 class SpacerData:
     start = "GAAGAC" #enzyme recog. site?
@@ -192,8 +140,7 @@ class SpacerData:
         return len(SpacerData.spacers) - 1
 
     def __init__(self):
-        self.__inDatabase = False
-        return
+        pass
 
     @classmethod
     def makeNew(cls, position, isTerminal):
@@ -243,23 +190,9 @@ class SpacerData:
         #set the NN on each side
         newSpacerData.setNN()
         newSpacerData.setFullSpacerSeqs()
-        
-        newSpacerData.__inDatabase = False
-        
+                
         return newSpacerData
 
-    @classmethod
-    def loadEntry(cls, newID):
-        if(type(newID) != int):
-            raise TypeError("newID not an int")
-            
-        newSpacerData = cls()
-            
-        newSpacerData.__DBid = newID
-        newSpacerData.__inDatabase = True
-        
-        return newSpacerData
-    
     #json stuff
     def toJSON(self):
         return vars(self)
@@ -283,21 +216,13 @@ class SpacerData:
             newSpacerData.__rightNN = JSONDict[prefix + "rightNN"]
             newSpacerData.__fullSeqLeft = JSONDict[prefix + "fullSeqLeft"]
             newSpacerData.__fullSeqRight = JSONDict[prefix + "fullSeqRight"]
-            
-            newSpacerData.__inDatabase = JSONDict[prefix + "inDatabase"]
+
         except KeyError:
             raise Exception("Can't create a NamedSequence from this JSONDict.")
         
         return newSpacerData
 
     #setters?
-    def setDBid(self, newID):
-        if(type(newID) != int):
-            raise TypeError("newID not an int")
-            
-        self.__DBid = newID
-        self.__inDatabase = True
-
     def setFullSpacerSeqs(self):
         self.__fullSeqLeft = self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
         self.__fullSeqRight = SpacerData.end + self.getRightNN() +  self.getSpacerRight() #actually, I don't know if it's that simple or if complementary bases need to be found
@@ -312,63 +237,36 @@ class SpacerData:
     def __str__(self):
         retStr = "Spacers for position " + str(self.getPosition())
         if(self.getIsTerminal()):
-            retStr += " is terminal"
+            retStr += " is last element"
         else:
-            retStr += " is not terminal"
+            retStr += " is middle element"
             
         retStr += "\nLeft:\n" + self.getSpacerLeft()
         retStr += "\nRight:\n" + self.getSpacerRight()
         retStr += "\nTerminal Letter: " + self.getTerminalLetter()
         return retStr
 
-    #basic getters
-    def getInDatabase(self):
-        return self.__inDatabase
-        
-    def getID(self):
-        return self.__DBid
-    
+    #basic getters            
     def getPosition(self):
-        if(self.getInDatabase()):   #query the database if it's in
-            return SpacerDataDB.query.get(self.getID()).getPosition()
-        else:                       #the instance directly otherwise
-            return self.__position 
+        return self.__position 
 
     def getSpacerLeft(self):
-        if(self.getInDatabase()):
-            return SpacerDataDB.query.get(self.getID()).getSpacerLeft()
-        else:
-            return self.__spacerLeft
+        return self.__spacerLeft
     
     def getSpacerRight(self):
-        if(self.getInDatabase()):
-            return SpacerDataDB.query.get(self.getID()).getSpacerRight()
-        else:
-            return self.__spacerRight
+        return self.__spacerRight
     
     def getIsTerminal(self):
-        if(self.getInDatabase()):
-            return SpacerDataDB.query.get(self.getID()).getIsTerminal()
-        else:
-            return self.__isTerminal
+        return self.__isTerminal
     
     def getTerminalLetter(self):
-        if(self.getInDatabase()):
-            return SpacerDataDB.query.get(self.getID()).getTerminalLetter()
-        else:
-            return self.__terminalLetter
+        return self.__terminalLetter
 
     def getLeftNN(self):
-        if(self.getInDatabase()):
-            return SpacerDataDB.query.get(self.getID()).getLeftNN()
-        else:
-            return self.__leftNN
+        return self.__leftNN
     
     def getRightNN(self):
-        if(self.getInDatabase()):
-            return SpacerDataDB.query.get(self.getID()).getRightNN()
-        else:
-            return self.__rightNN
+        return self.__rightNN
 
     def getFullSeqLeft(self):
         return self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
@@ -379,7 +277,7 @@ class SpacerData:
 
 class PrimerData:
     def __init__(self):
-        self.__inDatabase = False
+        pass
     
     @classmethod
     def makeNew(cls, seq, TMgoal, TMrange):
@@ -398,25 +296,6 @@ class PrimerData:
  
         
         return newPrimerData
-
-    @classmethod
-    def loadEntry(cls, newID):
-        if(type(newID) != int):
-            raise TypeError("newID not an int")
-        
-        newPrimerData = cls()
-            
-        newPrimerData.__DBid = newID
-        newPrimerData.__inDatabase = True
-
-        return newPrimerData
-    
-    def setDBid(self, newID):
-        if(type(newID) != int):
-            raise TypeError("newID not an int")
-            
-        self.__DBid = newID
-        self.__inDatabase = True
 
     #json stuff
     def toJSON(self):
@@ -439,7 +318,6 @@ class PrimerData:
             newPrimerData.__GCright = JSONDict[prefix + "GCright"]
             newPrimerData.__TMright = JSONDict[prefix + "TMright"]
 
-            newPrimerData.__inDatabase = JSONDict[prefix + "inDatabase"]
         except KeyError:
             raise Exception("Can't create a PrimerData from this JSONDict.")
         
@@ -559,53 +437,26 @@ class PrimerData:
         return retStr
     
     #basic getters
-    def getID(self):
-        return self.__DBid
-    
-    def getInDatabase(self):
-        return self.__inDatabase
-    
     def getPrimersFound(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getPrimersFound()
-        else:
-            return self.__primersFound
+        return self.__primersFound
     
     def getSeqLeft(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getSeqLeft()
-        else:
-            return self.__seqLeft
+        return self.__seqLeft
     
     def getGCleft(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getGCleft()
-        else:
-            return self.__GCleft
+        return self.__GCleft
     
     def getTMleft(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getTMleft()
-        else:
-            return self.__TMleft
+        return self.__TMleft
     
     def getSeqRight(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getSeqRight()
-        else:
-            return self.__seqRight
+        return self.__seqRight
     
     def getGCright(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getGCright()
-        else:
-            return self.__GCright
+        return self.__GCright
     
     def getTMright(self):
-        if(self.getInDatabase()):
-            return PrimerDataDB.query.get(self.getID()).getTMright()
-        else:
-            return self.__TMright
+        return self.__TMright
 
 
 
@@ -629,30 +480,7 @@ class Component:
         self.__namedSeq = namedSeq
         self.__primerData = primerData
         self.__spacerData = spacerData
-        
-        self.__inDatabase = False
-    
-    """@classmethod
-    def loadEntry(cls, newID):
-        if(type(newID) != int):
-            raise TypeError("newID not an int")
-        
-        self.__DBid = newID
-        
-        entry = ComponentDB.query.get(newID)
             
-        newPrimerData.__DBid = newID
-        newPrimerData.__inDatabase = True
-
-        return newPrimerData"""
-    
-    def setID(self, newID):
-        if(type(newID) != int):
-            raise TypeError("Component newID not an int")
-        
-        self.__DBid = newID
-        self.__inDatabase = True
-        
     
     #does not require a NamedSequence, SpacerData, or PrimerData to create the component
     @staticmethod
@@ -770,9 +598,6 @@ class Component:
         return retDict
     
     #basic getters
-    def getDBid(self):
-        return self.__DBid
-    
     def getID(self):
         nameID = self.getNamedSequence().getNameID()
         retStr = self.getType() + "-" + str(nameID).zfill(3) + "-" + str(self.getPosition()).zfill(3) + self.getTerminalLetter()
@@ -843,4 +668,13 @@ class Component:
     
     def getRightTM(self):
         return self.getPrimerData().getTMright()
-    
+
+
+
+
+
+
+
+
+
+nullPrimerData = PrimerData.makeNull()

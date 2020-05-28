@@ -97,13 +97,12 @@ function showLibrary(libraryName){
 	return false;
 }
 
-function removeComponent(elemType, name, pos, terminal){
+
+function removeComponent(id){
 	if(window.confirm("This will permanently remove a component from your library.\nAre you sure?")){
 
-		var componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
-
 		$.ajax({
-			data : {componentToRemove: componentInfo},
+			data : {compID: id},
 			type : 'POST',
 			url : '/removeComponent'
 			})
@@ -113,7 +112,7 @@ function removeComponent(elemType, name, pos, terminal){
 				refreshPage();
 			}
 			else{
-				alert("There was a problem.");
+				alert("ERROR: " + data.errorMessage);
 			}
 
 		});
@@ -124,13 +123,11 @@ function removeComponent(elemType, name, pos, terminal){
 	}
 }
 
-function removeSequence(elemType, name){
+function removeSequence(id){
 	if(window.confirm("This will permanently remove sequence " + name + " and all components derived from it from your library.\nAre you sure?")){
 
-		var sequenceInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "'}";
-
 		$.ajax({
-			data : {sequenceToRemove: sequenceInfo},
+			data : {sequenceID: id},
 			type : 'POST',
 			url : '/removeSequence'
 			})
