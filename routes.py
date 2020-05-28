@@ -271,7 +271,7 @@ def design():
                 NSSequencesJSONifiable[ns.getID()] = ns.getSeq()
 
     
-    return render_template("domesticate.html", namedSequencesNames = NSNamesJSONifiable,
+    return render_template("design.html", namedSequencesNames = NSNamesJSONifiable,
                            namedSequencesSequences = NSSequencesJSONifiable,
                            loggedIn = checkLoggedIn())
 
