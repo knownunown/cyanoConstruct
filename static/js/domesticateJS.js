@@ -7,14 +7,45 @@ function scrollToId(id){
 	document.getElementById(id).scrollIntoView({block: "start", inline: "start", behavior: "smooth"})
 }
 
+
+function selectForm(){
+
+	if(document.getElementById("designComponent").checked){
+		document.getElementById("componentForm").style.display = "block";
+
+		document.getElementById("sequenceForm").style.display = "none";
+		document.getElementById("backboneForm").style.display = "none";
+
+		scrollToId("componentForm");
+	}
+	else if(document.getElementById("designSequence").checked){
+		//do that
+		//disable all the other stuff?
+		document.getElementById("sequenceForm").style.display = "block";
+
+		document.getElementById("componentForm").style.display = "none";
+		document.getElementById("backboneForm").style.display = "none";
+
+		scrollToId("designSequence");
+	}
+	else if(document.getElementById("designBackbone").checked){
+		document.getElementById("backboneForm").style.display = "block";
+
+		document.getElementById("componentForm").style.display = "none";
+		document.getElementById("sequenceForm").style.display = "none";
+
+		scrollToId("backboneForm");
+	}
+}
+
 //named sequence
 function formatNSname(){
 	var currentType = document.getElementById("NStype").value;
 
-	var retString = "<option value ='new'>Create new</option>";
+	var retString = "";
 
-	for(ns of namedSequencesNames[currentType]){
-		retString += "<option value = '" + ns + "'>" + ns + "</option>";
+	for(ns of namedSequencesNames[currentType]){ //change so the value is the ID?
+		retString += "<option value = '" + ns.id + "'>" + ns.name + "</option>";
 	}
 
 	document.getElementById("NSname").innerHTML = retString;
@@ -25,127 +56,20 @@ function formatNSname(){
 }
 
 function formatNSsequence(){
-	var currentName = document.getElementById("NSname").value;
+	var currID = document.getElementById("NSname").value;
 
-	if(currentName == "new"){ //making new sequence
-		//adjust ability to name new sequence
-		document.getElementById("newNSname").style.visibility = "visible";
-		document.getElementById("newNSnameInput").disabled = false;
-
-		//adjust sequence textarea
-		document.getElementById("NSseq").value = "";
-		document.getElementById("NSseq").readOnly = false;
-
-		//adjust buttons
-		document.getElementById("newNSsubmitDiv").style.visibility = "visible";
-		document.getElementById("newNSsubmit").disabled = false;
-
-		document.getElementById("NSfinish").disabled = true;
-	}
-	else{ //using already existing sequence
-		//adjust ability to name new sequence
-		document.getElementById("newNSname").style.visibility = "hidden";
-		document.getElementById("newNSnameInput").disabled = true;
-
-		//adjust sequence textarea
-		document.getElementById("NSseq").value = namedSequencesSeqs[currentName];
-		document.getElementById("NSseq").readOnly = true;
-
-		//adjust buttons
-		document.getElementById("newNSsubmitDiv").style.visibility = "hidden";
-		document.getElementById("newNSsubmit").disabled = true;
-
-		document.getElementById("NSfinish").disabled = false;
-	}
-
-	//clear sequence error message
-	document.getElementById("sequenceError").textContent = "";
-
-	return false;
-}
-
-function validateNS(){
-	var canProceed = true;
-
-	if(document.getElementById("NSname").value == "new"){
-		//name
-		if(document.getElementById("newNSnameInput").value == ""){
-			canProceed = false;
-			document.getElementById("nameError").textContent = "Need a name."; //also it should be less then X characters
-		}
-		else{
-			document.getElementById("nameError").textContent = "";
-		}
-
-		//sequence
-		if(document.getElementById("NSseq").value == ""){
-			canProceed = false;
-			document.getElementById("sequenceError").textContent = "Need a sequence."; //need to be changed if you use default
-		}
-		else{
-			document.getElementById("sequenceError").textContent = "";
-		}
-	}
-
-	return canProceed;
-}
-
-function newNS(){
-	if(!validateNS()){
-		return false; //not very useful return value
-	}
-
-	//remove line breaks from sequence (what about spaces?)
-	document.getElementById("NSseq").value = document.getElementById("NSseq").value.replace(/\s/g,"");
-
-	//create the NamedSequence
-
-	//get Data
-	var newNSData = "{'NStype': '" + document.getElementById("NStype").value +
-					"', 'NSname': '" + document.getElementById("newNSnameInput").value + 
-					"', 'NSseq': '" + document.getElementById("NSseq").value + "'}";
-
-	//send request
-	$.ajax({
-		data : {"newNSData": newNSData},
-		type : 'POST',
-		url : '/newNamedSeq'
-		})
-	.done(function(data){
-		document.getElementById("NSoutput").innerHTML = data.output;
-
-		//only can proceed if successfully created
-		if(data.succeeded){
-			document.getElementById("NSfinish").disabled = false;
-			document.getElementById("newNSsubmit").disabled = true;
-		}
-		else{
-			document.getElementById("NSfinish").disabled = true;			
-			document.getElementById("newNSsubmit").disabled = false;
-		}
-	});
-	event.preventDefault();
+	//adjust sequence textarea
+	document.getElementById("NSseq").innerText = namedSequencesSeqs[currID];
 
 	return false;
 }
 
 function finishNSSection(){
-	//send the NS data (is a "confirm" button always necessary? I think not)
-
-	if(document.getElementById("NSname").value == "new"){
-		var namedSeqData = "{'NStype': '" + document.getElementById("NStype").value + 
-							"', 'NSname': '" + document.getElementById("newNSnameInput").value +
-							"', 'NSseq': '" + document.getElementById("NSseq").value + "'}";
-	}
-	else{
-		var namedSeqData = "{'NStype': '" + document.getElementById("NStype").value +
-							"', 'NSname': '" + document.getElementById("NSname").value +
-							"', 'NSseq': '" + document.getElementById("NSseq").value + "'}";
-	}
+	var id = document.getElementById("NSname").value
 
 	//request
 	$.ajax({
-		data : {"namedSeqData": namedSeqData},
+		data : {NSid: id},
 		type : 'POST',
 		url : '/findNamedSeq'
 		})
@@ -358,7 +282,7 @@ function downloadZIPFile(){
 	if(submitted && (newID != -1)){
 		document.getElementById("downloadMessage").textContent = "Preparing files...";
 
-		window.location.href = "/domesticationZIPs.zip?id=" + newID.toString();
+		window.location.href = "/newComponent.zip?id=" + newID.toString();
 		event.preventDefault();
 
 		document.getElementById("downloadMessage").textContent = "Downloaded.";
@@ -370,9 +294,135 @@ function downloadZIPFile(){
 	return false;
 }
 
+
+/* Create Sequence */
+
+function validateSequence(){
+	var canProceed = true;
+
+	if(document.getElementById("seqName").value == ""){
+		canProceed = false;
+		document.getElementById("seqNameError").textContent = "Need a name 1-20 characters long.";
+	}
+	else{
+		document.getElementById("seqNameError").textContent = "";
+	}
+
+	//sequence
+	if(document.getElementById("sequenceSeq").value == ""){
+		canProceed = false;
+		document.getElementById("sequenceSeqError").textContent = "Need a sequence.";
+	}
+	else{
+		document.getElementById("sequenceSeqError").textContent = "";
+	}
+
+	return canProceed;
+}
+
+function newNS(){
+	if(!validateSequence()){
+		return false; //not very useful return value
+	}
+
+	//remove whitespace from sequence
+	document.getElementById("sequenceSeq").value = document.getElementById("sequenceSeq").value.replace(/\s/g,"");
+
+	//create the NamedSequence
+	var newNSData = "{'NStype': '" + document.getElementById("seqType").value +
+					"', 'NSname': '" + document.getElementById("seqName").value + 
+					"', 'NSseq': '" + document.getElementById("sequenceSeq").value + "'}";
+
+	//send request
+	$.ajax({
+		data : {"newNSData": newNSData},
+		type : 'POST',
+		url : '/newNamedSeq'
+		})
+	.done(function(data){
+		document.getElementById("sequenceOutput").innerHTML = data.output;
+
+		//only can proceed if successfully created
+		if(data.succeeded){
+			document.getElementById("resetSeqForm").disabled = false;
+		}
+		else{
+		}
+	});
+	event.preventDefault();
+
+	return false;
+}
+
+function resetSeq(){
+	document.getElementById("sequenceForm").reset();
+
+	document.getElementById("resetSeqForm").disabled = true;
+}
+
+/* backbone */
+function validateBackbone(){
+	var canProceed = true;
+
+	if(document.getElementById("backboneName").value == ""){
+		canProceed = false;
+		document.getElementById("backboneNameError").textContent = "Need a name 1-20 characters long.";
+	}
+	else{
+		document.getElementById("backboneNameError").textContent = "";
+	}
+
+	//sequence
+	if(document.getElementById("backboneSeq").value == ""){
+		canProceed = false;
+		document.getElementById("backboneSeqError").textContent = "Need a sequence.";
+	}
+	else{
+		document.getElementById("backboneSeqError").textContent = "";
+	}
+
+	return canProceed;
+}
+
+function newBackbone(){
+	if(!validateBackbone()){
+		return false;
+	}
+
+	document.getElementById("backboneSeq").value = document.getElementById("backboneSeq").value.replace(/\s/g,"");
+
+	var newBackboneData = "{'backboneName' : '" + document.getElementById("backboneName").value +
+						  "', 'backboneSeq' : '" + document.getElementById("backboneSeq").value + "'}";
+
+	$.ajax({
+		data : {"newBackboneData": newBackboneData},
+		type : 'POST',
+		url : '/newBackbone'
+		})
+	.done(function(data){
+		document.getElementById("backboneOutput").innerHTML = data.output;
+
+		//only can proceed if successfully created
+		if(data.succeeded){
+			document.getElementById("resetBackboneForm").disabled = false;
+		}
+		else{
+		}
+	});
+	event.preventDefault();
+}
+
+function resetBackbone(){
+	document.getElementById("backboneForm").reset();
+
+	document.getElementById("resetBackboneForm").disabled = true;
+}
+
+/* misc */
+
 function clearEverything(scrollToNS){
 	//reset values
-	document.getElementById("domesticationForm").reset();
+	document.getElementById("componentForm").reset();
 	//and then. Reset the values on the server
 
 	//clear output messages
@@ -390,7 +440,6 @@ function clearEverything(scrollToNS){
 	document.getElementById("createNewComponent").disabled = true;
 
 	//disable all proceeding buttons
-	document.getElementById("NSfinish").disabled = true;
 	document.getElementById("spacersFinish").disabled = true;
 	document.getElementById("primersFinish").disabled = true;
 
@@ -414,7 +463,9 @@ function startOver(){
 
 //onload
 function bodyOnload(){
-	clearEverything(false);
+	//clearEverything(false); //is this necessary?
+	formatNSname();
+	formatNSsequence();
 
 	return false;
 }

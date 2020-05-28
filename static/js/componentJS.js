@@ -25,10 +25,12 @@ function refreshPage(){
 	if(window.location.hash){
 		window.location.href = window.location.href.split('#')[0];
 	}
+
+	location.reload();
 }
 
 function loadNormal(){
-		showLibrary("Default");
+	showLibrary("Default");
 }
 
 function bodyOnload(){
@@ -55,22 +57,6 @@ function bodyOnload(){
 }
 
 function downloadComponentSequence(id){
-	//var componentInfo = "{'elemType': '" + elemType + "', 'name': '" + name + "', 'pos': '" + pos + "', 'terminal': '" + terminal + "'}";
-
-	/*$.ajax({
-		data : {component: componentInfo},
-		type : 'POST',
-		url : '/locateComponentForZIP'
-		})
-	.done(function(data){
-		if(data.succeeded){
-			window.location.href = "/componentZIP.zip?id=help";
-		}
-
-	});
-	event.preventDefault();*/
-
-
 	window.location.href = "/componentZIP.zip?id=" + id;
 
 	return false;

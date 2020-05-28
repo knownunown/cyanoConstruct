@@ -119,12 +119,12 @@ class NamedSequenceDB(db.Model):
 
         retArray = []
 
-        retArray.append("""<div class = "hideableTitle nameTitle">
-                    <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{NSname}'); switchToggleText(this);" value = "Name: {NSname}">
+        retArray.append("""<div class = "hideableTitle nameTitle" id = "{libraryName}{NSname}">
+                    <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{NSname}Data'); switchToggleText(this);" value = "Name: {NSname}">
                     <span class = "titleRight monospaced">[Click to show]</span>
                 </div>
 
-                <div id = "{libraryName}{NSname}" class = "hideableDiv" style = "display: none">
+                <div id = "{libraryName}{NSname}Data" class = "hideableDiv" style = "display: none">
 
                         <!-- info about the named sequence -->
                         <p>{longName}: {NSname}</p>

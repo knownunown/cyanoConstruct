@@ -50,6 +50,13 @@ def checkPermission(comp):
     if(comp.getUserID() != current_user.getID() and comp.getUserID() != defaultUser.getID()):
         raise AccessError("Do not have permission to access component.")
 
+def checkPermissionNS(ns):
+    if(type(ns) != NamedSequenceDB):
+        raise TypeError("ns not a NamedSequenceDB")
+    
+    if(ns.getUserID() != current_user.getID() and ns.getUserID() != defaultUser.getID()):
+        raise AccessError("Do not have permission to access sequence.")
+
 def permissionOwnNS(ns):
     if(type(ns) != NamedSequenceDB):
         raise TypeError("ns not a NamedSequenceDB")
@@ -64,7 +71,7 @@ def permissionOwnComp(comp):
     if(comp.getUserID() != current_user.getID()):
         raise AccessError("Do not have permission to access component.")
 
-#Selected objects (on the domesticate page)
+#Selected objects (for designing components)
 def getSelectedNS():
     try:
         NSID = session["selectedNS"]
@@ -118,6 +125,11 @@ def error500(error):
     #roll back the database somehow, because this is invoked by database errors
     return render_template("500.html")
 """
+
+def errorZIP(error):
+    return render_template("noSeq.html",
+                            errorMessage = str(e),
+                            loggedIn = checkLoggedIn())
 
 ##################################     LOG IN     ################################
 ##################################################################################
@@ -226,108 +238,74 @@ def accountInfo():
                            loggedIn = checkLoggedIn())
 
 
-##############################     DOMESTICATION     ##############################
+#################################     DESIGN     ##################################
 ###################################################################################
-
-#the page for domestication
 @app.route("/design", methods = ["POST", "GET"])
 @login_required
-def domesticate():
-    
-    currUser = getCurrUser()
-        
-    sessionNamedSequences = currUser.getSortedNS()
+def design():        
+    userNamedSequences = getCurrUser().getSortedNS()
     defaultNamedSequences = defaultUser.getSortedNS()
     
     #make the named sequences more friendly to javascript
     NSNamesJSONifiable = {}
     NSSequencesJSONifiable = {}
+
+    defaultNames = []
     
     #defaults first
     for typeKey in defaultNamedSequences.keys():
         NSNamesJSONifiable[typeKey] = [] 
         
         for ns in defaultNamedSequences[typeKey]:
-            NSNamesJSONifiable[typeKey].append(ns.getName())
+            NSNamesJSONifiable[typeKey].append({"name": ns.getName(), "id": ns.getID()})
             
-            NSSequencesJSONifiable[ns.getName()] = ns.getSeq()
+            NSSequencesJSONifiable[ns.getID()] = ns.getSeq()
+
+            defaultNames.append(ns.getName())
 
     #user-made second
-        for ns in sessionNamedSequences[typeKey]:
-            if(ns.getName() not in NSNamesJSONifiable[typeKey]): #will not duplicate if it's actually a default NS
-                NSNamesJSONifiable[typeKey].append(ns.getName())
+        for ns in userNamedSequences[typeKey]:
+            if(ns.getName() not in defaultNames): #will not duplicate if it's actually a default NS
+                NSNamesJSONifiable[typeKey].append({"name": ns.getName(), "id": ns.getID()})
                 
-                NSSequencesJSONifiable[ns.getName()] = ns.getSeq()
+                NSSequencesJSONifiable[ns.getID()] = ns.getSeq()
 
     
     return render_template("domesticate.html", namedSequencesNames = NSNamesJSONifiable,
                            namedSequencesSequences = NSSequencesJSONifiable,
                            loggedIn = checkLoggedIn())
 
-#make a new NamedSequence
-@app.route("/newNamedSeq", methods = ["POST"])
-def newNamedSeq():
-    outputStr = ""
-    validInput = True
-    succeeded = False
-
-    #get data
-    try:
-        newNSData = leval(request.form["newNSData"])
-
-        newNSType = newNSData["NStype"]
-        newNSName = newNSData["NSname"]
-        newNSSeq = newNSData["NSseq"].upper()
-
-    except Exception:
-        validInput = False
-        outputStr = "ERROR: invalid input received.<br>"
-
-
-    #validation
-    if(validInput):
-        validInput, outputStr = validateNewNS(newNSType, newNSName, newNSSeq)
-    
-    #finish validation
-    if(validInput):
-        try:
-            getCurrUser().createNS(newNSType, newNSName, newNSSeq)
-
-            outputStr += "Successfully created sequence " + newNSName + "."
-            
-            succeeded = True
-            
-        except Exception as e:
-            outputStr += "ERROR: " + str(e) + "<br>"
-            
-    if(not succeeded):
-        outputStr += "Sequence not created."
-    
-    return jsonify({"output": outputStr, "succeeded": succeeded})
+################################     Component     ################################
 
 #in order to set it to the global
 @app.route("/findNamedSeq", methods = ["POST"])
 def findNamedSeq():
     currUser = getCurrUser()
     #get data
-    namedSeqData = leval(request.form["namedSeqData"])
-        
-    NStype = namedSeqData["NStype"]
-    NSname = namedSeqData["NSname"]
-    NSseq = namedSeqData["NSseq"]
+    try:
+        nsID = request.form["NSid"]
 
-    #search for sequence
-    try:        #search default first
-        foundNamedSequence = defaultUser.findNamedSequence(NStype, NSname, NSseq)
-    except Exception:
-        foundNamedSequence = currUser.findNamedSequence(NStype, NSname, NSseq)
+        ns = NamedSequenceDB.query.get(nsID)
         
-    #add to session selected
-    addToSelected(foundNamedSequence) #####<----- strange way to call, but I think it works
-    
-    outputStr = ""
-    
-    succeeded = True
+        if(ns is None):
+            outputStr = "ERROR: Sequence does not exist."
+        else:
+            try:
+                checkPermissionNS(ns)
+
+                addToSelected(ns)
+
+                outputStr = ""
+                succeeded = True
+
+            except AccessError:
+                outputStr = "ERROR: You do not have permission to access this sequence."
+
+            except Exception as e:
+                outputStr = str(e)
+
+    except Exception:
+        outputStr = "ERROR: Bad input."
         
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
@@ -381,6 +359,7 @@ def findSpacers():
 #make PrimerData
 @app.route("/findPrimers", methods = ["POST"])
 def findPrimers():
+    outputStr = ""
     validInput = True
     succeeded = False
 
@@ -492,7 +471,7 @@ def finishDomestication():
             
             #modify output string
             libraryName = "Personal"
-            outputStr = "<a target = '_blank' href = '/components#" + libraryName + newComponent.getNameID() + "'>" + newComponent.getNameID() + "</a> created."
+            outputStr = "<a target = '_blank' href = '/library#" + libraryName + newComponent.getNameID() + "'>" + newComponent.getNameID() + "</a> created."
             
             #set it as the tempComp (for the ZIP file)
             newID = newComponent.getID()
@@ -508,8 +487,8 @@ def finishDomestication():
     return jsonify({"output": outputStr, "succeeded": succeeded, "newID": newID})
 
 #domestication ZIP file
-@app.route("/domesticationZIPs.zip")
-def domesticationZIPs():
+@app.route("/newComponent.zip")
+def newCompZIP():
     try:
         newCompID = request.args.get("id")
         comp = ComponentDB.query.get(newCompID)
@@ -520,16 +499,74 @@ def domesticationZIPs():
 
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+        return errorZIP(e)
     
     if(data == None):
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+        return errorZIP("No/invalid component to create a ZIP from.")
 
 
     return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='sequences.zip';"})
 
+################################     Sequence     ################################
+@app.route("/newNamedSeq", methods = ["POST"])
+def newNamedSeq():
+    outputStr = ""
+    validInput = True
+    succeeded = False
 
+    #get data
+    try:
+        newNSData = leval(request.form["newNSData"])
+
+        newNSType = newNSData["NStype"]
+        newNSName = newNSData["NSname"]
+        newNSSeq = newNSData["NSseq"].upper()
+
+    except Exception:
+        validInput = False
+        outputStr = "ERROR: invalid input received.<br>"
+
+    #validation
+    if(validInput):
+        validInput, outputStr = validateNewNS(newNSType, newNSName, newNSSeq)
+    
+    #finish validation
+    if(validInput):
+        try:
+            getCurrUser().createNS(newNSType, newNSName, newNSSeq)
+
+            libraryName = "Personal"
+
+            outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{NSname}'>{NSname}</a>".format(libraryName = libraryName,
+                                                                                                                    NSname = newNSName)
+            
+            succeeded = True
+            
+        except Exception as e:
+            outputStr += "ERROR: " + str(e) + "<br>"
+            
+    if(not succeeded):
+        outputStr += "Sequence not created."
+    
+    return jsonify({"output": outputStr, "succeeded": succeeded})
+
+
+################################     Backbone     ################################
+@app.route("/newBackbone", methods = ["POST"])
+def newBackbone():
+    outputStr = ""
+    validInput = True
+    succeeded = True
+
+    outputStr = "ERROR: what validation should occur?<br>"
+
+    if(succeeded):
+        outputStr += "Backbone created."
+    else:
+        outputStr += "Backbone not created."
+
+    return jsonify({"output": outputStr, "succeeded": succeeded})
 
 ##############################     ASSEMBLY     ##############################
 ##############################################################################
@@ -644,7 +681,7 @@ def processAssembly():
             #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
             compsList.append(foundComp.getID())
             #libraryName = "Personal"
-            outputStr += ("Found: <a target = '_blank' href ='/components#" + libraryName + foundComp.getNameID() + "'>" + 
+            outputStr += ("Found: <a target = '_blank' href ='/library#" + libraryName + foundComp.getNameID() + "'>" + 
                           foundComp.getNameID() + "</a><br>")
         except (SequenceNotFoundError, ComponentNotFoundError):
             outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
@@ -668,8 +705,7 @@ def assemblyZIP():
     try:
         compsList = session["assemblyCompIDs"]
     except KeyError:
-        print("FAILED TO CREATE ZIP BECAUSE NO ASSEMBLED SEQUENCE")
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+        return errorZIP("No assembled sequence.")
 
     try:
         startEndComps = defaultUser.getStartEndComps()
@@ -699,11 +735,10 @@ def assemblyZIP():
         data = makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
 
     except Exception as e:
-        print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+        return errorZIP(e)
     
     if(data == None):
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())    
+        return errorZIP("No assembled sequence.")
 
     return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='sequences.zip';"})
@@ -712,81 +747,23 @@ def assemblyZIP():
 ##############################     COMPONENT LIST     ##############################
 #components page
 @app.route("/components", methods = ["GET"])
-@login_required
 def displayComps():
-    array = [time()]
-    
-    currUser = getCurrUser()
-
-    array.append(time())
-
-    allNS = {}
-    allComps = {}
-
-    allNS["Default"], allComps["Default"] = defaultUser.getSortedNSandComps()
-    allNS["Personal"], allComps["Personal"] = currUser.getSortedNSandComps()
-
-    array.append(time())
-
-    #replace the NamedSequenceDBs with the name and sequence
-    for libraryName in allNS.keys():
-        for typeKey in allNS[libraryName].keys():
-            typeNS = {}
-            for ns in allNS[libraryName][typeKey]:
-                typeNS[ns.getName()] = ns.getSeq()
-            allNS[libraryName][typeKey] = typeNS
-
-    array.append(time())
-
-    #used for formatting
-    longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators"}
-    longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
-
-    rendered = render_template("components.html", allComps = allComps, allNS = allNS,
-                           longNames = longNames, longNamesSingular = longNamesSingular,
-                           loggedIn = checkLoggedIn())
-
-    array.append(time())
-    
-    explanations = ["getCurrUser()", "getSortedNSandComps()", "replace NS with seqs", "render_template"]
-    
-    for i in range(len(array) - 1):
-        print(explanations[i] + ":\t" + str(array[i+1]-array[i]))
-
-    return rendered
+    return redirect("/library")
 
 @app.route("/library", methods = ["GET"])
 @login_required
 def displayCompLib():
-    array = [time()]
-    
-    currUser = getCurrUser()
-
-    array.append(time())
 
     allNS = {"Default": defaultUser.getSortedNS(),
-            "Personal": currUser.getSortedNS()}
-
-    array.append(time())
-
-    array.append(time())
+            "Personal": getCurrUser().getSortedNS()}
 
     #used for formatting
     longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators"}
     longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
 
-    rendered = render_template("library.html", allNS = allNS,
+    return render_template("library.html", allNS = allNS,
                            longNames = longNames, longNamesSingular = longNamesSingular,
                            loggedIn = checkLoggedIn())
-
-    array.append(time())
-    
-    explanations = ["getCurrUser()", "getSortedNS()", "nothing", "render_template"]
-    
-    for i in range(len(array) - 1):
-        print(explanations[i] + ":\t" + str(array[i+1]-array[i]))
-
-    return rendered
 
 
 #make and send the ZIP file for a component
@@ -802,11 +779,10 @@ def getComponentZIP():
         data = makeZIP(compZIP)
 
     except Exception as e:
-        print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+        return errorZIP(e)
     
     if(data == None):
-        return render_template("noSeq.html", loggedIn = checkLoggedIn())
+        return errorZIP("No/invalid sequence to create a ZIP from.")
     
     else:
         return Response(data, headers = {"Content-Type": "application/zip",
@@ -920,13 +896,11 @@ def libraryZIP():
         succeeded = False
         errorMessage = "Library not found."
 
-    
     if(succeeded):
         return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='library.zip';"})
     else:
-        print(errorMessage)
-        return render_template("noSeq.html", loggedIn = checkLoggedIn()) #####<----- I need something better than this
+        return errorZIP(errorMessage)
 
 
 ################################################################################

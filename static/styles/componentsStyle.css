@@ -58,15 +58,6 @@
 }
 
 /* other */
-.sequence {
-	border: 1px solid #0E1B45;
-	background: #E7EFF4; /*lighter than the div bg colors */
-	padding: 5px;
-
-	max-height: 200px;
-	overflow: auto;
-}
-
 p {
 	word-wrap: break-word;
 }

@@ -16,14 +16,16 @@
 	<a href = "/index" class = "{% block indexClass %}{% endblock %}">CyanoConstruct</a>
 	{% if loggedIn %}
 		<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
-		<a href = "/components"class = "{% block componentsClass %}{% endblock %}">Components</a>
-		<a href = "/design" class = "{% block domesticateClass %}{% endblock %}">Design</a>
+		<a href = "/library"class = "{% block libraryClass %}{% endblock %}">Library</a>
+		<a href = "/design" class = "{% block designClass %}{% endblock %}">Design</a>
 
 		<div class = "shouldGrow"></div>
 
 		<a href = "/account" class = "{% block accountClass %}{% endblock %}" id = "accountNav">Account</a>
 		<a href = "/logout" id = "logInOut">Log Out</a>
 	{% else %}
+		<div class = "shouldGrow"></div>
+
 		<a href = "/login" id = "logInOut">Log In</a>
 	{% endif %}
 </div>

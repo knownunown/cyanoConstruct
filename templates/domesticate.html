@@ -14,15 +14,31 @@
 	<script src = "/static/js/domesticateJS.js" ></script>
 {% endblock %}
 
-{% block domesticateClass %}active{% endblock %}
-
+{% block designClass %}active{% endblock %}
 
 {% block content %}
-<h3>Domesticate</h3>
+<form id = "whichDesignForm" name = "whichDesignForm">
+	<div class = "formSection">
+		<legend>1. Select What to Design</legend>
 
-<form id = "domesticationForm" name = "domesticationForm">
+		<input type = "radio" id = "designComponent" name = "whichDesign" value = "component" checked>
+		<label for = "designComponent">Component</label>
+		<br>
+		<input type = "radio" id = "designSequence" name = "whichDesign" value = "sequence">
+		<label for = "designSequence">Sequence</label>
+		<br>
+		<input type = "radio" id = "designBackbone" name = "whichDesign" value = "backbone">
+		<label for = "designBackbone">Backbone</label>
+		
+		<br><br>
+
+		<input type = "button" class = "styledButton" value = "Select" onclick = "selectForm()">
+	</div>
+</form>
+
+<form id = "componentForm" name = "componentForm" style = "display: none">
 	<div class = "formSection"><fieldset id = "selectNS" method = "POST">
-		<legend>Sequence</legend>
+		<legend>2. Select Sequence</legend>
 
 		<!--Type of Named Sequence-->
 		<label for = "NStype">Type</label>
@@ -41,28 +57,11 @@
 
 		<br>
 
-		<div id = "newNSname">
-			<label for = "newNSname">New Sequence Name</label>
-			<input class = "formField" name = "newNSnameInput" id = "newNSnameInput" type = "text">
-			<span class = "errorMessage" id = "nameError"></span>
-		</div>
-
-		<!--Sequence of Named Sequence-->
-		<label for = "NSseq">Sequence</label>
-		<br>
-		<textarea class = "formField" name = "NSseq" id = "NSseq"></textarea> <!-- if it's not on Create new, display what it is & disable it -->
-		<br>
-		<span class = "errorMessage" id = "sequenceError"></span>
-		<br>
-
+		<p>Sequence</p>
+		<div class = "monospaced sequence" id = "NSseq"></div>
 
 		<!--Output-->
 		<p id = "NSoutput"></p>
-
-		<br>
-
-		<!--Should I verify if it can find the sequence?-->
-		<div id = "newNSsubmitDiv"><input type = "button" class = "styledButton" name = "newNSsubmit" id = "newNSsubmit" value = "Create Sequence" onclick = "newNS()"></div>
 
 		<input type = "button" class = "styledButton" name = "NSfinish" id = "NSfinish" value = "Next Step" onclick = "finishNSSection()">
 
@@ -70,7 +69,7 @@
 
 	<div class = "formSection"><fieldset id = "componentSpacers" method = "POST" disabled>
 
-		<legend>Position and Spacers</legend>
+		<legend>3. Select Position and Spacers</legend>
 
 		<input type = "button" class = "styledButton" name = "spacersBack" id = "spacersBack" value = "Go Back" onclick = "goBackSpacers()">
 
@@ -104,13 +103,11 @@
 
 	<div class = "formSection"><fieldset id = "componentPrimers" method = "POST" disabled>
 
-		<legend>Primers</legend>
+		<legend>4. Make Primers</legend>
 
 		<input type = "button" class = "styledButton" name = "primersBack" id = "primersBack" value = "Go Back" onclick = "goBackPrimers()">
 
 		<br><br>
-
-		<p>(Consider spacers & other non-part-sequence-sequence-elements in the primers?)</p>
 
 		<!--Melting point middle-->
 		<label for = "componentTM">Melting Point</label> <!-- what values are valid -->
@@ -141,7 +138,7 @@
 	</fieldset></div>
 
 	<div class = "formSection"><fieldset id = "createNewComponent" method = "POST" disabled>
-		<legend>Finish</legend>
+		<legend>5. Finish</legend>
 
 		<input type = "button" class = "styledButton" name = "finishBack" id = "finishBack" value = "Go Back" onclick = "goBackFinish()">
 
@@ -165,5 +162,76 @@
 
 	</fieldset></div>
 </form>
+
+<form id = "sequenceForm" name = "sequenceForm" style = "display: none">
+	<div class = "formSection"><fieldset id = "createSequence" method = "POST">
+		<legend>2. Create New Sequence</legend>
+
+		<label for = "seqType">Type</label>
+		<select class = "formField" name = "seqType" id = "seqType">
+			<option value = "Pr">Promoter</option>
+			<option value = "RBS">Ribosome binding site</option>
+			<option value = "GOI">Gene of interest</option>
+			<option value = "Term">Terminator</option>
+		</select>
+
+		<br>
+
+		<label for = "seqName">Name</label>
+		<input clsas = "formField" type = "text" id = "seqName" name = "seqName">
+		<span class = "errorMessage" id = "seqNameError"></span>
+
+		<br>
+
+		<label for = "sequenceSeq">Sequence</label>
+		<br>
+		<textarea class = "formField" name = "sequenceSeq" id = "sequenceSeq"></textarea>
+		<br>
+		<span class = "errorMessage" id = "sequenceSeqError"></span>
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "submitSequence" id = "submitSequence" value = "Submit" onclick = "newNS()">
+
+		<p id = "sequenceOutput"></p>
+
+		<!-- make output include a link to the sequence on the Library page -->
+		<!-- include button to Make Components with new sequence -->
+
+		<input type = "button" class = "styledButton" name = "resetSeqForm" id = "resetSeqForm" value = "Create Another" onclick = "resetSeq();" disabled>
+
+	</fieldset></div>
+
+</form>
+
+<form id = "backboneForm" name = "backboneForm" style = "display: none">
+	<div class = "formSection"><fieldset id = "createBackbone" method = "POST">
+		<legend>2. Create New Backbone</legend>
+
+		<label for = "backboneName">Name</label>
+		<input type = "text" id = "backboneName" name = "backboneName">
+		<span class = "errorMessage" id = "backboneNameError"></span>
+
+		<br>
+
+		<label for = "backboneSeq">Sequence</label>
+		<br>
+		<textarea class = "formField" name = "backboneSeq" id = "backboneSeq"></textarea>
+		<br>
+		<span class = "errorMessage" id = "backboneSeqError"></span>
+
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "submitBackbone" id = "submitBackbone" value = "Submit" onclick = "newBackbone()">
+
+		<p id = "backboneOutput"></p>
+
+		<input type = "button" class = "styledButton" name = "resetBackboneForm" id = "resetBackboneForm" value = "Create Another" onclick = "resetBackbone();" disabled>
+
+	</fieldset></div>
+
+</form>
+
 
 {% endblock %}
