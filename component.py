@@ -25,6 +25,8 @@ def inverseSeq(sequence):
     if(type(sequence) != str):
         raise TypeError("sequence not a string")
     
+    print(sequence)
+
     #dict containing all pairings
     pairs = {'A': 'T', 'C': 'G', 'B': 'V', 'D': 'H', 'K': 'M', 'N': 'N', 'R': 'Y', 'S': 'S', 'W': 'W', 'T': 'A', 'G': 'C', 'V': 'B', 'H': 'D', 'M': 'K', 'Y': 'R'}
 
@@ -34,9 +36,11 @@ def inverseSeq(sequence):
         i = len(sequence) - 1
         #traverse sequence from end to start
         while(i >= 0):
+            print(sequence[i])
             array.append(pairs[sequence[i]])
             i -= 1
-    except KeyError:
+    except KeyError as e:
+        print(e)
         raise ValueError("sequence has invalid nucleotide")
     
     finalSeq = "".join(array)
@@ -335,11 +339,12 @@ class PrimerData:
         if(type(spacerData) != SpacerData):
             raise TypeError("spacerData not a SpacerData")
             
-        self.__seqLeft = spacerData.getFullSeqLeft() + self.getSeqLeft()
+        if(self.getPrimersFound()):
+            self.__seqLeft = spacerData.getFullSeqLeft() + self.getSeqLeft()
 
-        self.__seqRight = self.getSeqRight() + spacerData.getFullSeqRight() 
-        
-        self.invertRightPrimer() #because I'm lazy
+            self.__seqRight = self.getSeqRight() + spacerData.getFullSeqRight()             
+
+            self.invertRightPrimer() #because I'm lazy
                                     #need to apply on all previous entries? is it worth it
     
     def invertRightPrimer(self):

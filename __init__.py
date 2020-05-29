@@ -8,7 +8,7 @@ Created on Wed Apr  1 21:32:02 2020
 cyanoConstruct __init__ file
 """
 printActions = True
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 #import statements
 from flask import Flask, session
