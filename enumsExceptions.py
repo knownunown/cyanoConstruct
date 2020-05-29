@@ -32,6 +32,9 @@ class SequenceNotFoundError(Error):
 class ComponentNotFoundError(Error):
     pass
 
+class BackboneNotFoundError(Error):
+    pass
+
 class UserNotFoundError(Error):
     pass
 

@@ -20,7 +20,7 @@ function toggleDisplay(id){
 	}
 }
 
-//technically, removes the hash and then refreshes
+//technically, removes the hash and then refreshes BUT IT DOESN'T QUITE WORK
 function refreshPage(){
 	if(window.location.hash){
 		window.location.href = window.location.href.split('#')[0];
@@ -30,7 +30,7 @@ function refreshPage(){
 }
 
 function loadNormal(){
-	showLibrary("Default");
+	showLibrary("Personal");
 }
 
 function bodyOnload(){
@@ -110,7 +110,9 @@ function removeComponent(id){
 }
 
 function removeSequence(id){
-	if(window.confirm("This will permanently remove sequence " + name + " and all components derived from it from your library.\nAre you sure?")){
+	//oh I need to pass the name in
+
+	if(window.confirm("This will permanently remove this sequence and all components derived from it from your library.\nAre you sure?")){
 
 		$.ajax({
 			data : {sequenceID: id},
@@ -129,6 +131,30 @@ function removeSequence(id){
 		});
 		//event.preventDefault();
 
+
+		return true;
+	}
+}
+
+function removeBackbone(id){
+	if(window.confirm("This will permanently remove this backbone from your library.\nAre you sure?")){
+
+		$.ajax({
+			data : {backboneID: id},
+			type : 'POST',
+			url : '/removeBackbone'
+			})
+		.done(function(data){
+			if(data.succeeded){
+				alert("Backbone removed");
+				refreshPage();
+			}
+			else{
+				alert("ERROR: " + data.errorMessage);
+			}
+
+		});
+		//event.preventDefault();
 
 		return true;
 	}

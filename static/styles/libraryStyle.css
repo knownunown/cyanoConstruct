@@ -2,7 +2,7 @@
 	border: 1px solid #0E1B45;
 	/*padding: 5px;*/
 	border-radius: 5px 5px 0px 0px;
-	background-color: #DFE8EE;
+	background-color: #ededed;
 
 	overflow: auto;
 
@@ -94,3 +94,45 @@ hr {
 	background: #067373;
 	color: white;
 }
+
+/* hideable titles */
+
+/* alternating color scheme */
+.typeContainer.typePr .hideableTitle,
+.typeContainer.typeGOI .hideableTitle{
+  background: #CFE6E0;
+}
+
+.typeContainer.typeRBS .hideableTitle,
+.typeContainer.typeTerm .hideableTitle{
+  background: #DAE6ED;
+}
+
+
+.typeContainer.typeBB .hideableTitle {
+  background: #D0E6C8;
+}
+
+/* analogous color scheme */
+/*
+.typeContainer.typePr .hideableTitle {
+  background: #DAE6ED;
+}
+
+.typeContainer.typeRBS .hideableTitle {
+  background: #DFEDE6;
+}
+
+.typeContainer.typeGOI .hideableTitle {
+  background: #DFE1ED;
+
+}
+
+.typeContainer.typeTerm .hideableTitle {
+  background: #DAEDED;
+}
+
+.typeContainer.typeBB .hideableTitle {
+  background: #E6E4CC;
+}
+*/

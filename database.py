@@ -18,7 +18,7 @@ class UserDataDB(db.Model):
     
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(254), unique = True)
-    #include name, institution, etc.?
+
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
     nextNSidGOI = db.Column(db.Integer)
@@ -51,7 +51,7 @@ class UserDataDB(db.Model):
     
     def getEmail(self):
         return self.email
-    
+
     def getNextNSid(self):
         return {"Pr": self.nextNSidPR,
                 "RBS": self.nextNSidRBS,
@@ -63,6 +63,9 @@ class UserDataDB(db.Model):
     
     def getAllComponents(self):
         return ComponentDB.query.filter_by(user_id = self.id)
+
+    def getAllBackbones(self):
+        return BackboneDB.query.filter_by(user_id = self.id)
 
 class NamedSequenceDB(db.Model):
     __tablename__ = "NamedSequence"
@@ -732,3 +735,94 @@ class ComponentDB(db.Model):
             return self.getSpacerData() >= other.getSpacerData()
         else:
             return self.getNamedSequence() >= other.getNamedSequence()
+
+class BackboneDB(db.Model):
+    __tablename__ = "Backbone"
+
+    #gross
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(20))
+    seq = db.Column(db.Text())
+
+    user_id = db.Column(db.Integer)
+
+    def __repr__(self):
+        return "<Backbone {ID} {Name}".format(ID = self.getID(), Name = self.getName())
+    
+    def __str__(self):
+        return "Backbone {Name}".format(Name = self.getName())
+
+
+    def setUserID(self, newID):
+        self.user_id = newID        
+
+    #getters
+    def getID(self):
+        return self.id
+    
+    def getUserID(self):
+        return self.user_id
+
+    def getName(self):
+        return self.name
+    
+    def getSeq(self):
+        return self.seq
+
+    def getHTMLdisplay(self):
+        if UserDataDB.query.get(self.getUserID()).getEmail() == "default":
+            libraryName = "Default"
+            isDefault = True
+        else:
+            libraryName = "Personal"
+            isDefault = False
+
+        retArray = []
+
+        retArray.append("""<div class = "hideableTitle nameTitle" id = "{libraryName}{BBname}">
+                    <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{BBname}Data'); switchToggleText(this);" value = "Name: {BBname}">
+                    <span class = "titleRight monospaced">[Click to show]</span>
+                </div>
+
+                <div id = "{libraryName}{BBname}Data" class = "hideableDiv" style = "display: none">
+
+                        <!-- info about the named sequence -->
+                        <p>Backbone: {BBname}</p>
+
+                        <p>Sequence:</p>
+                        <div class = "sequence monospaced">{BBseq}</div>
+
+                        <br>""".format(libraryName = libraryName,
+                                        BBname = self.getName(),
+                                        BBseq = self.getSeq(),
+                                        ))
+
+
+        if(not isDefault):
+            retArray.append("""<br><hr><input type = "button" class = "styledButton" value = "Remove Backbone" onclick = "removeBackbone('{BBID}')">""".format(
+                BBID = self.getID()))
+
+        retArray.append("""</div><div class = "hideableBottom"></div>""")
+
+        retStr = "".join(retArray)
+
+        return Markup(retStr)
+
+    #comparisons
+    def __eq__(self, other):
+        return self.getName() == other.getName()
+
+    def __ne__(self, other):
+        return self.getName() != other.getName()
+
+    def __lt__(self, other):
+        return self.getName() < other.getName()
+
+    def __le__(self, other):
+        return self.getName() <= other.getName()
+    
+    def __gt__(self, other):
+        return self.getName() > other.getName()
+        
+    def __ge__(self, other):
+        return self.getName() >= other.getName()

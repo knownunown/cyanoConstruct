@@ -109,6 +109,8 @@
 
 		<br><br>
 
+		<p class ="bold">Find primers:</p>
+
 		<!--Melting point middle-->
 		<label for = "componentTM">Melting Point</label> <!-- what values are valid -->
 		<input class = "formField" name = "componentTM" id = "componentTM" type = "number" min = "20" max = "80" step = "any" size = "5" value = "55"> 
@@ -119,7 +121,7 @@
 		<input class = "formField" name = "TMRange" id = "TMRange" type = "number" min = "1" max = "10" step = "1" size = "5" value = "2">°C
 		<span class = "errorMessage" id = "TMRangeError"></span>
 
-		<br><br>
+		<p class = "bold">Or skip primers:</p>
 
 		<label for = "skipPrimers">Skip primers</label>
 		<input class = "formField" name = "skipPrimers" id = "skipPrimers" type = "checkbox">
@@ -129,7 +131,7 @@
 		<!--Output-->
 		<p id = "primersOutput"></p>
 
-		<input type = "button" class = "styledButton" name = "primersSubmit" id = "primersSubmit" value = "Find Primers" onclick = "findPrimers()">
+		<input type = "button" class = "styledButton" name = "primersSubmit" id = "primersSubmit" value = "Confirm" onclick = "findPrimers()">
 
 		<br>
 

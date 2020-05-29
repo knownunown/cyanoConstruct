@@ -155,6 +155,64 @@ def validatePrimers(TMstr, rangeStr):
 	return (validInput, outputStr, TMnum, rangeNum)
 
 
+def validateBackbone(newName, newSeq):
+	"""Validates the input from creating a new NamedSequence on the design page."""
+	validInput = True
+	outputStr = ""
+
+						#####	TYPE CHECKING	#####
+	if(type(newName) != type(newSeq) != str):
+		validInput = False
+		outputStr += "ERROR: input received not all strings.<br>"
+	
+
+						#####	VALIDATE NAME 	#####
+	#length
+	if(len(newName) < 1 or len(newName) > 20):
+		validInput = False
+		outputStr += "ERROR: Backbone name must be 1-20 characters.<br>"
+	
+	#whether it already exists in default:
+		try:
+			defaultUser.findBackbone(newName)
+						
+			validInput = False
+			outputStr += "ERROR: Backbone {name} already exists in the default library.<br>".format(name = newName)
+
+		except BackboneNotFoundError:
+			pass
+	
+	#characters
+	validCharacters = ascii_letters + digits + "_-. "
+	
+	invalidCharactersName = []
+	
+	for character in newName:
+		if((character not in validCharacters) and (character not in invalidCharactersName)):
+			validInput = False
+			outputStr += "ERROR: '" + character + "' is not allowed in a sequence's name.<br>"
+			invalidCharactersName.append(character)
+
+
+						#####	VALIDATE SEQUENCE 	#####
+	#length
+	if(len(newSeq) < 1 or len(newSeq) > 999999): #I don't know what limits should be used
+		validInput = False
+		outputStr += "ERROR: Sequence must be 1-999999 nucleotides.<br>"
+	
+	#characters
+	validNucleotides = "AGTCBDHKMNRSVWY"
+	
+	invalidCharactersSeq = []
+	for character in newSeq:
+		if((character not in validNucleotides) and (character not in invalidCharactersSeq)):
+			validInput = False
+			outputStr += "ERROR: '" + character + "' is not an allowed nucleotide.<br>"
+			invalidCharactersSeq.append(character)
+
+	return (validInput, outputStr)
+
+
 #Assembly
 def addCompAssemblyGB(comp, features, i):
 	"""Add feature of component for a GenBank file."""

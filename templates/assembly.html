@@ -13,6 +13,7 @@ var elemOptions = {{ availableElements|tojson }}; //all the available elements, 
 var fidelityLimits = {{ fidelityLimits|tojson }};
 
 var posTermComb = {{ posTermComb|tojson }}
+
 </script>
 
 <script src = "/static/js/assembleJS.js" ></script>
@@ -42,10 +43,12 @@ var posTermComb = {{ posTermComb|tojson }}
 			<br>
 
 			<div id="backboneInput">
-				<label for="backbone">Backbone</label>
+				<label for="backbone">Backbone (doesn't do anything yet)</label>
 				<div class="shouldGrow"></div>
 				<select class="formField" name="backbone" id="backbone">
-					<option value="default">Default</option>
+					{% for key in availableBackbones.keys() %}
+						<option value = "{{ key }}">{{ availableBackbones[key]}}</option>
+					{% endfor %}
 				</select>
 			</div>
 

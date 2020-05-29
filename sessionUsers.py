@@ -8,9 +8,9 @@ Created on Sun May  3 19:58:38 2020
 cyanoConstruct sessionUsers file (UserData class)
 """
 from cyanoConstruct import printActions
-from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB
+from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 from cyanoConstruct import NamedSequence, SpacerData, PrimerData, checkType
-from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, NotLoggedInError
+from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, BackboneNotFoundError, NotLoggedInError
 
 class UserData:
     def __init__(self):
@@ -113,18 +113,27 @@ class UserData:
         
         return (startComp, endComp)
 
+    #get all query
     def getAllNSQuery(self): #a query
         return self.getEntry().getAllNamedSeqs()
     
     def getAllCompsQuery(self): #a query
         return self.getEntry().getAllComponents()
     
-    def getAllNS(self): #an array
+    def getAllBBQuery(self):
+        return self.getEntry().getAllBackbones()    
+
+    #get all array
+    def getAllNS(self):
         return self.getAllNSQuery().all()
             
-    def getAllComps(self): #an array
+    def getAllComps(self):
         return self.getAllCompsQuery().all()
-        
+    
+    def getAllBB(self):
+        return self.getEntry().getAllBackbones().all()
+
+    #get sorted
     def getSortedNS(self):
         """Return dict, key: type, value: sorted array of all NamedSequenceDB of the type."""
         #the use of order_by is likely unnecessary, but not deeply detrimental
@@ -175,6 +184,12 @@ class UserData:
 
         return (allNS, retDict)
     
+    def getSortedBB(self):
+        allBB = self.getAllBB()
+        allBB.sort()
+
+        return allBB
+
     #find
     def findNamedSequenceNoSeq(self, NStype, NSname):
         """Searches UserDataDB for NamedSequenceDB with specifications; don't need sequence."""
@@ -211,7 +226,7 @@ class UserData:
             raise SequenceMismatchError("Sequence does not match stored sequence.")
 
     def findComponent(self, compType, compName, compPos, compTerminalLetter):
-        """Searches UserDataDB for component with specifications"""
+        """Searches UserDataDB for component with specifications."""
         #type checking
         checkType(compType, "compType")
         if(type(compName) != str):
@@ -230,6 +245,18 @@ class UserData:
         
         #did not find it
         raise ComponentNotFoundError("Could not find component.")
+
+    def findBackbone(self, name):
+        """Searches BackboneDB for backbone with the same name."""
+        backboneList = self.getAllBBQuery().filter_by(name = name).all()
+
+        #handle the results from the query
+        if(len(backboneList) == 0):
+            raise BackboneNotFoundError("Could not find backbone.")
+        if(len(backboneList) > 1):
+            raise Exception("Multiple backbones found.")
+        else:
+            return backboneList[0]
     
     #remove
     def removeComponent(self, compType, compName, compPos, compTerminalLetter):
@@ -256,7 +283,7 @@ class UserData:
         db.session.commit()
         
     def removeSequenceByID(self, id):
-        """Removes namedSequence from database based on its ID"""
+        """Removes namedSequence from database based on its ID."""
         foundNS = NamedSequenceDB.query.get(id)
 
         for foundComp in foundNS.getAllComponents():
@@ -275,12 +302,21 @@ class UserData:
         
         db.session.commit()
 
-
     def removeSequence(self, seqType, seqName):
         """Removes namedSequence from UserDataDB by finding it, removing all its components, and removing it."""
         foundNS = self.findNamedSequenceNoSeq(seqType, seqName)
         
         self.removeFoundSequence(foundNS)
+
+    def removeBackbone(self, id): #check permissions
+        foundBB = BackboneDB.query.get(id)
+
+        if(foundBB is None):
+            raise BackboneNotFoundError("Backbone with that id was not found.")
+        
+        db.session.delete(foundBB)
+
+        db.session.commit()
     
     #add, create, make
     def addNSDB(self, namedSeq):
@@ -442,10 +478,23 @@ class UserData:
         
         return self.makeWithNamedSequence(ns, position, isTerminal, TMgoal, TMrange)
 
+    def createBackbone(self, name, seq):
+        """Create a BackboneDB using its name and sequence."""
+        #see if it exists already
+        try:
+            self.findBackbone(name)
+            raise AlreadyExistsError("Backbone {name} already exists.".format(name = name))
+        except BackboneNotFoundError:
+            pass
 
+        #create
+        bb = BackboneDB(name = name, seq = seq, user_id = self.getID())
 
+        db.session.add(bb)
 
+        db.session.commit()
 
+        return bb
 
 
 

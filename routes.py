@@ -9,9 +9,9 @@ Created on Wed Apr  1 14:54:27 2020
 cyanoConstruct routes file
 """
 from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, AccessError
-from cyanoConstruct import app, UserData, SpacerData, PrimerData, NamedSequenceDB, UserDataDB, ComponentDB, session
+from cyanoConstruct import app, UserData, SpacerData, PrimerData, NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB, session
 from cyanoConstruct import login, current_user, login_user, logout_user, login_required
-from cyanoConstruct import boolJS, validateNewNS, validateSpacers, validatePrimers, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
+from cyanoConstruct import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
 from cyanoConstruct import defaultUser, nullPrimerData, printActions
 
 #flask
@@ -70,6 +70,13 @@ def permissionOwnComp(comp):
 
     if(comp.getUserID() != current_user.getID()):
         raise AccessError("Do not have permission to access component.")
+
+def permissionOwnBB(bb):
+    if(type(bb) != BackboneDB):
+        raise TypeError("bb not a BackboneDB")
+
+    if(bb.getUserID() != current_user.getID()):
+        raise AccessError("Do not have permission to access this backbone.")
 
 #Selected objects (for designing components)
 def getSelectedNS():
@@ -538,7 +545,7 @@ def newNamedSeq():
 
             libraryName = "Personal"
 
-            outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{NSname}'>{NSname}</a>".format(libraryName = libraryName,
+            outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{NSname}'>{NSname}</a>.".format(libraryName = libraryName,
                                                                                                                     NSname = newNSName)
             
             succeeded = True
@@ -557,13 +564,36 @@ def newNamedSeq():
 def newBackbone():
     outputStr = ""
     validInput = True
-    succeeded = True
+    succeeded = False
 
-    outputStr = "ERROR: what validation should occur?<br>"
+    try:
+        backboneData = leval(request.form["newBackboneData"])
 
-    if(succeeded):
-        outputStr += "Backbone created."
-    else:
+        BBname = backboneData["backboneName"]
+        BBseq = backboneData["backboneSeq"].upper()
+
+    except Exception:
+        validInput = False
+        outputStr = "ERROR: invalid input received.<br>"
+
+    if(validInput):
+        validInput, outputStr = validateBackbone(BBname, BBseq)
+
+    if(validInput):
+        try:
+            getCurrUser().createBackbone(BBname, BBseq)
+
+            libraryName = "Personal"
+
+            outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{BBname}'>{BBname}</a>.".format(
+                                                                                        libraryName = libraryName,
+                                                                                        BBname = BBname)
+
+            succeeded = True
+        except Exception as e:
+            outputStr += "ERROR: {error}<br>".format(error = str(e))
+
+    if(not succeeded):
         outputStr += "Backbone not created."
 
     return jsonify({"output": outputStr, "succeeded": succeeded})
@@ -617,10 +647,16 @@ def assemble():
 
     fidelityLimits = {"98.1%": SpacerData.max981, "95.8%": SpacerData.max958, "91.7%": SpacerData.max917}
     
+    #list of backbones & IDs
+    availableBackbones = {}
+    for BB in defaultUser.getSortedBB():
+        availableBackbones[BB.getID()] = BB.getName()
+
     return render_template("assembly.html", fidelities = fidelities,
                            fidelityLimits = fidelityLimits,
                            availableElements = allAvailableNames, 
                            posTermComb = posTerminalComb,
+                           availableBackbones = availableBackbones,
                            loggedIn = checkLoggedIn())
 
 #process assembly
@@ -744,7 +780,7 @@ def assemblyZIP():
                                      "Condent-Disposition": "attachment; filename='sequences.zip';"})
 
 
-##############################     COMPONENT LIST     ##############################
+##############################     LIBRARY     ##############################
 #components page
 @app.route("/components", methods = ["GET"])
 def displayComps():
@@ -754,15 +790,20 @@ def displayComps():
 @login_required
 def displayCompLib():
 
-    allNS = {"Default": defaultUser.getSortedNS(),
-            "Personal": getCurrUser().getSortedNS()}
+    currUser = getCurrUser()
+
+    allNSandBB = {"Default": defaultUser.getSortedNS(),
+            "Personal": currUser.getSortedNS()}
+
+    allNSandBB["Default"]["BB"] = defaultUser.getSortedBB()
+    allNSandBB["Personal"]["BB"] = currUser.getSortedBB()
 
     #used for formatting
-    longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators"}
-    longNamesSingular = {"Pr": "Promoter", "RBS": "Ribosome Binding Site", "GOI": "Gene", "Term": "Terminator"}
+    longNames = {"Pr": "Promoters", "RBS": "Ribosome Binding Sites", "GOI": "Genes of Interest", "Term": "Terminators",
+                "BB": "Backbones"}
 
-    return render_template("library.html", allNS = allNS,
-                           longNames = longNames, longNamesSingular = longNamesSingular,
+    return render_template("library.html", allNSandBB = allNSandBB,
+                           longNames = longNames,
                            loggedIn = checkLoggedIn())
 
 
@@ -821,7 +862,7 @@ def removeComponent():
             
     return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
 
-@app.route("/removeSequence", methods = ["POST"]) #####<----- use ID INSTEAD
+@app.route("/removeSequence", methods = ["POST"])
 def removeSequence():
     succeeded = False
     errorMessage = ""
@@ -843,6 +884,39 @@ def removeSequence():
 
             except AccessError:
                 errorMessage = "You do not have permission to modify this sequence."
+
+            except Exception as e:
+                errorMessage = str(e)
+
+    except Exception:
+        errorMessage = "Bad input."
+            
+    return jsonify({"succeeded": succeeded, "errorMessage": errorMessage})
+
+@app.route("/removeBackbone", methods = ["POST"])
+def removeBackbone():
+    succeeded = False
+    errorMessage = ""
+
+    try:
+        bbID = request.form["backboneID"]
+
+        bb = BackboneDB.query.get(bbID)
+        
+        print(bb)
+
+        if(bb is None):
+            errorMessage = "Backbone does not exist."
+        else:
+            try:
+                permissionOwnBB(bb)
+
+                getCurrUser().removeBackbone(bbID)
+
+                succeeded = True
+
+            except AccessError:
+                errorMessage = "You do not have permission to modify this backbone."
 
             except Exception as e:
                 errorMessage = str(e)

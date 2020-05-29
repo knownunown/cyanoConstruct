@@ -280,6 +280,7 @@ function fidelityChanged(){
 	}
 }
 
+
 function bodyOnload(){
 	fidelityChanged();
 }

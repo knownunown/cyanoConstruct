@@ -16,27 +16,29 @@
 <br>
 
 <div id = "allLibraryTabs">
-	{% for libraryName in allNS.keys() %}<div class = "libraryTab" id = "{{ libraryName }}Tab"><input class = "subtleButton" type = "button" onclick = "showLibrary('{{ libraryName }}')" value = "{{ libraryName }}"></div>{% endfor %}
+	{% for libraryName in allNSandBB.keys() %}<div class = "libraryTab" id = "{{ libraryName }}Tab"><input class = "subtleButton" type = "button" onclick = "showLibrary('{{ libraryName }}')" value = "{{ libraryName }}"></div>{% endfor %}
 </div>
 
-{% for libraryName in allNS.keys() %}
+{% for libraryName in allNSandBB.keys() %}
 <div class = "libraryContents" id = "{{ libraryName }}Library">
 	<h2>{{ libraryName }} Library</h2>
 
-	{% for typeKey in allNS[libraryName].keys() %}
+	{% for typeKey in allNSandBB[libraryName].keys() %}
 
-		<div class = "hideableTitle typeTitle">
-			<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}'); switchToggleText(this);" value = "{{ longNames[typeKey] }}">
-			<span class = "titleRight monospaced">[Click to hide]</span>
+		<div class = "typeContainer type{{ typeKey }} library{{ libraryName }}">
+			<div class = "hideableTitle typeTitle">
+				<input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{{ libraryName }}{{ typeKey }}'); switchToggleText(this);" value = "{{ longNames[typeKey] }}">
+				<span class = "titleRight monospaced">[Click to hide]</span>
+			</div>
+			<div id = "{{ libraryName }}{{ typeKey }}" class = "hideableDiv" style = "display: block">
+
+					{% for ns in allNSandBB[libraryName][typeKey] %}
+						{{ns.getHTMLdisplay()}}
+					{% endfor %}
+
+			</div>
+			<div class = "hideableBottom"></div>
 		</div>
-		<div id = "{{ libraryName }}{{ typeKey }}" class = "hideableDiv" style = "display: block">
-
-				{% for ns in allNS[libraryName][typeKey] %}
-					{{ns.getHTMLdisplay()}}
-				{% endfor %}
-
-		</div>
-		<div class = "hideableBottom"></div>
 
 	{% endfor %}
 
