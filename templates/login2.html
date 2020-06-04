@@ -1,0 +1,44 @@
+<!--cyano 500-->
+
+{% extends "base.html" %}
+
+{% block pageName %}Login 2{% endblock %}
+
+{% block headContent %}
+<meta name="google-signin-client_id" content="431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleusercontent.com">
+
+<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+
+<script>
+function onSignIn(googleUser) {
+	var profile = googleUser.getBasicProfile();
+
+	loginData = "{'ID': '" = profile.getID() + "', 'Name': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
+
+	$.ajax({
+		data : {loginData: loginData},
+		type : 'POST',
+		url : '/login2process'
+		})
+	.done(function(data){
+		document.getElementById("showOutput").innerHTML = data.output;
+
+		if(data.succeeded){
+			submitted = true;
+		}
+		else{
+			submitted = false;
+		}
+	});
+	event.preventDefault();
+
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Log In Using Google</h1>
+
+<div class = "g-signin2" data-onsuccess = "onSignIn"></div>
+{% endblock %}

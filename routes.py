@@ -204,6 +204,19 @@ def loginProcess():
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
+@app.route("/login2", methods = ["POST", "GET"])
+def login2():
+    return render_template("login2.thml", loggedIn = checkLoggedIn())
+
+@app.route("/login2process", methods = ["POST"])
+def login2process():
+    try:
+        print(request.form["loginData"])
+    except Exception as e:
+        print(e)
+
+    return jsonify({"succeeded": False})
+
 @app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():
     logout_user()
