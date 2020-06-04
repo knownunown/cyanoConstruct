@@ -206,7 +206,7 @@ def loginProcess():
 
 @app.route("/login2", methods = ["POST", "GET"])
 def login2():
-    return render_template("login2.thml", loggedIn = checkLoggedIn())
+    return render_template("login2.html", loggedIn = checkLoggedIn())
 
 @app.route("/login2process", methods = ["POST"])
 def login2process():
