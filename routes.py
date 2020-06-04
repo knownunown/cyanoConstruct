@@ -145,6 +145,10 @@ def errorZIP(error):
                             errorMessage = str(error),
                             loggedIn = checkLoggedIn())
 
+@app.route("/privacy")
+def privacyPolicy():
+    return render_template("privacy.html", loggedIn = checkLoggedIn())
+
 ##################################     LOG IN     ################################
 ##################################################################################
 
