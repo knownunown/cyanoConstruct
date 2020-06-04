@@ -78,6 +78,20 @@
 		<!--Position-->
 		<label for = "componentPos">Position</label>
 		<input class = "formField" name = "componentPos" id = "componentPos" type = "number" min = "1" step = "1" size = "5">
+
+		<div id = "specialPositions">
+			<p>OR:</p>
+			<div id = "pos0">
+				<label for = "componentPos0">position 0 (only promoters)</label>
+				<input class = "formField" name = "componentPos0" id = "componentPos0" type = "checkbox">
+			</div>
+
+			<div id = "posT">
+				<label for = "componentPosT">position T (only terminators)</label>
+				<input class = "formField" name = "componentPosT" id = "componentPosT" type = "checkbox">
+			</div>
+		</div>
+
 		<span class = "errorMessage" id = "posError"></span>
 
 		<br>

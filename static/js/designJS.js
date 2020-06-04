@@ -42,6 +42,28 @@ function selectForm(){
 function formatNSname(){
 	var currentType = document.getElementById("NStype").value;
 
+	//alter things in the spacer section
+	if(currentType == "Pr"){
+		document.getElementById("componentPos0").disabled = false;
+		document.getElementById("componentPosT").disabled = true;
+
+		document.getElementById("componentPosT").checked = false;
+	}
+	else if(currentType == "Term"){
+		document.getElementById("componentPos0").disabled = true;
+		document.getElementById("componentPosT").disabled = false;
+
+		document.getElementById("componentPos0").checked = false;
+	}
+	else{
+		document.getElementById("componentPos0").disabled = true;
+		document.getElementById("componentPosT").disabled = true;
+
+		document.getElementById("componentPosT").checked = false;
+		document.getElementById("componentPos0").checked = false;
+	}
+
+	//format the options
 	var retString = "";
 
 	for(ns of namedSequencesNames[currentType]){ //change so the value is the ID?
@@ -51,6 +73,7 @@ function formatNSname(){
 	document.getElementById("NSname").innerHTML = retString;
 
 	formatNSsequence();
+
 
 	return false;
 }
@@ -81,6 +104,8 @@ function finishNSSection(){
 			document.getElementById("selectNS").disabled = true;
 			document.getElementById("componentSpacers").disabled = false;	
 
+			document.getElementById("NStype").value;
+
 			scrollToId("componentSpacers");
 		}
 		else{
@@ -97,12 +122,17 @@ function finishNSSection(){
 function validateSpacers(){
 	var canProceed = true;
 
-	if(document.getElementById("componentPos").value == ""){ //needs to be within range
-		canProceed = false;
-		document.getElementById("posError").textContent = "Need a position.";
+	if(document.getElementById("componentPos").value == ""){
+		var pos0 = document.getElementById("componentPos0");
+		var posT = document.getElementById("componentPosT");
+
+		if(!((!pos0.disabled && pos0.checked) || (!posT.disabled && posT.checked))){
+			canProceed = false;
+			document.getElementById("posError").textContent = "Need a position.";			
+		}
 	}
 	else{
-		document.getElementById("posError").textContent = "";		
+		document.getElementById("posError").textContent = "";
 	}
 
 	return canProceed;
@@ -115,8 +145,20 @@ function findSpacers(){
 	}
 
 	//format data
-	var spacersData = "{'componentPos': '" + document.getElementById("componentPos").value + 
+	var pos0 = document.getElementById("componentPos0");
+	var posT = document.getElementById("componentPosT");
+
+	if(!pos0.disabled && pos0.checked){
+		var spacersData = "{'componentPos': '0', 'isTerminal': '" + document.getElementById("componentTerminal").checked + "'}";
+	}
+	else if(!posT.disabled && posT.checked){
+		var spacersData = "{'componentPos': '999', 'isTerminal': '" + document.getElementById("componentTerminal").checked + "'}";
+	}
+	else{
+		var spacersData = "{'componentPos': '" + document.getElementById("componentPos").value + 
 						"', 'isTerminal': '" + document.getElementById("componentTerminal").checked + "'}";
+	}
+
 
 	//actually find the spacers
 	$.ajax({

@@ -8,7 +8,7 @@ body{
 	margin: 0px;
 	padding: 0px 10vw;
 	/*overflow: auto;*/
-	height: 100vh;
+	height: 100vh; /* change so it only applies to assembly */
 
 	font-family: Verdana, Geneva, sans-serif;
 }
@@ -17,12 +17,16 @@ h1, h2, h3, h4, #navigation {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
-p, span, label {
+p, span, label, figcaption {
 	font-size: small;
 }
 
 p.bold {
 	font-weight: bold;
+}
+
+figcaption {
+	margin: 5px 0px;
 }
 
 hr {
@@ -96,7 +100,7 @@ a:active {
 
 #footer {
 	clear: both;
-	border-top: 2px solid black;
+	border-top: 3px solid black;
 	padding: 5px 0px;
 	margin: 5px 0px;
 }
@@ -266,33 +270,31 @@ div.elemDiv > div{
 }
 
 #navigation a {
-	/*float: left;*/
 	text-align: center;
 	color: #000;
   	text-decoration: none;
 	padding: 10px;
 	outline: none;
-	border-bottom: 2px solid black;
 }
 
 #navigation a:hover, #navigation a:focus {
 	font-style: normal;
 	background: #eee;
-	border-bottom: 2px solid #68BF48;
+	border-bottom-color: #68BF48;
 }
 
-#navigation div.shouldGrow {
-	border-bottom: 2px solid black;
+#navigation a, #navigation div.shouldGrow {
+	border-bottom: 3px solid black;
 }
 
 #navigation a:active {
 	font-weight: normal;
-	border-bottom: 2px solid #439326;
+	border-bottom-color: #439326;
 }
 
 #navigation a.active {
 	font-weight: bold;
-	border-bottom: 2px solid #439326;
+	border-bottom-color: #439326;
 }
 
 #navigation a#logInOut, #navigation a#accountNav {
@@ -333,4 +335,14 @@ legend {
 	font-size: larger;
 	margin: 5px 0px 10px 0px;
 	padding: 5px 0px;
+}
+
+/* why yes this is messy */
+/* design stuff */
+#specialPositions {
+	display: inline-block;
+}
+
+#specialPositions p, #specialPositions div {
+	display: inline-block;
 }

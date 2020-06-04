@@ -295,10 +295,10 @@ class SpacerDataDB(db.Model):
         return self.rightNN
 
     def getFullSeqLeft(self):
-        return self.getSpacerLeft() + self.getLeftNN() + SpacerDataDB.start
+        return SpacerDataDB.start + self.getLeftNN() + self.getSpacerLeft()
 
     def getFullSeqRight(self):
-        return SpacerDataDB.end + self.getRightNN() + self.getSpacerRight() #except the complementary probably
+        return self.getSpacerRight()  + self.getRightNN() +  SpacerDataDB.end
 
 
     #comparisons
@@ -515,13 +515,13 @@ class ComponentDB(db.Model):
         fileByLines.append("FEATURES\tLocation/Qualifiers")
         
         i = 0
-        
-        #spacerLeft
-        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenSpacerL))
-        fileByLines.append("\t\t\t/note=\"spacer (left)\"")
-        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#E6855F") #color only for Benchling?
-        fileByLines.append("\t\t\t/ApEinfo_revcolor=#E6855F")
-        i += lenSpacerL
+
+        #EnzymeLeft
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenEnzymeL))
+        fileByLines.append("\t\t\t/note=\"enzyme recog. site (left) (BbsI)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#CFEC67")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#CFEC67")
+        i += lenEnzymeL
         
         #NNleft
         fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenNNL))
@@ -530,12 +530,13 @@ class ComponentDB(db.Model):
         fileByLines.append("\t\t\t/ApEinfo_revcolor=#62E6D0")
         i += lenNNL
         
-        #EnzymeLeft
-        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenEnzymeL))
-        fileByLines.append("\t\t\t/note=\"enzyme recog. site (left) (WHICH?)\"")
-        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#CFEC67")
-        fileByLines.append("\t\t\t/ApEinfo_revcolor=#CFEC67")
-        i += lenEnzymeL
+        #spacerLeft
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenSpacerL))
+        fileByLines.append("\t\t\t/note=\"spacer (left)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#E6855F") #color only for Benchling?
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#E6855F")
+        i += lenSpacerL
+        
         
         #sequence
         if(self.getType() == "GOI"):
@@ -544,21 +545,23 @@ class ComponentDB(db.Model):
         else:
             regTypes = {"Pr": "promoter", "RBS" : "ribosome_binding_site", "Term": "terminator"}
             regName = regTypes[self.getType()]
+            longTypes = {"Pr": "promoter", "RBS" : "RBS", "Term": "terminator"}
+            longType = longTypes[self.getType()]
             fileByLines.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
             fileByLines.append("\t\t\t/regulatory_class=" + regName)
-            fileByLines.append("\t\t\t/note=\"" + self.getType() + " " + self.getName() + "\"")
+            fileByLines.append("\t\t\t/note=\"" + longType + " " + self.getName() + "\"")
         
         fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#AB81E1")
         fileByLines.append("\t\t\t/ApEinfo_revcolor=#AB81E1")
         
         i += lenSeq
-        
-        #EnzymeRight
-        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenEnzymeR))
-        fileByLines.append("\t\t\t/note=\"enzyme recog. site (right) (WHICH?)\"")
-        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#CFEC67")
-        fileByLines.append("\t\t\t/ApEinfo_revcolor=#CFEC67")
-        i += lenEnzymeL
+
+        #spacerRight
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenSpacerR))
+        fileByLines.append("\t\t\t/note=\"spacer (right)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#E6855F")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#E6855F")
+        i += lenSpacerL
 
         #NNright
         fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenNNR))
@@ -567,12 +570,13 @@ class ComponentDB(db.Model):
         fileByLines.append("\t\t\t/ApEinfo_revcolor=#62E6D0")
         i += lenNNL
 
-        #spacerRight
-        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenSpacerR))
-        fileByLines.append("\t\t\t/note=\"spacer (right)\"")
-        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#E6855F")
-        fileByLines.append("\t\t\t/ApEinfo_revcolor=#E6855F")
-        i += lenSpacerL
+        #EnzymeRight
+        fileByLines.append("\tmisc_feature\t" + str(i + 1) + ".." + str(i + lenEnzymeR))
+        fileByLines.append("\t\t\t/note=\"enzyme recog. site (right) (BbsI)\"")
+        fileByLines.append("\t\t\t/ApEinfo_fwdcolor=#CFEC67")
+        fileByLines.append("\t\t\t/ApEinfo_revcolor=#CFEC67")
+        i += lenEnzymeL
+
         
         #the sequence
         fileByLines.append("ORIGIN")

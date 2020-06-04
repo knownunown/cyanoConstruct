@@ -107,9 +107,10 @@ def validateSpacers(newPosStr, newTerminalStr):
 		outputStr += "ERROR: position not an integer.<br>"
 		
 	if(validInput):
-		if((newPos <= 0) or (newPos > maxPosition)):
-			validInput = False
-			outputStr += "ERROR: Position must be in range 1-" + str(maxPosition) + ".<br>"
+		if((newPos < 0) or (newPos > maxPosition)):
+			if(newPos != 999):
+				validInput = False
+				outputStr += "ERROR: Position must be in range 1-" + str(maxPosition) + ".<br>"
 
 	#isTerminal
 	try:

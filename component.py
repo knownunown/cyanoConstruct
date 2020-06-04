@@ -25,8 +25,6 @@ def inverseSeq(sequence):
     if(type(sequence) != str):
         raise TypeError("sequence not a string")
     
-    print(sequence)
-
     #dict containing all pairings
     pairs = {'A': 'T', 'C': 'G', 'B': 'V', 'D': 'H', 'K': 'M', 'N': 'N', 'R': 'Y', 'S': 'S', 'W': 'W', 'T': 'A', 'G': 'C', 'V': 'B', 'H': 'D', 'M': 'K', 'Y': 'R'}
 
@@ -36,11 +34,9 @@ def inverseSeq(sequence):
         i = len(sequence) - 1
         #traverse sequence from end to start
         while(i >= 0):
-            print(sequence[i])
             array.append(pairs[sequence[i]])
             i -= 1
     except KeyError as e:
-        print(e)
         raise ValueError("sequence has invalid nucleotide")
     
     finalSeq = "".join(array)
@@ -229,7 +225,7 @@ class SpacerData:
     #setters?
     def setFullSpacerSeqs(self):
         self.__fullSeqLeft = self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
-        self.__fullSeqRight = SpacerData.end + self.getRightNN() +  self.getSpacerRight() #actually, I don't know if it's that simple or if complementary bases need to be found
+        self.__fullSeqRight = SpacerData.end + self.getRightNN() +  self.getSpacerRight()
 
     def setNN(self):
         #technically, T is allowed in certain circumstances, but that would require passing in

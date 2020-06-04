@@ -57,6 +57,13 @@ def checkPermissionNS(ns):
     if(ns.getUserID() != current_user.getID() and ns.getUserID() != defaultUser.getID()):
         raise AccessError("Do not have permission to access sequence.")
 
+def checkPermissionBB(bb):
+    if(type(bb) != BackboneDB):
+        raise TypeError("bb not a BackboneDB")
+
+    if(bb.getUserID() != current_user.getID() and bb.getUserID() != defaultUser.getID()):
+        raise AccessError("Do not have permission to access this backbone.")
+
 def permissionOwnNS(ns):
     if(type(ns) != NamedSequenceDB):
         raise TypeError("ns not a NamedSequenceDB")
@@ -343,7 +350,11 @@ def findSpacers():
             newSpacerData = SpacerData.makeNew(newPos, isTerminal)
             
             #add to outputStr
-            outputStr += "Spacers found for position " + str(newPos)
+            if(newPos == 999):
+                outputStr += "Spacers found for position T"
+            else:
+                outputStr += "Spacers found for position " + str(newPos)
+
             if(isTerminal):
                 outputStr += " last element:"
             else:
@@ -662,68 +673,99 @@ def assemble():
 #process assembly
 @app.route("/processAssembly", methods = ["POST"])
 def processAssembly():
-    #get info.
-    formData = request.form["assemblyData"]
-    dataDict = leval(formData)
-    
-    #Validation where?
-    
-    if(printActions):
-        print("ASSEMBLING SEQUENCE FROM:\n" + str(dataDict))
-    
-    #remove from the dict. the info. that doesn't need to be processed
-    del dataDict["fidelity"]
-    del dataDict["elemName0"]
-    del dataDict["elemType0"]
-    del dataDict["elemName999"]
-    del dataDict["elemType999"]
-    del dataDict["backbone"]
-    
-    #go through the dataDict, creating an array of all elements with the format:
-    #{'position': position, 'type': elemType, 'name': elemName}
-    gatheredElements = []
-    for key in dataDict.keys():
-        number = int(key[8:])
-        
-        if number > len(gatheredElements): #assumes the elements are in order
-            gatheredElements.append({"position": number}) #add a new element
-            
-        if(key[0:8] == "elemType"):
-            gatheredElements[number - 1]["type"] = dataDict[key]
-            
-        elif(key[0:8] == "elemName"):
-            gatheredElements[number - 1]["name"] = dataDict[key]
-
     outputStr = ""
+    validInput = True
+    succeeded = False
 
-    succeeded = True
-    compsList = []
+    #get info.
+    try:
+        formData = request.form["assemblyData"]
+        dataDict = leval(formData)
+    except Exception:
+        validInput = False
+        outputStr = "ERROR: bad input."
 
-    #find the components of gatheredElements
-    for comp in gatheredElements:
-        if(comp["position"] < len(dataDict) / 2):
-            terminalLetter = "M"
-        else:
-            terminalLetter = "L"
-                        
+    if(validInput):
+        #Validation where?
+        
+        if(printActions):
+            print("ASSEMBLING SEQUENCE FROM:\n" + str(dataDict))
+        
+        #get the backbone
         try:
-            try:                    #search defaults
-                foundComp = defaultUser.findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
-                libraryName = "Default"
-            except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
-                foundComp = getCurrUser().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
-                libraryName = "Personal"
-                
-            #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
-            compsList.append(foundComp.getID())
-            #libraryName = "Personal"
-            outputStr += ("Found: <a target = '_blank' href ='/library#" + libraryName + foundComp.getNameID() + "'>" + 
-                          foundComp.getNameID() + "</a><br>")
-        except (SequenceNotFoundError, ComponentNotFoundError):
-            outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
-                          "<br>Position: " + str(comp["position"]) + "<br>Terminal letter: " + terminalLetter + "<br>")
+            bbID = int(dataDict["backbone"])
+
+            bb = BackboneDB.query.get(bbID)
             
-            succeeded = False
+            if(bb is None):
+                validInput = False
+                outputStr = "ERROR: Could not find backbone."
+            else:
+                try:
+                    checkPermissionBB(bb)
+
+                    outputStr = "FOUND:  {BBname}".format(bb.getName())
+
+                    """<a target = '_blank' href = '/library#{libraryName}{BBname}'>{BBname}</a>.".format(
+                                                                                        libraryName = libraryName,
+                                                                                        BBname = BBname)"""
+
+                except AccessError:
+                    validInput = False
+                    errorMessage = "ERROR: You do not have permission to use this backbone."
+        except Exception as e:
+            print("hm")
+
+        #remove from the dict. the info. that doesn't need to be processed
+        del dataDict["fidelity"]
+        del dataDict["elemName0"]
+        del dataDict["elemType0"]
+        del dataDict["elemName999"]
+        del dataDict["elemType999"]
+        del dataDict["backbone"]
+        
+        #go through the dataDict, creating an array of all elements with the format:
+        #{'position': position, 'type': elemType, 'name': elemName}
+        gatheredElements = []
+        for key in dataDict.keys():
+            number = int(key[8:])
+            
+            if number > len(gatheredElements): #assumes the elements are in order
+                gatheredElements.append({"position": number}) #add a new element
+                
+            if(key[0:8] == "elemType"):
+                gatheredElements[number - 1]["type"] = dataDict[key]
+                
+            elif(key[0:8] == "elemName"):
+                gatheredElements[number - 1]["name"] = dataDict[key]
+
+        compsList = []
+
+        #find the components of gatheredElements
+        for comp in gatheredElements:
+            if(comp["position"] < len(dataDict) / 2):
+                terminalLetter = "M"
+            else:
+                terminalLetter = "L"
+                            
+            try:
+                try:                    #search defaults
+                    foundComp = defaultUser.findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                    libraryName = "Default"
+                except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
+                    foundComp = getCurrUser().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                    libraryName = "Personal"
+                    
+                #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
+                compsList.append(foundComp.getID())
+                #libraryName = "Personal"
+                outputStr += ("Found: <a target = '_blank' href ='/library#" + libraryName + foundComp.getNameID() + "'>" + 
+                              foundComp.getNameID() + "</a><br>")
+            except (SequenceNotFoundError, ComponentNotFoundError):
+                outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
+                              "<br>Position: " + str(comp["position"]) + "<br>Terminal letter: " + terminalLetter + "<br>")
+                
+                succeeded = False
     
     #proceed if found everything
     if(succeeded):
