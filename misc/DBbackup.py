@@ -14,7 +14,7 @@ DBNAME = USERNAME + "$cyanoconstruct"
 DAYS_TO_KEEP = 3
 
 #make today's backup
-timestamp = datetime.datetime.now().strftime(FILE_SUFFIX_DATE_FORMAT)
+timestamp = datetime.now().strftime(FILE_SUFFIX_DATE_FORMAT)
 backup_filename = os.path.join(DIR, FILE_PREFIX + timestamp + ".sql")
 
 os.system("mysqldump -u " + USERNAME + " -h " + USERNAME + ".mysql.pythonanywhere-services.com '" + DBNAME +"'  > "+ backup_filename)
