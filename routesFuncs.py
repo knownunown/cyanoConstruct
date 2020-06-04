@@ -225,10 +225,13 @@ def addCompAssemblyGB(comp, features, i):
 	else:
 		regTypes = {"Pr": "promoter", "RBS" : "ribosome_binding_site", "Term": "terminator"}
 		regName = regTypes[comp.getType()]
+		longTypes = {"Pr": "promoter", "RBS" : "RBS", "Term": "terminator"}
+		longType = longTypes[comp.getType()]
+
 		features.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
 		features.append("\t\t\t/regulatory_class=" + regName)
 											#get a longer thing to say here
-		features.append("\t\t\t/note=\"" + comp.getType() + " " + comp.getName() + "\"")
+		features.append("\t\t\t/note=\"" + longType + " " + comp.getName() + "\"")
 	
 	return i + lenSeq
 

@@ -4,6 +4,8 @@
 {% block pageName %}Assemble Sequences{% endblock %}
 
 {% block headContent %}
+<link rel = "stylesheet" type = "text/css" href = "/static/styles/assembleStyle.css">
+
 <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
 <script>
 var seqElements = ["Pr", "RBS", "GOI", "Term"];
@@ -55,24 +57,32 @@ var posTermComb = {{ posTermComb|tojson }}
 
 		</div>
 
-		<div class="elemDiv">
+<!--		<div class="elemDiv">
 			<span class="elemName">0:</span>
 			<label for="elemType0">Type</label>
 			<div><select class="formField" name="elemType0" id="elemType0"><option value="Pr">Pr</option></select></div>
+
 			<label for="elemName0">Name</label>
 			<div><select class="formField" name="elemName0" id="elemName0"><option value="psbA">psbA</option></select></div>
+				<select class = 'formField' name = 'elemName0' id = 'elemName0'><option value = 'psbA'>psbA</option></select>
+
 		</div>
+-->
+		<div id = "elem0"></div>
 
 		<div id = "elements">
 		</div>
 
+		<div id = "elemT"></div>
+
+		<!--
 		<div class="elemDiv">
 			<span class="elemName">T:</span>
 			<label for="elemType999">Type</label>
 			<div><select class="formField" name="elemType999" id="elemType999"><option value="Term">Term</option></select></div>
 			<label for="elemName999">Name</label>
 			<div><select class="formField" name="elemName999" id="elemName999"><option value="T1">T1</option></select></div>
-		</div>
+		</div>-->
 
 
 		<div>

@@ -142,7 +142,7 @@ def error500(error):
 
 def errorZIP(error):
     return render_template("noSeq.html",
-                            errorMessage = str(e),
+                            errorMessage = str(error),
                             loggedIn = checkLoggedIn())
 
 ##################################     LOG IN     ################################
@@ -675,7 +675,7 @@ def assemble():
 def processAssembly():
     outputStr = ""
     validInput = True
-    succeeded = False
+    succeeded = True
 
     #get info.
     try:
@@ -691,12 +691,14 @@ def processAssembly():
         if(printActions):
             print("ASSEMBLING SEQUENCE FROM:\n" + str(dataDict))
         
+        outputStr = "Backbone:<br>"
+
         #get the backbone
         try:
             bbID = int(dataDict["backbone"])
 
             bb = BackboneDB.query.get(bbID)
-            
+
             if(bb is None):
                 validInput = False
                 outputStr = "ERROR: Could not find backbone."
@@ -704,56 +706,64 @@ def processAssembly():
                 try:
                     checkPermissionBB(bb)
 
-                    outputStr = "FOUND:  {BBname}".format(bb.getName())
+                    user = UserDataDB.query.get(bb.getUserID())
 
-                    """<a target = '_blank' href = '/library#{libraryName}{BBname}'>{BBname}</a>.".format(
-                                                                                        libraryName = libraryName,
-                                                                                        BBname = BBname)"""
+                    if(user.getEmail() == "default"):
+                        libraryName = "Default"
+                    else:
+                        libraryName = "Personal"
+
+                    outputStr += "Found:  <a target = '_blank' href = '/library#{libraryName}{BBname}'>{BBname}</a><br>".format(
+                                                                            BBname = bb.getName(),
+                                                                            libraryName = libraryName)
 
                 except AccessError:
                     validInput = False
                     errorMessage = "ERROR: You do not have permission to use this backbone."
         except Exception as e:
-            print("hm")
+            print(e)
 
         #remove from the dict. the info. that doesn't need to be processed
         del dataDict["fidelity"]
-        del dataDict["elemName0"]
-        del dataDict["elemType0"]
-        del dataDict["elemName999"]
-        del dataDict["elemType999"]
         del dataDict["backbone"]
+
+        outputStr += "<br>Components:<br>"
         
-        #go through the dataDict, creating an array of all elements with the format:
-        #{'position': position, 'type': elemType, 'name': elemName}
-        gatheredElements = []
+        #go through the dataDict, creating a difct of all elements, with the keys being the positions:
+        gatheredElements = {}
         for key in dataDict.keys():
             number = int(key[8:])
             
-            if number > len(gatheredElements): #assumes the elements are in order
-                gatheredElements.append({"position": number}) #add a new element
+            if(number not in gatheredElements.keys()):
+                gatheredElements[number] = {}
                 
             if(key[0:8] == "elemType"):
-                gatheredElements[number - 1]["type"] = dataDict[key]
+                gatheredElements[number]["type"] = dataDict[key]
                 
             elif(key[0:8] == "elemName"):
-                gatheredElements[number - 1]["name"] = dataDict[key]
+                gatheredElements[number]["name"] = dataDict[key]
 
         compsList = []
 
         #find the components of gatheredElements
-        for comp in gatheredElements:
-            if(comp["position"] < len(dataDict) / 2):
+        for posKey in gatheredElements.keys():
+            comp = gatheredElements[posKey]
+
+            if(posKey == 0):
+                terminalLetter = "S"
+            elif(posKey == 999):
+                terminalLetter = "T"
+            elif(posKey < (len(dataDict) / 2) - 2):
                 terminalLetter = "M"
             else:
                 terminalLetter = "L"
                             
             try:
                 try:                    #search defaults
-                    foundComp = defaultUser.findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                    foundComp = defaultUser.findComponent(comp["type"], comp["name"], posKey, terminalLetter)
                     libraryName = "Default"
                 except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
-                    foundComp = getCurrUser().findComponent(comp["type"], comp["name"], comp["position"], terminalLetter)
+                    foundComp = getCurrUser().findComponent(comp["type"], comp["name"], posKey, terminalLetter)
                     libraryName = "Personal"
                     
                 #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
@@ -763,17 +773,17 @@ def processAssembly():
                               foundComp.getNameID() + "</a><br>")
             except (SequenceNotFoundError, ComponentNotFoundError):
                 outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
-                              "<br>Position: " + str(comp["position"]) + "<br>Terminal letter: " + terminalLetter + "<br>")
+                              "<br>Position: " + str(posKey) + "<br>Terminal letter: " + terminalLetter + "<br>")
                 
                 succeeded = False
     
     #proceed if found everything
     if(succeeded):
         session["assemblyCompIDs"] = compsList
-        outputStr += "Full sequence can be downloaded."
+        outputStr += "<br>Full sequence can be downloaded."
         
     else:
-        outputStr += "Errors in finding components are often due to not having a component with the right terminal letter.<br>Sequence not created."
+        outputStr += "<br>Errors in finding components are often due to not having a component with the right terminal letter.<br>Sequence not created."
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
@@ -788,13 +798,10 @@ def assemblyZIP():
     try:
         startEndComps = defaultUser.getStartEndComps()
 
-        #start with element 0
-        fullSeq = startEndComps[0].getFullSeq()
+        fullSeq = ""
 
         features = []
         i = 0 #index (starting at zero) of the fullSeq to add at
-
-        i = addCompAssemblyGB(startEndComps[0], features, i)
 
         #add the sequence of the component
         for compID in compsList:
@@ -802,11 +809,7 @@ def assemblyZIP():
             checkPermission(comp)
             fullSeq += comp.getFullSeq()
             i = addCompAssemblyGB(comp, features, i)
-        
-        #finish fullSeq with element T
-        fullSeq += startEndComps[1].getFullSeq()
-        i = addCompAssemblyGB(startEndComps[1], features, i)
-    
+            
         fileGB = finishCompAssemblyGB(features, fullSeq)
         fileFASTA = ">CyanoConstruct sequence\n" + fullSeq
 

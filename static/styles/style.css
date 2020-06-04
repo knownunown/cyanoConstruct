@@ -7,8 +7,6 @@ body{
 #bodyDiv {
 	margin: 0px;
 	padding: 0px 10vw;
-	/*overflow: auto;*/
-	height: 100vh; /* change so it only applies to assembly */
 
 	font-family: Verdana, Geneva, sans-serif;
 }
@@ -60,44 +58,6 @@ a:active {
 	}
 }
 
-@media (min-width: 600px) and (min-height: 550px){
-	#inputCol {
-		width: 40%;
-		float: left;
-	}
-
-	#outputCol {
-		width: 60%;
-		float: right;
-	}
-
-	#input {
-		max-height: 80vh;
-	}
-
-	#output {
-		max-height: 80vh;
-
-		display: flex;
-		flex-direction: column;
-	}
-
-	#show-output {
-		flex-grow: 1;
-	}
-}
-
-@media (max-width: 600px) or (max-height: 550px){
-	#input, #output { /* looks kind of silly but I don't know what else to do */
-		max-width: 610px;
-		margin: auto;
-	}
-}
-
-#input, #output {
-	padding: 10px;
-}
-
 #footer {
 	clear: both;
 	border-top: 3px solid black;
@@ -109,18 +69,6 @@ a:active {
 	color: red;
 }
 /* output */
-
-#showOutput {
-	padding: 5px;
-	background: #F0F6FB;
-	border: 1px solid #333;
-
-	overflow: auto;
-}
-
-#showOutput > p {
-	margin: 0px;
-}
 
 .monospaced {
 	font-family: "Courier New", Courier, monospace;
@@ -204,63 +152,11 @@ input[type=button]:active, input[type=button]:focus, input[type=submit]:active, 
 	color: #999;
 }
 
-#fidelityInput, #backboneInput {
-	display:flex;
-	flex-direction: row;
-	max-width: 600px;
-}
 
 .shouldGrow {
 	flex-grow: 1;
 }
 
-div.elemDiv {
-	border: 1px solid #333;
-	background: #F0F6FB;
-	padding: 5px;
-	margin: 5px;
-	text-align: center;
-	max-width: 580px;
-}
-
-#elements .elemDiv {
-	background: #BEE3FF;
-}
-
-div.elemDiv > span{
-	margin: 5px;
-	font-weight: bold;
-}
-
-div.elemDiv > label{
-	margin: 5px;
-	font-style: bold;
-}
-
-div.elemDiv > div{
-	display: inline-block;
-	margin: 5px;
-}
-
-@media (min-width: 600px) and (min-height: 550px){
-	#form {
-		display: flex;
-		flex-direction: column;
-		max-height: 80vh;
-	}
-
-	#elements {
-		flex-grow: 1;
-	}
-}
-
-#elements {
-	border: 1px dashed black;
-	overflow: auto;
-
-	min-height: 20px;
-	max-width: 600px;
-}
 
 /* navigation */
 #navigation {

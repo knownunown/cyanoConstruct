@@ -41,7 +41,7 @@ function formatOptions(elementToUse, idNumber = count){ //get a thing for the lo
 
 function formatSection(){
 	var format = "<div class = 'elemDiv'>"; //div
-	format += "<span = 'elemName'>" + count + ":</span>";
+	format += "<span class = 'elemName'>" + count + ":</span>";
 	//first select
 	format += "<label for = 'elemType" + count + "'>Type</label>";
 	format += "<div>";
@@ -55,6 +55,35 @@ function formatSection(){
 	count += 1;
 	return format;
 }
+
+function formatSec0(){
+	var format = "<div class = 'elemDiv'>";
+	format += "<span class = 'elemName'>0:</span>";
+	//first select
+	format += "<label for = 'elemType0'>Type</label>";
+	format += "<div><select class = 'formField' name = 'elemType0' id = 'elemType0'><option value = 'Pr'>Pr</option></select></div>";
+	//second select
+	format += "<label for = 'elemName0'>Name</label>";
+	format += "<div>";
+	format += formatOptions("Pr", 0); //idk man
+	format += "</div></div>";
+	return format;
+}
+
+function formatSecT(){
+	var format = "<div class = 'elemDiv'>";
+	format += "<span class = 'elemName'>T:</span>";
+	//first select
+	format += "<label for = 'elemType999'>Type</label>";
+	format += "<div><select class = 'formField' name = 'elemType999' id = 'elemType999'><option value = 'Term'>Term</option></select></div>";
+	//second select
+	format += "<label for = 'elemName999'>Name</label>";
+	format += "<div>";
+	format += formatOptions("Term", 999);
+	format += "</div></div>";
+	return format;
+}
+
 
 function updateForm(selectSeq){
 	//get all nodes
@@ -283,4 +312,7 @@ function fidelityChanged(){
 
 function bodyOnload(){
 	fidelityChanged();
+
+	document.getElementById("elem0").innerHTML = formatSec0();
+	document.getElementById("elemT").innerHTML = formatSecT();
 }
