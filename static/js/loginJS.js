@@ -41,3 +41,25 @@ function register(){
 	return false;
 }
 
+function onSignIn(googleUser) {
+	var profile = googleUser.getBasicProfile();
+
+	var IDtoken = googleUser.getAuthResponse().id_token;
+
+	var loginData = "{'IDtoken': '" + IDtoken + "', 'fullName': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
+
+	$.ajax({
+		data : {loginData: loginData},
+		type : 'POST',
+		url : '/login2process'
+		})
+	.done(function(data){
+		if(data.succeeded){
+			alert(data.output);
+		}
+		else{
+			alert(data.output);
+		}
+	});
+	event.preventDefault();
+}

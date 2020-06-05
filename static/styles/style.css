@@ -242,3 +242,7 @@ legend {
 #specialPositions p, #specialPositions div {
 	display: inline-block;
 }
+
+#googleWrapper {
+	margin: 20px;
+}

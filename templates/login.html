@@ -53,6 +53,11 @@ var returnURL = {{ returnURL|tojson }};
 
 	<input name = "submitRegister" id = "submitRegister" type = "submit" value = "Register">
 
+<h1>TESTING: Log In or Register through Google</h1>
+<p>NOTE: this currently only works with umn.edu emails. Using other types of emails would require verification of this site by Google, which may take weeks.</p>
+
+<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
+
 <p id = "loginOutput">
 </p>
 <span id = "returnURL"></span>
