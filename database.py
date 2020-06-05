@@ -19,6 +19,9 @@ class UserDataDB(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(254), unique = True)
 
+    googleAssoc = db.Column(db.Boolean, default = False)
+    googleID = db.Column(db.Text, unique = True)
+
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
     nextNSidGOI = db.Column(db.Integer)
@@ -44,13 +47,19 @@ class UserDataDB(db.Model):
         else:
             self.nextNSidTERM += 1
             return self.nextNSidTERM
-    
+
     #getters
     def getID(self):
         return self.id
     
     def getEmail(self):
         return self.email
+
+    def getGoogleAssoc(self):
+        return self.googleAssoc
+
+    def getGoogleID(self):
+        return self.googleID
 
     def getNextNSid(self):
         return {"Pr": self.nextNSidPR,
@@ -66,6 +75,16 @@ class UserDataDB(db.Model):
 
     def getAllBackbones(self):
         return BackboneDB.query.filter_by(user_id = self.id)
+
+    #setters
+    def setEmail(self, newEmail):
+        self.email = newEmail
+
+    def setGoogleAssoc(self, newValue):
+        self.setGoogleAssoc = newValue
+
+    def setGoogleID(self, newID):
+        self.googleID = newID
 
 class NamedSequenceDB(db.Model):
     __tablename__ = "NamedSequence"

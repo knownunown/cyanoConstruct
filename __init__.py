@@ -35,7 +35,17 @@ from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, P
 db.create_all()
 from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, Component, checkType, nullPrimerData, inverseSeq
 maxPosition = SpacerData.getMaxPosition()
-from cyanoConstruct.sessionUsers import UserData, defaultUser
+from cyanoConstruct.sessionUsers import UserData
+
+try:
+    defaultUser = UserData.load("default")
+except UserNotFoundError:
+    defaultUser = UserData.new("default")
 
 from cyanoConstruct.routesFuncs import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
 from cyanoConstruct.routes import *
+
+##yeah
+for user in UserDataDB.query.all():
+	if(user.googleAssoc is None):
+		user.googleAssoc = False

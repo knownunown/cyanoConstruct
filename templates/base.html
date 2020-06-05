@@ -27,7 +27,7 @@ function googleSignOut(){
 
 <div id = "navigation">
 	<a href = "/index" class = "{% block indexClass %}{% endblock %}">CyanoConstruct</a>
-	{% if loggedIn %}
+	{% if not current_user.is_anonymous %}
 		<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
 		<a href = "/library"class = "{% block libraryClass %}{% endblock %}">Library</a>
 		<a href = "/design" class = "{% block designClass %}{% endblock %}">Design</a>

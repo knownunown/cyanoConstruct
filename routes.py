@@ -210,13 +210,6 @@ def loginProcess():
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-@app.route("/login2", methods = ["POST", "GET"])
-def login2():
-    if(checkLoggedIn()):
-        return redirect("/index")
-
-    return render_template("login2.html", loggedIn = checkLoggedIn())
-
 @app.route("/login2process", methods = ["POST"])
 def login2process():
     succeeded = False
@@ -246,10 +239,21 @@ def login2process():
         #actually log in OR register
         try:
             user = UserData.load(email)
+
+            if(user.getEntry().getGoogleAssoc()):
+                if(user.getEntry().getGoogleID() != userid):
+                    raise Exception(" User ID and Email do not match.")
+            else:
+                raise Exception("Account with this email already exists, not associated with Google.")
+
             login_user(user, remember = True)
             outputStr = "Successfully logged in as {email}.".format(email = email)
         except UserNotFoundError:
             user = UserData.new(email)
+
+            user.getEntry().setGoogleAssoc(True)
+            user.getEntry().setGoogleID(userid)
+
             login_user(user, remember = True)
             outputStr = "Successfully created account as {email}.".format(email = email)
 
@@ -260,7 +264,7 @@ def login2process():
         # Invalid token
 
     except Exception as e:
-        outputStr =  "Unknown error."
+        outputStr =  "ERROR: {}".format(e)
         print(e)
 
     return jsonify({"succeeded": succeeded, "output": outputStr})
@@ -313,7 +317,10 @@ def accountInfo():
     currUser = getCurrUser()
     email = currUser.getEmail()
     
+    googleAssoc = currUser.getEntry().getGoogleAssoc()
+
     return render_template("account.html", email = email,
+                            googleAssoc = googleAssoc,
                            loggedIn = checkLoggedIn())
 
 

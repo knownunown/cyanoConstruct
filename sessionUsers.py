@@ -497,9 +497,3 @@ class UserData:
         return bb
 
 
-
-
-try:
-    defaultUser = UserData.load("default")
-except UserNotFoundError:
-    defaultUser = UserData.new("default")

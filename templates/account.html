@@ -2,7 +2,14 @@
 
 {% block pageName %}Account{% endblock %}
 
-{% block headContent %}{% endblock %}
+{% block headContent %}
+<script>
+	function googleConnect(){
+		return false;
+	}
+</script>
+
+{% endblock %}
 
 {% block accountClass %}active{% endblock %}
 
@@ -10,4 +17,13 @@
 <h1>Account</h1>
 
 <p>Email: {{ email }}</p>
+
+{% if googleAssoc %}
+	<p>Account is associated with Google account.</p>
+{% else %}
+	<p> Account is not associated with Google account.</p>
+	<input type = "button" class = "styledButton" value = "Connect with Google" onclick = "googleConnect()">
+{% endif %}
+
+
 {% endblock %}
