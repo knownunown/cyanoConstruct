@@ -212,16 +212,25 @@ def loginProcess():
 
 @app.route("/login2", methods = ["POST", "GET"])
 def login2():
+    if(checkLoggedIn()):
+        return redirect("/index")
+
     return render_template("login2.html", loggedIn = checkLoggedIn())
 
 @app.route("/login2process", methods = ["POST"])
 def login2process():
+    succeeded = False
+    outputStr = ""
+
     print("I'm trying to log in.")
     try:
         print(request.form["loginData"])
         loginData = leval(request.form["loginData"])
 
         token = loginData["IDtoken"]
+        email = loginData["email"]
+
+        #check token
 
         # Specify the CLIENT_ID of the app that accesses the backend:
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
@@ -234,16 +243,27 @@ def login2process():
 
         print(userid)
 
-    except ValueError:
-        print("Invalid token.")
-        # Invalid token
-        pass
+        #actually log in OR register
+        try:
+            user = UserData.load(email)
+            login_user(user, remember = True)
+            outputStr = "Successfully logged in as {email}.".format(email = email)
+        except UserNotFoundError:
+            user = UserData.new(email)
+            login_user(user, remember = True)
+            outputStr = "Successfully crated account as {email}.".format(email = email)
 
+        succeeded = True
+
+    except ValueError:
+        outputStr = "ERROR: Invalid token."
+        # Invalid token
 
     except Exception as e:
+        outputStr =  "Unknown error."
         print(e)
 
-    return jsonify({"succeeded": False})
+    return jsonify({"succeeded": succeeded, "output": outputStr})
 
 @app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():

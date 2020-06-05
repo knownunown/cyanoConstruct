@@ -25,14 +25,13 @@ function onSignIn(googleUser) {
 		})
 	.done(function(data){
 		if(data.succeeded){
-			submitted = true;
+			alert(data.output);
 		}
 		else{
-			submitted = false;
+			alert(data.output);
 		}
 	});
 	event.preventDefault();
-
 }
 
 function signOut(){
