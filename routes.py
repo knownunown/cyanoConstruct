@@ -251,7 +251,7 @@ def login2process():
         except UserNotFoundError:
             user = UserData.new(email)
             login_user(user, remember = True)
-            outputStr = "Successfully crated account as {email}.".format(email = email)
+            outputStr = "Successfully created account as {email}.".format(email = email)
 
         succeeded = True
 
