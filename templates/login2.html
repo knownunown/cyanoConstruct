@@ -14,7 +14,7 @@
 function onSignIn(googleUser) {
 	var profile = googleUser.getBasicProfile();
 
-	var loginData = "{'ID': '" = profile.getID() + "', 'Name': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
+	var loginData = "{'ID': '" + profile.getID() + "', 'Name': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
 
 	$.ajax({
 		data : {loginData: loginData},
@@ -32,6 +32,11 @@ function onSignIn(googleUser) {
 	event.preventDefault();
 
 }
+
+function signOut(){
+    var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut();
+}
 </script>
 {% endblock %}
 
@@ -39,4 +44,6 @@ function onSignIn(googleUser) {
 <h1>Log In Using Google</h1>
 
 <div class = "g-signin2" data-onsuccess = "onSignIn"></div>
+
+<input type = "button" value = "sign out" onclick = "signOut()">
 {% endblock %}
