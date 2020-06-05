@@ -14,7 +14,7 @@
 function onSignIn(googleUser) {
 	var profile = googleUser.getBasicProfile();
 
-	loginData = "{'ID': '" = profile.getID() + "', 'Name': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
+	var loginData = "{'ID': '" = profile.getID() + "', 'Name': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
 
 	$.ajax({
 		data : {loginData: loginData},
@@ -22,8 +22,6 @@ function onSignIn(googleUser) {
 		url : '/login2process'
 		})
 	.done(function(data){
-		document.getElementById("showOutput").innerHTML = data.output;
-
 		if(data.succeeded){
 			submitted = true;
 		}

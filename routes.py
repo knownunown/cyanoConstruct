@@ -210,6 +210,7 @@ def login2():
 
 @app.route("/login2process", methods = ["POST"])
 def login2process():
+    print("I'm trying to log in.")
     try:
         print(request.form["loginData"])
     except Exception as e:
