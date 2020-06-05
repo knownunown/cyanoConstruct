@@ -14,7 +14,9 @@
 function onSignIn(googleUser) {
 	var profile = googleUser.getBasicProfile();
 
-	var loginData = "{'ID': '" + profile.getId() + "', 'Name': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
+	var IDtoken = googleUser.getAuthResponse().id_token;
+
+	var loginData = "{'IDtoken': '" + IDtoken + "', 'fullName': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
 
 	$.ajax({
 		data : {loginData: loginData},
@@ -38,6 +40,8 @@ function signOut(){
     auth2.signOut();
     alert("signed out");
 }
+
+function bodyOnload(){}
 </script>
 {% endblock %}
 

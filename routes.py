@@ -20,12 +20,18 @@ from flask import request, render_template, jsonify, Response, redirect
 #session stuff
 from datetime import timedelta
 
+#Google Login stuff
+from google.oauth2 import id_token
+from google.auth.transport import requests
+
 #misc.
 from ast import literal_eval as leval
 from werkzeug.urls import url_parse #for redirect parsing
 from time import time
 
 ##########################################################################################
+
+CLIENT_ID = "431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleusercontent.com"
 
 #user-related funcs
 @login.user_loader
@@ -200,7 +206,7 @@ def loginProcess():
             outputStr = "Successfully logged in as " + email + ".<br>"
             succeeded = True
         except Exception as e:
-            outputStr = "ERROR: " + str(e) + "<br>" #####<----- maybe I shouldn't use .innerHTML with this?
+            outputStr = "ERROR: " + str(e) + "<br>"
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
@@ -213,6 +219,27 @@ def login2process():
     print("I'm trying to log in.")
     try:
         print(request.form["loginData"])
+        loginData = leval(request.form["loginData"])
+
+        token = loginData["IDtoken"]
+
+        # Specify the CLIENT_ID of the app that accesses the backend:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+
+        # ID token is valid. Get the user's Google Account ID from the decoded token.
+        userid = idinfo['sub']
+
+        print(userid)
+
+    except ValueError:
+        print("Invalid token.")
+        # Invalid token
+        pass
+
+
     except Exception as e:
         print(e)
 
