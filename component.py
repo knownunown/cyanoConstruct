@@ -342,6 +342,19 @@ class PrimerData:
 
             self.invertRightPrimer() #because I'm lazy
                                     #need to apply on all previous entries? is it worth it
+
+    def addSpacerSeqs2(self, spacerData):
+        if(type(spacerData) != SpacerDataDB):
+            raise TypeError("spacerData not a SpacerDataDB")
+            
+        if(self.getPrimersFound()):
+            self.__seqLeft = spacerData.getFullSeqLeft() + self.getSeqLeft()
+
+            self.__seqRight = self.getSeqRight() + spacerData.getFullSeqRight()             
+
+            self.invertRightPrimer() #because I'm lazy
+                                    #need to apply on all previous entries? is it worth it
+
     
     def invertRightPrimer(self):
         self.__seqRight = inverseSeq(self.getSeqRight())

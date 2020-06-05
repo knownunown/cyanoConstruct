@@ -33,7 +33,7 @@ migrate = Migrate(app, db)
 from cyanoConstruct.enumsExceptions import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, BackboneNotFoundError, NotLoggedInError, AccessError
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 db.create_all()
-from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, Component, checkType, nullPrimerData
+from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, Component, checkType, nullPrimerData, inverseSeq
 maxPosition = SpacerData.getMaxPosition()
 from cyanoConstruct.sessionUsers import UserData, defaultUser
 
