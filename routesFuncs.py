@@ -10,7 +10,7 @@ from datetime import datetime
 #zips
 import os
 from shutil import rmtree, make_archive
-from uuid import uuid1
+from uuid import uuid1, uuid4
 
 #misc.
 def boolJS(b):
@@ -24,6 +24,26 @@ def boolJS(b):
 		else:
 			raise ValueError("b not true or false")
 
+#temporary passwords or something
+def makePass():
+	"""Return 32-character long string of random letters and numbers."""
+	temp = uuid.uuid4().hex + uuid.uuid4().hex
+
+	characters = "{letters}{digits}{d1}{d2}".format(
+	            letters = ascii_letters,
+	            digits = digits,
+	            d1 = digits[random.randrange(10)],
+	            d2 = digits[random.randrange(10)])
+
+	password = []
+
+	for i in range(0, 64, 2):
+	    index1 = int(temp[i : i + 2], 16)
+	    index = (int) (index1 / 4)
+
+	    password.append(characters[index])
+	    
+	return "".join(password)
 
 #Design
 def validateNewNS(newNSType, newNSName, newNSSeq):

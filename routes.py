@@ -114,15 +114,21 @@ def getSelectedPD():
         return None
 
 def getAllSelected():
-    return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
+    currUser = getCurrUser()
+
+    return ((currUser.getSelectedNS() is not None) and (currUser.getSelectedSD() is not None) and (currUser.getSelectedPD() is not None))
+    #return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
 
 def addToSelected(newSelected):
     if(type(newSelected) == NamedSequenceDB):
-        session["selectedNS"] = newSelected.getID()
+        getCurrUser().setSelectedNS(newSelected)
+        #session["selectedNS"] = newSelected.getID()
     elif(type(newSelected) == SpacerData):
-        session["selectedSD"] = newSelected.toJSON()
+        getCurrUser().setSelectedSD(newSelected)
+        #session["selectedSD"] = newSelected.toJSON()
     elif(type(newSelected) == PrimerData):
-        session["selectedPD"] = newSelected.toJSON()
+        getCurrUser().setSelectedPD(newSelected)
+        #session["selectedPD"] = newSelected.toJSON()
     else:
         raise TypeError("can't add item of type " + type(newSelected))
     
@@ -210,14 +216,12 @@ def loginProcess():
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-@app.route("/login2process", methods = ["POST"])
+@app.route("/loginGoogle", methods = ["POST"])
 def login2process():
     succeeded = False
     outputStr = ""
 
-    print("I'm trying to log in.")
     try:
-        print(request.form["loginData"])
         loginData = leval(request.form["loginData"])
 
         token = loginData["IDtoken"]
@@ -234,25 +238,24 @@ def login2process():
         # ID token is valid. Get the user's Google Account ID from the decoded token.
         userid = idinfo['sub']
 
-        print(userid)
-
         #actually log in OR register
         try:
             user = UserData.load(email)
 
-            if(user.getEntry().getGoogleAssoc()):
-                if(user.getEntry().getGoogleID() != userid):
+            if(user.getGoogleAssoc()):
+                if(user.getGoogleID() != userid):
                     raise Exception(" User ID and Email do not match.")
+                else:
+                    login_user(user, remember = True) #I don't know else to handle that
+                    outputStr = "Successfully logged in as {email}.".format(email = email)
             else:
                 raise Exception("Account with this email already exists, not associated with Google.")
 
-            login_user(user, remember = True)
-            outputStr = "Successfully logged in as {email}.".format(email = email)
         except UserNotFoundError:
             user = UserData.new(email)
 
-            user.getEntry().setGoogleAssoc(True)
-            user.getEntry().setGoogleID(userid)
+            user.setGoogleAssoc(True)
+            user.setGoogleID(userid)
 
             login_user(user, remember = True)
             outputStr = "Successfully created account as {email}.".format(email = email)
@@ -260,7 +263,7 @@ def login2process():
         succeeded = True
 
     except ValueError:
-        outputStr = "ERROR: Invalid token."
+        outputStr = "ERROR: Invalid input."
         # Invalid token
 
     except Exception as e:
@@ -323,6 +326,56 @@ def accountInfo():
                             googleAssoc = googleAssoc,
                            loggedIn = checkLoggedIn())
 
+
+@app.route("/googleConnect", methods = ["POST"])
+def googleConnect():
+    outputStr = ""
+    succeeded = False
+
+    currUser = getCurrUser()
+
+    try:
+        connectData = leval(request.form["connectData"])
+
+        token = connectData["IDtoken"]
+        email = connectData["email"]
+
+        #check token
+
+        # Specify the CLIENT_ID of the app that accesses the backend:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+
+        # ID token is valid. Get the user's Google Account ID from the decoded token.
+        userid = idinfo['sub']
+
+        u = UserData.load(email)
+
+        if(u.getGoogleAssoc()):
+            raise Exception("Already connected Google account with this email.")
+        else:
+            if(u.getEmail() != email):
+                raise Exception("Emails don't match.") #what will this even mean?
+            else:
+                u.setGoogleAssoc(True)
+                u.setGoogleID(userid)
+
+                outputStr = "Successfully connected {email} with Google account.".format(email = email)
+
+                succeeded = True
+
+    except ValueError:
+        outputStr = "ERROR: Invalid input."
+        # Invalid token
+
+    except Exception as e:
+        outputStr =  "ERROR: {}".format(e)
+        print(e)
+
+
+    return jsonify({"output": outputStr, "succeeded" = succeeded})
 
 #################################     DESIGN     ##################################
 ###################################################################################
@@ -485,17 +538,17 @@ def findPrimers():
         
         if(validInput):        
             #is there a spacer selected
-            selectedSpacers = getSelectedSD()
+            selectedSpacers = getCurrUser().getSelectedSD()
             if(selectedSpacers == None):
                 validInput = False
                 outputStr += "ERROR: No spacers selected.<br>"
             
-            selectedSpacers = SpacerData.fromJSON(selectedSpacers)
+            selectedSpacers = getCurrUser().getSelectedSD() #SpacerData.fromJSON(selectedSpacers)
 
         #find the primers
         if(validInput):
             try:
-                seqToEvaluate = getSelectedNS().getSeq() #fix this --- how?
+                seqToEvaluate = getCurrUser().getSelectedNS().getSeq() #fix this --- how?
                 newPrimerData = PrimerData.makeNew(seqToEvaluate, TMnum, rangeNum)
                 newPrimerData.addSpacerSeqs(selectedSpacers)
                 
@@ -532,9 +585,9 @@ def finishDomestication():
     if(validInput):
         try:
             currUser = getCurrUser()
-            selectedNS = getSelectedNS()
-            selectedSpacers = SpacerData.fromJSON(getSelectedSD())
-            selectedPrimers = PrimerData.fromJSON(getSelectedPD())
+            selectedNS = currUser.getSelectedNS() #getSelectedNS()
+            selectedSpacers = currUser.getSelectedSD() #SpacerData.fromJSON(getSelectedSD())
+            selectedPrimers = currUser.getSelectedPD() #PrimerData.fromJSON(getSelectedPD())
             
             #check if it already exists in defaults
             try:

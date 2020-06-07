@@ -17,6 +17,10 @@ class UserData:
         """Creates an empty UserData. Should not be accessed except through new or load"""
         self.__DBid = -1
         self.__entryDB = None
+
+        self.__selectedNS = None
+        self.__selectedSD = None
+        self.__selectedPD = None
         return
     
     @classmethod
@@ -90,6 +94,37 @@ class UserData:
     def get_id(self):
         return self.getEmail()
 
+    #basic setters
+    def setSelectedNS(self, namedSeq):
+        if(type(namedSeq) != NamedSequenceDB):
+            raise TypeError("namedSeq not a NamedSequenceDB")
+
+        self.__selectedNS = namedSeq
+
+    def setSelectedSD(self, spacerData):
+        if(type(spacerData) != SpacerData):
+            raise TypeError("spacerData not a SpacerData")
+
+        self.__selectedSD = spacerData
+
+    def setSelectedPD(self, primerData):
+        if(type(primerData) != PrimerData):
+            raise TypeError("primerData not a PrimerData")
+
+        self.__selectedPD = primerData
+
+    def setGoogleAssoc(self, assoc):
+        if(type(assoc) != bool):
+            raise TypeError("assoc not a bool")
+
+        return self.getEntry().setGoogleAssoc(assoc)
+
+    def setGoogleID(self, newID):
+        if(type(newID) != str):
+            raise TypeError("newID not a str")
+
+        return self.getEntry().setGoogleID(newID)
+
     #getters
     def getID(self):
         return self.__DBid
@@ -100,18 +135,23 @@ class UserData:
     def getEmail(self):
         return self.getEntry().getEmail()
 
+    def getSelectedNS(self):
+        return self.__selectedNS
+
+    def getSelectedSD(self):
+        return self.__selectedSD
+
+    def getSelectedPD(self):
+        return self.__selectedPD
+
     def getNextNSid(self):
         return self.getEntry().getNextNSid()
 
-    def getStartEndComps(self):
-        """Return StartEndComps; only works for default user."""
-        if(self.getEntry().getEmail() != "default"):
-            raise Exception("can't get StartEndComps from non-default session")
-        
-        startComp = self.findComponent("Pr", "psbA", 0, "S")
-        endComp = self.findComponent("Term", "T1", 999, "T")
-        
-        return (startComp, endComp)
+    def getGoogleAssoc(self):
+        return self.getEntry().getGoogleAssoc()
+
+    def getGoogleID(self):
+        return self.getEntry().getGoogleID()
 
     #get all query
     def getAllNSQuery(self): #a query

@@ -4,6 +4,27 @@
 
 {% block headContent %}
 <script>
+	function onSignIn(googleUser) {
+		alert("you're logging in");
+
+		var profile = googleUser.getBasicProfile();
+
+		var IDtoken = googleUser.getAuthResponse().id_token;
+
+		var connectData = "{'IDtoken': '" + IDtoken + "', 'fullName': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
+
+		$.ajax({
+			data : {connectData: connectData},
+			type : 'POST',
+			url : '/googleConnect'
+			})
+		.done(function(data){
+			document.getElementById("loginOutput").innerHTML = data.output;
+		});
+		event.preventDefault();
+	}
+
+
 	function googleConnect(){
 		return false;
 	}
@@ -19,10 +40,12 @@
 <p>Email: {{ email }}</p>
 
 {% if googleAssoc %}
-	<p>Account is associated with Google account.</p>
+	<p>Account is associated with Google.</p>
 {% else %}
-	<p> Account is not associated with Google account.</p>
-	<input type = "button" class = "styledButton" value = "Connect with Google" onclick = "googleConnect()">
+	<p> Account is not associated with Google.</p>
+
+	<p>Connect account to Google account:</p>
+	<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
 {% endif %}
 
 

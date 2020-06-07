@@ -10,8 +10,11 @@ cyanoConstruct database file (UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerD
 
 from jinja2 import Markup #for HTML display of Component
 from datetime import datetime #for time in GenBank file
+from time import time
 
 from cyanoConstruct import db
+
+EXPIRATIONSECS = 3600 #expires in an hour
 
 class UserDataDB(db.Model):
     __tablename__ = "UserData"
@@ -21,6 +24,9 @@ class UserDataDB(db.Model):
 
     googleAssoc = db.Column(db.Boolean, default = False)
     googleID = db.Column(db.Text, unique = True)
+
+    tempPass = db.Column(db.String(32))
+    tempExp = db.Column(db.Integer)
 
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
@@ -85,6 +91,18 @@ class UserDataDB(db.Model):
 
     def setGoogleID(self, newID):
         self.googleID = newID
+
+    def setTemp(self, temp):
+        self.timeExp = int(time() + EXPIRATIONSECS)
+        self.tempPass = temp
+
+    #something
+    def compareTemp(self, temp):
+        if(time() > self.timeExp):
+            #somehow indicate it's too late
+            return False
+        else:
+            return self.tempPass == temp
 
 class NamedSequenceDB(db.Model):
     __tablename__ = "NamedSequence"

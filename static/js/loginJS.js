@@ -51,14 +51,12 @@ function onSignIn(googleUser) {
 	$.ajax({
 		data : {loginData: loginData},
 		type : 'POST',
-		url : '/login2process'
+		url : '/loginGoogle'
 		})
 	.done(function(data){
+		document.getElementById("loginOutput").innerHTML = data.output;
 		if(data.succeeded){
-			alert(data.output);
-		}
-		else{
-			alert(data.output);
+			document.getElementById("returnURL").innerHTML = "<a href = '" + returnURL + "'>Go to " + returnURL.substr(1) + " page.</a>";
 		}
 	});
 	event.preventDefault();
