@@ -375,7 +375,7 @@ def googleConnect():
         print(e)
 
 
-    return jsonify({"output": outputStr, "succeeded" = succeeded})
+    return jsonify({"output": outputStr, "succeeded": succeeded})
 
 #################################     DESIGN     ##################################
 ###################################################################################
