@@ -30,7 +30,9 @@ os.remove(backup_filename)
 #remove old backups
 for filename in os.listdir(DIR):
 	completePath = os.path.join(DIR, filename)
+	print("looking at {}".format(completePath))
 	secLastMod = os.stat(completePath).st_mtime - time()
+	print("secLastMod = {}".format(secLastMod))
 	if(secLastMod > DAYS_TO_KEEP * 86400):
 		print("REMOVING: " + completePath)
 		os.remove(completePath)
