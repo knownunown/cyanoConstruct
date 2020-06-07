@@ -47,5 +47,5 @@ from cyanoConstruct.routes import *
 
 ##yeah
 """for user in UserDataDB.query.all():
-	if(user.googleAssoc is None):
-		user.googleAssoc = False"""
+	if(user.getGoogleAssoc() is None):
+		user.setGoogleAssoc(False)"""
