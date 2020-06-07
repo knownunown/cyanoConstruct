@@ -22,12 +22,12 @@ class UserDataDB(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(254), unique = True)
 
-    googleAssoc = db.Column(db.Boolean, default = False)
+    """googleAssoc = db.Column(db.Boolean, default = False)
     googleID = db.Column(db.Text, unique = True)
 
     tempPass = db.Column(db.String(32))
     tempExp = db.Column(db.Integer)
-
+"""
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
     nextNSidGOI = db.Column(db.Integer)
