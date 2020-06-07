@@ -46,6 +46,6 @@ from cyanoConstruct.routesFuncs import boolJS, validateNewNS, validateSpacers, v
 from cyanoConstruct.routes import *
 
 ##yeah
-for user in UserDataDB.query.all():
+"""for user in UserDataDB.query.all():
 	if(user.googleAssoc is None):
-		user.googleAssoc = False
+		user.googleAssoc = False"""
