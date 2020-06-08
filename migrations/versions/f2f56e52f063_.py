@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute("UPDATE UserData SET googleAssoc = false")
+    op.execute("UPDATE UserData SET googleAssoc = false WHERE googleAssoc IS NULL")
     op.alter_column('UserData', 'googleAssoc', nullable=False)
     return
 
