@@ -17,15 +17,16 @@ depends_on = None
 
 
 def upgrade():
-        op.add_column('UserData', sa.Column('googleID', sa.TEXT(), nullable=True, server_default="False"))
-        op.add_column('UserData', sa.Column('googleAssoc', sa.BOOLEAN(), nullable=True))
-        op.create_unique_constraint(None, 'UserData', ['googleID'])
-        op.add_column('UserData', sa.Column('tempPass', sa.String(32), nullable = True))
-        op.add_column('UserData', sa.Column('tempExp', sa.INTEGER(), nullable = True))
-
+    op.add_column('UserData', sa.Column('googleID', sa.TEXT(), nullable=True))
+    op.add_column('UserData', sa.Column('googleAssoc', sa.BOOLEAN(), nullable=True, server_default="False"))
+    op.create_unique_constraint(None, 'UserData', ['googleID'])
+    op.add_column('UserData', sa.Column('tempPass', sa.String(32), nullable = True))
+    op.add_column('UserData', sa.Column('tempExp', sa.INTEGER(), nullable = True))
+    return
 
 def downgrade():
-        op.drop_column('UserData', 'googleID')
-        op.drop_column('UserData', 'googleAssoc')
-        op.drop_column('UserData', 'tempPass')
-        op.drop_column('UserData', 'tempExp')
+    op.drop_column('UserData', 'googleID')
+    op.drop_column('UserData', 'googleAssoc')
+    op.drop_column('UserData', 'tempPass')
+    op.drop_column('UserData', 'tempExp')
+    return

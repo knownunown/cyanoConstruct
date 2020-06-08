@@ -25,9 +25,8 @@ class UserDataDB(db.Model):
     googleAssoc = db.Column(db.Boolean, default = False)
     googleID = db.Column(db.Text, unique = True)
 
-    """
     tempPass = db.Column(db.String(32))
-    tempExp = db.Column(db.Integer)"""
+    tempExp = db.Column(db.Integer)
 
     nextNSidPR = db.Column(db.Integer)
     nextNSidRBS = db.Column(db.Integer)
