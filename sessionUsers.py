@@ -17,10 +17,6 @@ class UserData:
         """Creates an empty UserData. Should not be accessed except through new or load"""
         self.__DBid = -1
         self.__entryDB = None
-
-        self.__selectedNS = None
-        self.__selectedSD = None
-        self.__selectedPD = None
         return
     
     @classmethod
@@ -95,31 +91,6 @@ class UserData:
         return self.getEmail()
 
     #basic setters
-    def setSelectedNS(self, namedSeq):
-        if(type(namedSeq) != NamedSequenceDB):
-            raise TypeError("namedSeq not a NamedSequenceDB")
-
-        print("adding: {}".format(namedSeq))
-
-        self.__selectedNS = namedSeq
-
-    def setSelectedSD(self, spacerData):
-        if(type(spacerData) != SpacerData):
-            raise TypeError("spacerData not a SpacerData")
-
-
-        print("adding: {}".format(spacerData))
-
-        self.__selectedSD = spacerData
-
-    def setSelectedPD(self, primerData):
-        if(type(primerData) != PrimerData):
-            raise TypeError("primerData not a PrimerData")
-
-        print("adding: {}".format(primerData))
-
-        self.__selectedPD = primerData
-
     def setGoogleAssoc(self, assoc):
         if(type(assoc) != bool):
             raise TypeError("assoc not a bool")
@@ -141,15 +112,6 @@ class UserData:
 
     def getEmail(self):
         return self.getEntry().getEmail()
-
-    def getSelectedNS(self):
-        return self.__selectedNS
-
-    def getSelectedSD(self):
-        return self.__selectedSD
-
-    def getSelectedPD(self):
-        return self.__selectedPD
 
     def getNextNSid(self):
         return self.getEntry().getNextNSid()
@@ -473,7 +435,7 @@ class UserData:
                  isTerminal = spacerData.getIsTerminal(), terminalLetter = spacerData.getTerminalLetter(),
                  leftNN = spacerData.getLeftNN(), rightNN = spacerData.getRightNN())
 
-        p = PrimerDataDB(primersFound = primerData.getPrimersFound(), seqLeft = primerData.getSeqLeft(), seqRight = primerData.getSeqRight(),
+        p = PrimerDataDB(primersFound = primerData.getPrimersFound(), seqLeft = primerData.getLeftSeq(), seqRight = primerData.getRightSeq(),
                  GCleft = primerData.getGCleft(), GCright = primerData.getGCright(), TMleft = primerData.getTMleft(), TMright = primerData.getTMright())
 
         c = ComponentDB(namedSequence_id = NSentry.getID(), user_id = self.getID())

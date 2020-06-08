@@ -114,28 +114,20 @@ def getSelectedPD():
         return None
 
 def getAllSelected():
-    currUser = getCurrUser()
-
-    print(currUser.getSelectedNS())
-    print(currUser.getSelectedSD())
-    print(currUser.getSelectedPD())
-
-    return ((currUser.getSelectedNS() is not None) and (currUser.getSelectedSD() is not None) and (currUser.getSelectedPD() is not None))
-    #return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
+    return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
 
 def addToSelected(newSelected):
     if(type(newSelected) == NamedSequenceDB):
-        getCurrUser().setSelectedNS(newSelected)
-        #session["selectedNS"] = newSelected.getID()
+        session["selectedNS"] = newSelected.getID()
     elif(type(newSelected) == SpacerData):
-        getCurrUser().setSelectedSD(newSelected)
-        #session["selectedSD"] = newSelected.toJSON()
+        session["selectedSD"] = newSelected.toJSON()
     elif(type(newSelected) == PrimerData):
-        getCurrUser().setSelectedPD(newSelected)
-        #session["selectedPD"] = newSelected.toJSON()
+        session["selectedPD"] = newSelected.toJSON()
     else:
         raise TypeError("can't add item of type " + type(newSelected))
-    
+
+    session.modified = True
+ 
 ##################################     ERRORS     ################################
 ##################################################################################
 
@@ -243,8 +235,6 @@ def login2process():
         #actually log in OR register
         try:
             user = UserData.load(email)
-
-            print(user.getGoogleAssoc())
 
             if(user.getGoogleAssoc()):
                 if(user.getGoogleID() != userid):
@@ -365,8 +355,6 @@ def googleConnect():
             else:
                 u.setGoogleAssoc(True)
                 u.setGoogleID(userid)
-
-                print(u.getGoogleAssoc())
 
                 outputStr = "Successfully connected {email} with Google account.".format(email = email)
 
@@ -544,17 +532,17 @@ def findPrimers():
         
         if(validInput):        
             #is there a spacer selected
-            selectedSpacers = getCurrUser().getSelectedSD()
+            selectedSpacers = getSelectedSD()
             if(selectedSpacers == None):
                 validInput = False
                 outputStr += "ERROR: No spacers selected.<br>"
             
-            selectedSpacers = getCurrUser().getSelectedSD() #SpacerData.fromJSON(selectedSpacers)
+            selectedSpacers = SpacerData.fromJSON(selectedSpacers)
 
         #find the primers
         if(validInput):
             try:
-                seqToEvaluate = getCurrUser().getSelectedNS().getSeq() #fix this --- how?
+                seqToEvaluate = getSelectedNS().getSeq() #fix this --- how?
                 newPrimerData = PrimerData.makeNew(seqToEvaluate, TMnum, rangeNum)
                 newPrimerData.addSpacerSeqs(selectedSpacers)
                 
@@ -591,9 +579,9 @@ def finishDomestication():
     if(validInput):
         try:
             currUser = getCurrUser()
-            selectedNS = currUser.getSelectedNS() #getSelectedNS()
-            selectedSpacers = currUser.getSelectedSD() #SpacerData.fromJSON(getSelectedSD())
-            selectedPrimers = currUser.getSelectedPD() #PrimerData.fromJSON(getSelectedPD())
+            selectedNS = getSelectedNS()
+            selectedSpacers = SpacerData.fromJSON(getSelectedSD())
+            selectedPrimers = PrimerData.fromJSON(getSelectedPD())
             
             #check if it already exists in defaults
             try:
@@ -633,8 +621,6 @@ def finishDomestication():
     else:
         outputStr += "ERROR: invalid input."
         
-    print("{}, {}, {}".format(outputStr, succeeded, newID))
-
     return jsonify({"output": outputStr, "succeeded": succeeded, "newID": newID})
 
 #domestication ZIP file
