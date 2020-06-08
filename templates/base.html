@@ -16,11 +16,7 @@ function googleSignOut(){
 	var auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut();
 
-    alert("signed out of Google");
-
     window.location.href = "/logout";
-
-	alert("signed out of site");
 
     return true;
 }
