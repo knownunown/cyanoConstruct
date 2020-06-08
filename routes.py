@@ -362,6 +362,8 @@ def googleConnect():
                 u.setGoogleAssoc(True)
                 u.setGoogleID(userid)
 
+                print(u.getGoogleAssoc())
+
                 outputStr = "Successfully connected {email} with Google account.".format(email = email)
 
                 succeeded = True
