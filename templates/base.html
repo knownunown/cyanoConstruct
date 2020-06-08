@@ -12,20 +12,7 @@
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 
 <script async defer>
-gapi.load('auth2', initSigninV2);
-
-var auth2;
-
-function initSigninV2() {
-    gapi.auth2.init({
-        client_id: 'CLIENT_ID.apps.googleusercontent.com'
-    }).then(function (authInstance) {
-        auth2 = authInstance;
-    });
-}
-
 function googleSignOut(){
-	//var auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut();
 
     alert("signed out of Google");
@@ -55,6 +42,7 @@ function googleSignOut(){
 
 		<a href = "/account" class = "{% block accountClass %}{% endblock %}" id = "accountNav">Account</a>
 		<a href = "javascript:googleSignOut()" id = "logInOut">Log Out</a>
+		<div class = "g-signin2" style = "display:none"></div>
 	{% else %}
 		<div class = "shouldGrow"></div>
 
