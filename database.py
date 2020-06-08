@@ -22,7 +22,7 @@ class UserDataDB(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(254), unique = True)
 
-    googleAssoc = db.Column(db.Boolean, default = False)
+    googleAssoc = db.Column(db.Boolean, default = False, nullable = False)
     googleID = db.Column(db.Text, unique = True)
 
     tempPass = db.Column(db.String(32))
