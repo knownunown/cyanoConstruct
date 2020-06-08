@@ -23,7 +23,7 @@ class UserDataDB(db.Model):
     email = db.Column(db.String(254), unique = True)
 
     googleAssoc = db.Column(db.Boolean, default = False, nullable = False)
-    googleID = db.Column(db.Text, unique = True)
+    googleID = db.Column(db.Text)
 
     tempPass = db.Column(db.String(32))
     tempExp = db.Column(db.Integer)
@@ -85,16 +85,20 @@ class UserDataDB(db.Model):
     #setters
     def setEmail(self, newEmail):
         self.email = newEmail
+        db.session.commit()
 
     def setGoogleAssoc(self, newValue):
         self.googleAssoc = newValue
+        db.session.commit()
 
     def setGoogleID(self, newID):
         self.googleID = newID
+        db.session.commit()
 
     def setTemp(self, temp):
         self.timeExp = int(time() + EXPIRATIONSECS)
         self.tempPass = temp
+        db.session.commit()
 
     #something
     def compareTemp(self, temp):
@@ -398,8 +402,8 @@ class PrimerDataDB(db.Model):
             tempTMleft = str(round(self.getTMleft(), 3))
             tempTMright = str(round(self.getTMright(), 3))
             
-            retStr = "Left Primer: \nSequence: " + self.getSeqLeft() + "\nGC content: " + tempGCleft + "%\nTM: " + tempTMleft + "°C"
-            retStr += "\n\nRight Primer: \nSequence: " + self.getSeqRight() + "\nGC content: " + tempGCright + "%\nTM: " + tempTMright + "°C"
+            retStr = "Left Primer: \nSequence: " + self.getLeftSeq() + "\nGC content: " + tempGCleft + "%\nTM: " + tempTMleft + "°C"
+            retStr += "\n\nRight Primer: \nSequence: " + self.getRightSeq() + "\nGC content: " + tempGCright + "%\nTM: " + tempTMright + "°C"
         else:
             retStr = "No primers found."
         
@@ -424,7 +428,7 @@ class PrimerDataDB(db.Model):
     def getPrimersFound(self):
         return self.primersFound
     
-    def getSeqLeft(self):
+    def getLeftSeq(self):
         return self.seqLeft
     
     def getGCleft(self):
@@ -433,7 +437,7 @@ class PrimerDataDB(db.Model):
     def getTMleft(self):
         return self.TMleft
     
-    def getSeqRight(self):
+    def getRightSeq(self):
         return self.seqRight
     
     def getGCright(self):
@@ -723,7 +727,7 @@ class ComponentDB(db.Model):
         return PrimerDataDB.query.get(self.primerData_id)
         
     def getLeftPrimer(self):
-        return self.getPrimerData().getSeqLeft()
+        return self.getPrimerData().getLeftSeq()
     
     def getLeftGC(self):
         return self.getPrimerData().getGCleft()
@@ -732,7 +736,7 @@ class ComponentDB(db.Model):
         return self.getPrimerData().getTMleft()
     
     def getRightPrimer(self):
-        return self.getPrimerData().getSeqRight()
+        return self.getPrimerData().getRightSeq()
     
     def getRightGC(self):
         return self.getPrimerData().getGCright()

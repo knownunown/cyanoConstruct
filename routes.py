@@ -1007,7 +1007,7 @@ def getComponentZIP():
         return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='componentZIP.zip';"})
     
-@app.route("/removeComponent", methods = ["POST"]) #####<----- use ID INSTEAD
+@app.route("/removeComponent", methods = ["POST"])
 def removeComponent():
 
     succeeded = False

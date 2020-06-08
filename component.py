@@ -336,9 +336,9 @@ class PrimerData:
             raise TypeError("spacerData not a SpacerData")
             
         if(self.getPrimersFound()):
-            self.__seqLeft = spacerData.getFullSeqLeft() + self.getSeqLeft()
+            self.__seqLeft = spacerData.getFullSeqLeft() + self.getLeftSeq()
 
-            self.__seqRight = self.getSeqRight() + spacerData.getFullSeqRight()             
+            self.__seqRight = self.getRightSeq() + spacerData.getFullSeqRight()             
 
             self.invertRightPrimer() #because I'm lazy
                                     #need to apply on all previous entries? is it worth it
@@ -348,16 +348,16 @@ class PrimerData:
             raise TypeError("spacerData not a SpacerDataDB")
             
         if(self.getPrimersFound()):
-            self.__seqLeft = spacerData.getFullSeqLeft() + self.getSeqLeft()
+            self.__seqLeft = spacerData.getFullSeqLeft() + self.getLeftSeq()
 
-            self.__seqRight = self.getSeqRight() + spacerData.getFullSeqRight()             
+            self.__seqRight = self.getRightSeq() + spacerData.getFullSeqRight()             
 
             self.invertRightPrimer() #because I'm lazy
                                     #need to apply on all previous entries? is it worth it
 
     
     def invertRightPrimer(self):
-        self.__seqRight = inverseSeq(self.getSeqRight())
+        self.__seqRight = inverseSeq(self.getRightSeq())
     
     def findPrimers(self, seq, TMgoal, TMrange):
         if(TMgoal <= TMrange):
@@ -443,8 +443,8 @@ class PrimerData:
             tempTMleft = str(round(self.getTMleft(), 3))
             tempTMright = str(round(self.getTMright(), 3))
             
-            retStr = "Left Primer: \nSequence: " + self.getSeqLeft() + "\nGC content: " + tempGCleft + "%\nTM: " + tempTMleft + "°C"
-            retStr += "\n\nRight Primer: \nSequence: " + self.getSeqRight() + "\nGC content: " + tempGCright + "%\nTM: " + tempTMright + "°C"
+            retStr = "Left Primer: \nSequence: " + self.getLeftSeq() + "\nGC content: " + tempGCleft + "%\nTM: " + tempTMleft + "°C"
+            retStr += "\n\nRight Primer: \nSequence: " + self.getRightSeq() + "\nGC content: " + tempGCright + "%\nTM: " + tempTMright + "°C"
         else:
             retStr = "No primers found."
         
@@ -454,7 +454,7 @@ class PrimerData:
     def getPrimersFound(self):
         return self.__primersFound
     
-    def getSeqLeft(self):
+    def getLeftSeq(self):
         return self.__seqLeft
     
     def getGCleft(self):
@@ -463,7 +463,7 @@ class PrimerData:
     def getTMleft(self):
         return self.__TMleft
     
-    def getSeqRight(self):
+    def getRightSeq(self):
         return self.__seqRight
     
     def getGCright(self):
@@ -666,7 +666,7 @@ class Component:
         return self.__primerData
     
     def getLeftPrimer(self):
-        return self.getPrimerData().getSeqLeft()
+        return self.getPrimerData().getLeftSeq()
     
     def getLeftGC(self):
         return self.getPrimerData().getGCleft()
@@ -675,7 +675,7 @@ class Component:
         return self.getPrimerData().getTMleft()
     
     def getRightPrimer(self):
-        return self.getPrimerData().getSeqRight()
+        return self.getPrimerData().getRightSeq()
     
     def getRightGC(self):
         return self.getPrimerData().getGCright()
