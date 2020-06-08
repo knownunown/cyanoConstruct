@@ -16,8 +16,11 @@ function googleSignOut(){
 	var auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut();
 
+    alert("signed out of Google");
+
     return true;
 }
+
 </script>
 {% block headContent %}{% endblock %}
 
