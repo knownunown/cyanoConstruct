@@ -10,6 +10,22 @@
 
 <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
 <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+<script async defer>
+function googleSignOut(){
+	var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut();
+
+    alert("signed out of Google");
+
+    window.location.href = "/logout";
+
+	alert("signed out of site");
+
+    return true;
+}
+
+</script>
 {% block headContent %}{% endblock %}
 
 </head>
@@ -27,21 +43,6 @@
 
 		<a href = "/account" class = "{% block accountClass %}{% endblock %}" id = "accountNav">Account</a>
 		<a href = "javascript:googleSignOut()" id = "logInOut">Log Out</a>
-		<script>
-			function googleSignOut(){
-				var auth2 = gapi.auth2.getAuthInstance();
-			    auth2.signOut();
-
-			    alert("signed out of Google");
-
-			    window.location.href = "/logout";
-
-				alert("signed out of site");
-
-			    return true;
-			}
-	</script>
-
 	{% else %}
 		<div class = "shouldGrow"></div>
 
