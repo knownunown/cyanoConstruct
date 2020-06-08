@@ -116,6 +116,10 @@ def getSelectedPD():
 def getAllSelected():
     currUser = getCurrUser()
 
+    print(currUser.getSelectedNS())
+    print(currUser.getSelectedSD())
+    print(currUser.getSelectedPD())
+
     return ((currUser.getSelectedNS() is not None) and (currUser.getSelectedSD() is not None) and (currUser.getSelectedPD() is not None))
     #return ((getSelectedNS() is not None) and (getSelectedSD() is not None) and (getSelectedPD() is not None))
 
@@ -132,8 +136,6 @@ def addToSelected(newSelected):
     else:
         raise TypeError("can't add item of type " + type(newSelected))
     
-    session.modified = True
-
 ##################################     ERRORS     ################################
 ##################################################################################
 
@@ -629,8 +631,10 @@ def finishDomestication():
             outputStr = "ERROR: " + str(e)
 
     else:
-        outputStr + "ERROR: invalid input."
+        outputStr += "ERROR: invalid input."
         
+    print("{}, {}, {}".format(outputStr, succeeded, newID))
+
     return jsonify({"output": outputStr, "succeeded": succeeded, "newID": newID})
 
 #domestication ZIP file

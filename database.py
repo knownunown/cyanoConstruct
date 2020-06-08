@@ -820,12 +820,12 @@ class BackboneDB(db.Model):
 
         retArray = []
 
-        retArray.append("""<div class = "hideableTitle nameTitle" id = "{libraryName}{BBname}">
-                    <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{BBname}Data'); switchToggleText(this);" value = "Name: {BBname}">
+        retArray.append("""<div class = "hideableTitle nameTitle" id = "{libraryName}{BBname}Backbone">
+                    <input class = "titleLeft subtleButton" type = "button" onclick = "toggleDisplay('{libraryName}{BBname}BackboneData'); switchToggleText(this);" value = "Name: {BBname}">
                     <span class = "titleRight monospaced">[Click to show]</span>
                 </div>
 
-                <div id = "{libraryName}{BBname}Data" class = "hideableDiv" style = "display: none">
+                <div id = "{libraryName}{BBname}BackboneData" class = "hideableDiv" style = "display: none">
 
                         <!-- info about the named sequence -->
                         <p>Backbone: {BBname}</p>

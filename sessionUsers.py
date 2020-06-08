@@ -99,17 +99,24 @@ class UserData:
         if(type(namedSeq) != NamedSequenceDB):
             raise TypeError("namedSeq not a NamedSequenceDB")
 
+        print("adding: {}".format(namedSeq))
+
         self.__selectedNS = namedSeq
 
     def setSelectedSD(self, spacerData):
         if(type(spacerData) != SpacerData):
             raise TypeError("spacerData not a SpacerData")
 
+
+        print("adding: {}".format(spacerData))
+
         self.__selectedSD = spacerData
 
     def setSelectedPD(self, primerData):
         if(type(primerData) != PrimerData):
             raise TypeError("primerData not a PrimerData")
+
+        print("adding: {}".format(primerData))
 
         self.__selectedPD = primerData
 
