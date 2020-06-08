@@ -19,7 +19,7 @@
 			url : '/googleConnect'
 			})
 		.done(function(data){
-			document.getElementById("loginOutput").innerHTML = data.output;
+			document.getElementById("connectOutput").innerHTML = data.output;
 		});
 		event.preventDefault();
 	}
@@ -46,6 +46,8 @@
 
 	<p>Connect account to Google account:</p>
 	<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
+
+	<div id = "connectOutput"></div>
 {% endif %}
 
 
