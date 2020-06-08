@@ -58,6 +58,9 @@ function onSignIn(googleUser) {
 		if(data.succeeded){
 			document.getElementById("returnURL").innerHTML = "<a href = '" + returnURL + "'>Go to " + returnURL.substr(1) + " page.</a>";
 		}
+		else{
+			googleSignOut();
+		}
 	});
 	event.preventDefault();
 }
