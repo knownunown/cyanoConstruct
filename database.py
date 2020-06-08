@@ -87,7 +87,7 @@ class UserDataDB(db.Model):
         self.email = newEmail
 
     def setGoogleAssoc(self, newValue):
-        self.setGoogleAssoc = newValue
+        self.googleAssoc = newValue
 
     def setGoogleID(self, newID):
         self.googleID = newID
