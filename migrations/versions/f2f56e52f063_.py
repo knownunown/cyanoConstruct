@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     #op.execute("UPDATE UserData SET googleAssoc = false")
-    op.alter_column("UserData", "googleAssoc", nullable=False, server_default = False)
+    op.alter_column("UserData", "googleAssoc", nullable=False, server_default = False, type=sa.BOOLEAN())
     return
 
 
