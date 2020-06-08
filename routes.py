@@ -242,6 +242,8 @@ def login2process():
         try:
             user = UserData.load(email)
 
+            print(user.getGoogleAssoc())
+
             if(user.getGoogleAssoc()):
                 if(user.getGoogleID() != userid):
                     raise Exception(" User ID and Email do not match.")
