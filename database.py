@@ -283,7 +283,7 @@ class NamedSequenceDB(db.Model):
 class SpacerDataDB(db.Model):
     __tablename__ = "SpacerData"
 
-    start = "GAAGAC" #enzyme recog. site?
+    start = "GAAGAC" #enzyme recog. site
     end = "GTCTTC"
 
     
@@ -788,6 +788,7 @@ class BackboneDB(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(20))
     seq = db.Column(db.Text())
+    desc = db.Column(db.String(128), nullable = False, default = "No description.")
 
     user_id = db.Column(db.Integer)
 
@@ -799,7 +800,7 @@ class BackboneDB(db.Model):
 
 
     def setUserID(self, newID):
-        self.user_id = newID        
+        self.user_id = newID
 
     #getters
     def getID(self):
@@ -813,6 +814,9 @@ class BackboneDB(db.Model):
     
     def getSeq(self):
         return self.seq
+
+    def getDesc(self):
+        return self.desc
 
     def getHTMLdisplay(self):
         if UserDataDB.query.get(self.getUserID()).getEmail() == "default":
