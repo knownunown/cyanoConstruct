@@ -123,10 +123,10 @@ class UserData:
         return self.getEntry().getGoogleID()
 
     #get all query
-    def getAllNSQuery(self): #a query
+    def getAllNSQuery(self):
         return self.getEntry().getAllNamedSeqs()
     
-    def getAllCompsQuery(self): #a query
+    def getAllCompsQuery(self):
         return self.getEntry().getAllComponents()
     
     def getAllBBQuery(self):
@@ -453,7 +453,7 @@ class UserData:
         s.setCompID(c.getID())
         p.setCompID(c.getID())
 
-        db.session.commit() #is it necessary? perhaps
+        db.session.commit()
 
         return c
         

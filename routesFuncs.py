@@ -286,7 +286,7 @@ def finishCompAssemblyGB(features, fullSeq):
 		i += 1
 		
 	remainder = len(seq) % 60
-	if(remainder != 0): #is not zero
+	if(remainder != 0):
 		
 		line = str(i * 60 + 1).rjust(9, " ") + " "
 		for j in range(remainder):

@@ -157,7 +157,7 @@ class SpacerData:
             newSpacerData.__spacerRight = SpacerData.spacerTR
             
             newSpacerData.__isTerminal = False #idk
-            newSpacerData.__terminalLetter = "T" #I. don't know what to put here
+            newSpacerData.__terminalLetter = "T" #Terminator
 
         #validation
         elif(position < 0 or position > SpacerData.getMaxPosition()):
@@ -175,15 +175,15 @@ class SpacerData:
             if(isTerminal):
                 newSpacerData.__spacerRight = SpacerData.spacerTL
                 newSpacerData.__isTerminal = True
-                newSpacerData.__terminalLetter = "L" #L for last I suppose
+                newSpacerData.__terminalLetter = "L" #Last
                 
             else:
                 newSpacerData.__spacerRight = SpacerData.spacers[position + 1]
                 newSpacerData.__isTerminal = False
-                newSpacerData.__terminalLetter = "M"
+                newSpacerData.__terminalLetter = "M" #Middle
         
             if(position == 0):
-                newSpacerData.__terminalLetter = "S" #to indicate it's the start
+                newSpacerData.__terminalLetter = "S" #Start
 
         newSpacerData.__position = position
         
@@ -272,7 +272,7 @@ class SpacerData:
         return self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
 
     def getFullSeqRight(self):
-        return SpacerData.end + self.getRightNN() + self.getSpacerRight() #except the complementary probably
+        return SpacerData.end + self.getRightNN() + self.getSpacerRight()
 
 
 class PrimerData:
@@ -340,10 +340,9 @@ class PrimerData:
 
             self.__seqRight = self.getRightSeq() + spacerData.getFullSeqRight()             
 
-            self.invertRightPrimer() #because I'm lazy
-                                    #need to apply on all previous entries? is it worth it
+            self.invertRightPrimer()
 
-    def addSpacerSeqs2(self, spacerData):
+    def addSpacerSeqs2(self, spacerData): #can I delete this now?
         if(type(spacerData) != SpacerDataDB):
             raise TypeError("spacerData not a SpacerDataDB")
             
@@ -352,8 +351,7 @@ class PrimerData:
 
             self.__seqRight = self.getRightSeq() + spacerData.getFullSeqRight()             
 
-            self.invertRightPrimer() #because I'm lazy
-                                    #need to apply on all previous entries? is it worth it
+            self.invertRightPrimer()
 
     
     def invertRightPrimer(self):
@@ -471,224 +469,3 @@ class PrimerData:
     
     def getTMright(self):
         return self.__TMright
-
-
-
-
-
-class Component:
-    start = "GAAGAC" #enzyme recog. site?
-    end = "GTCTTC"
-        
-    #standard init, requires NamedSequence, SpacerData, and PrimerData
-    def __init__(self, namedSeq, spacerData, primerData):
-        #type checking
-        if(type(namedSeq) != NamedSequence):
-            raise TypeError("namedSeq not a NamedSequence")
-        if(type(spacerData) != SpacerData):
-            raise TypeError("spacerData not a SpacerData")
-        if(type(primerData) != PrimerData):
-            raise TypeError("primerData not a PrimerData")
-        
-        #assign
-        self.__namedSeq = namedSeq
-        self.__primerData = primerData
-        self.__spacerData = spacerData
-            
-    
-    #does not require a NamedSequence, SpacerData, or PrimerData to create the component
-    @staticmethod
-    def makeFromNew(elemType, name, seq, position, isTerminal, TMgoal, TMrange):
-        """I would like to re-think the utility of this function. Is it convenient anymore?"""
-        
-        #type checking
-        checkType(elemType, "elemType")
-
-        if(type(name) != str):
-            raise TypeError("name not a string")
-        if(type(seq) != str):
-            raise TypeError("seq not a string")
-        if(type(position) != int):
-            raise TypeError("position not an int")
-        if(type(isTerminal) != bool):
-            raise TypeError("isTerminal is not a bool")
-        if(type(TMgoal) != int and type(TMgoal) != float):
-            raise TypeError("TMgoal not an int or float")
-        if(type(TMrange) != int and type(TMrange) != float):
-            raise TypeError("TMrange not an int or float")
-        
-        #make the other class instances
-        newNamedSequence = NamedSequence(elemType, name, seq)
-        newSpacerData = SpacerData(position, isTerminal)
-        newPrimerData = PrimerData(seq, TMgoal, TMrange)
-        
-        #make the component
-        newComponent = Component(newNamedSequence, newSpacerData, newPrimerData) #or such
-        return (newComponent, newNamedSequence)
-    
-    #requires a NamedSequence, but not a SpacerData or PrimerData to create the component
-    @staticmethod
-    def makeWithNamedSeq(namedSequence, position, isTerminal, TMgoal, TMrange):
-        """Do not use it right now, please."""
-        #type checking
-        if(type(namedSequence) != NamedSequence):
-            raise TypeError("namedSequence not a NamedSequence")
-        if(type(position) != int):
-            raise TypeError("position not an int")
-        if(type(isTerminal) != bool):
-            raise TypeError("isTerminal is not a bool")
-        if(type(TMgoal) != int and type(TMgoal) != float):
-            raise TypeError("TMgoal not an int or float")
-        if(type(TMrange) != int and type(TMrange) != float):
-            raise TypeError("TMrange not an int or float")
-            
-        #spacer and primer data
-        newSpacerData = SpacerData(position, isTerminal)
-        newPrimerData = PrimerData(namedSequence.getSeq(), TMgoal, TMrange)
-        
-        #make the component
-        newComponent = Component(namedSequence, newSpacerData, newPrimerData) #or such
-        return newComponent
-
-    #complicated getters
-    def getFullSeq(self):
-        #return self.getLeftSpacer() + self.getLeftNN() + Component.start + self.getSeq() + Component.end + self.getRightNN() + self.getRightSpacer()
-        return self.getFullSpacerLeft() + self.getSeq() + self.getFullSpacerRight()
-    
-    def getLongName(self):
-        retStr = self.getType() + " " + self.getName() + " Position: " + str(self.getPosition())
-        if(self.getTerminal()):
-            retStr += " terminal"
-        else:
-            retStr += " non-terminal"
-        
-        return retStr
-
-    def getHTMLdisplay(self):
-        retStr = "ID: " + str(self.getID()) + "<br>"
-
-        retStr += "Position: " + str(self.getPosition()) + "<br>"
-        retStr += "Terminal?: " + str(self.getTerminal()) + "<br>"
-
-        retStr += "<br><span class = 'emphasized'>Spacers:</span><br>"
-        retStr += "Left: " + self.getLeftSpacer() + "<br>"
-        retStr += "Right: " + self.getRightSpacer() + "<br>"
-        
-        retStr += "<br><span class = 'emphasized'>Primers:</span><br>"
-        retStr += "Left primer:<br>GC content: " + str(round(self.getLeftGC() * 100, 4)) + "%<br>TM: " + str(round(self.getLeftTM(), 4)) + "<br>Sequence:<br>" + self.getLeftPrimer() + "<br><br>"
-        retStr += "Right primer:<br>GC content: " + str(round(self.getRightGC() * 100, 4)) + "%<br>TM: " + str(round(self.getRightTM(), 4)) + "<br>Sequence:<br>" + self.getRightPrimer() + "<br>"
-
-        return Markup(retStr)
-
-    def __str__(self):
-        retStr = "Name: " + self.getName() + "\n"
-        retStr += "seq: " + self.getSeq() + "\n"
-        retStr += "elemType: " + self.getType() + "\n"
-        retStr += "terminal: " + str(self.getTerminal()) + "\n"
-        retStr += "position: " + str(self.getPosition()) + "\n"
-        retStr += "leftPrimer: " + self.getLeftPrimer() + "\n"
-        retStr += "leftGC: " + str(self.getLeftGC()) + "\n"
-        retStr += "leftTM: " + str(self.getLeftTM()) + "\n"
-        retStr += "rightPrimer: " + self.getRightPrimer() + "\n"
-        retStr += "rightGC: " + str(self.getRightGC()) + "\n"
-        retStr += "rightTM: " + str(self.getRightTM()) + "\n"
-        retStr += "leftSpacer: " + self.getLeftSpacer() + "\n"
-        retStr += "rightSpacer: " + self.getRightSpacer() + "\n"
-        retStr += "leftNN: " + self.getLeftNN() + "\n"
-        retStr += "rightNN: " + self.getRightNN()
-        return retStr
-    
-    def getCompZIP(self):
-        #primers and complete sequence
-        retDict = {}
-        
-        idStr = self.getID()
-        idStrAndName = self.getID() + " (" + self.getName() + ")"
-        
-        retDict[idStr + "-CompleteSequence.fasta"] = ">" + idStrAndName + " complete sequence\n" + self.getFullSeq()
-        retDict[idStr + "-LeftPrimer.fasta"] = ">" + idStrAndName + " left primer\n" + self.getLeftPrimer()
-        retDict[idStr + "-RightPrimer.fasta"] = ">" + idStrAndName + " right primer\n" + self.getRightPrimer()
-        
-        return retDict
-    
-    #basic getters
-    def getID(self):
-        nameID = self.getNamedSequence().getNameID()
-        retStr = self.getType() + "-" + str(nameID).zfill(3) + "-" + str(self.getPosition()).zfill(3) + self.getTerminalLetter()
-        return retStr
-
-
-    def getNamedSequence(self):
-        return self.__namedSeq
-    
-    def getName(self):
-        return self.getNamedSequence().getName()
-    
-    def getSeq(self):
-        return self.getNamedSequence().getSeq()
-    
-    def getType(self):
-        return self.getNamedSequence().getType()
-
-    
-    def getSpacerData(self):
-        return self.__spacerData
-
-    def getTerminal(self):
-        return self.getSpacerData().getIsTerminal()
-    
-    def getTerminalLetter(self):
-        return self.getSpacerData().getTerminalLetter()
-    
-    def getPosition(self):
-        return self.getSpacerData().getPosition()
-
-    def getLeftSpacer(self):
-        return self.getSpacerData().getSpacerLeft()
-    
-    def getRightSpacer(self):
-        return self.getSpacerData().getSpacerRight() #what is this naming
-
-    def getLeftNN(self):
-        return self.getSpacerData().getLeftNN()
-    
-    def getRightNN(self):
-        return self.getSpacerData().getRightNN()
-
-    def getFullSpacerLeft(self):
-        return self.getSpacerData().getFullSeqLeft()
-
-    def getFullSpacerRight(self):
-        return self.getSpacerData().getFullSeqRight()
-
-
-    def getPrimerData(self):
-        return self.__primerData
-    
-    def getLeftPrimer(self):
-        return self.getPrimerData().getLeftSeq()
-    
-    def getLeftGC(self):
-        return self.getPrimerData().getGCleft()
-    
-    def getLeftTM(self):
-        return self.getPrimerData().getTMleft()
-    
-    def getRightPrimer(self):
-        return self.getPrimerData().getRightSeq()
-    
-    def getRightGC(self):
-        return self.getPrimerData().getGCright()
-    
-    def getRightTM(self):
-        return self.getPrimerData().getTMright()
-
-
-
-
-
-
-
-
-
-nullPrimerData = PrimerData.makeNull()

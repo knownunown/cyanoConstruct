@@ -11,7 +11,7 @@ FILE_PREFIX = "cyanoConstructDB"
 FILE_SUFFIX_DATE_FORMAT = "%Y-%m-%d-%H:%MUTC"
 USERNAME = "cyanogate"
 DBNAME = USERNAME + "$cyanoconstruct"
-DAYS_TO_KEEP = 3
+DAYS_TO_KEEP = 2 #results in 3 files stored at any given time
 
 #make today's backup
 timestamp = datetime.now().strftime(FILE_SUFFIX_DATE_FORMAT)

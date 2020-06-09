@@ -244,5 +244,9 @@ legend {
 }
 
 #googleWrapper {
+	margin: 10px 0px;
+}
+
+#googleForm {
 	margin: 20px;
 }

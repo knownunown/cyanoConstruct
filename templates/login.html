@@ -10,6 +10,7 @@
 var returnURL = {{ returnURL|tojson }};
 </script>
 
+
 <script src = "/static/js/loginJS.js" ></script>
 {% endblock %}
 
@@ -56,8 +57,11 @@ var returnURL = {{ returnURL|tojson }};
 <h1>TESTING: Log In or Register through Google</h1>
 <p>NOTE: this currently only works with umn.edu emails. Using other types of emails would require verification of this site by Google, which may take weeks.</p>
 
-<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
-
+<form id = "googleForm">
+	<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
+	<label for = "googleRememberMe">Remember me</label>
+	<input name = "googleRememberMe" id = "googleRememberMe" type = "checkbox">
+</form>
 <p id = "loginOutput">
 </p>
 <span id = "returnURL"></span>

@@ -128,12 +128,16 @@ def addToSelected(newSelected):
 
     session.modified = True
  
+def clearSelected():
+    for key in ["selectedNS", "selectedSD", "selectedPD"]:
+        try:
+            session.pop(key)
+        except Exception:
+            pass
+
 ##################################     ERRORS     ################################
 ##################################################################################
 
-#temp disabled because it's called on js files: how to fix?
-
-"""
 @app.errorhandler(404)
 def error404(error):
     print("404 error: " + str(error))
@@ -144,7 +148,6 @@ def error500(error):
     print("500 eror: " + str(error))
     #roll back the database somehow, because this is invoked by database errors
     return render_template("500.html")
-"""
 
 def errorZIP(error):
     return render_template("noSeq.html",
@@ -187,7 +190,7 @@ def loginProcess():
         loginData = leval(request.form["loginData"])
         email = loginData["email"]
 
-        try:    #I'd prever something better than this
+        try:
             remember = boolJS(loginData["remember"])
         except Exception:
             raise ValueError("invalid remember me")
@@ -200,18 +203,21 @@ def loginProcess():
         try:            
             user = UserData.load(email)
             
-            login_user(user, remember = remember) #add remember me functionality
+            login_user(user, remember = remember)
             
+            clearSelected()
+
             #indicate success
             outputStr = "Successfully logged in as " + email + ".<br>"
             succeeded = True
+
         except Exception as e:
             outputStr = "ERROR: " + str(e) + "<br>"
     
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
 @app.route("/loginGoogle", methods = ["POST"])
-def login2process():
+def loginGoogle():
     succeeded = False
     outputStr = ""
 
@@ -220,6 +226,10 @@ def login2process():
 
         token = loginData["IDtoken"]
         email = loginData["email"]
+        try:
+            remember = boolJS(loginData["remember"])
+        except Exception:
+            raise ValueError("invalid remember me")
 
         #check token
 
@@ -240,7 +250,7 @@ def login2process():
                 if(user.getGoogleID() != userid):
                     raise Exception(" User ID and Email do not match.")
                 else:
-                    login_user(user, remember = True) #I don't know else to handle that
+                    login_user(user, remember = remember) #I don't know else to handle that
                     outputStr = "Successfully logged in as {email}.".format(email = email)
             else:
                 raise Exception("Account with this email already exists, not associated with Google.")
@@ -251,7 +261,10 @@ def login2process():
             user.setGoogleAssoc(True)
             user.setGoogleID(userid)
 
-            login_user(user, remember = True)
+            login_user(user, remember = remember)
+
+            clearSelected()
+
             outputStr = "Successfully created account as {email}.".format(email = email)
 
         succeeded = True
@@ -269,6 +282,8 @@ def login2process():
 @app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():
     logout_user()
+    clearSelected()    
+    
     return redirect("/index")
         
 
@@ -296,6 +311,8 @@ def registerProcess():
             user = UserData.new(email)
             login_user(user, remember = remember)
                         
+            clearSelected()
+
             #indicate success
             outputStr += "Successfully registered and logged in as " + registrationData["email"] + ".<br>"
             succeeded = True
@@ -542,7 +559,7 @@ def findPrimers():
         #find the primers
         if(validInput):
             try:
-                seqToEvaluate = getSelectedNS().getSeq() #fix this --- how?
+                seqToEvaluate = getSelectedNS().getSeq()
                 newPrimerData = PrimerData.makeNew(seqToEvaluate, TMnum, rangeNum)
                 newPrimerData.addSpacerSeqs(selectedSpacers)
                 
@@ -1146,8 +1163,8 @@ def libraryZIP():
 
 
 
-@app.route("/index", methods = ["GET", "POST"], endpoint = "index")
-@app.route("/", methods = ["GET", "POST"], endpoint = "index")
+@app.route("/index", methods = ["GET", "POST"])
+@app.route("/", methods = ["GET", "POST"])
 def index():    
     if(checkLoggedIn()):
         logInMessage = "Logged in as: " + current_user.getEmail() + "."

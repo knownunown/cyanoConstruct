@@ -8,7 +8,7 @@ Created on Wed Apr  1 21:32:02 2020
 cyanoConstruct __init__ file
 """
 printActions = True
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 #import statements
 from flask import Flask, session
@@ -33,9 +33,10 @@ migrate = Migrate(app, db)
 from cyanoConstruct.enumsExceptions import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, BackboneNotFoundError, NotLoggedInError, AccessError
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 db.create_all()
-from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, Component, checkType, nullPrimerData, inverseSeq
+from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, checkType, inverseSeq
+nullPrimerData = PrimerData.makeNull()
 maxPosition = SpacerData.getMaxPosition()
-from cyanoConstruct.sessionUsers import UserData
+from cyanoConstruct.users import UserData
 
 try:
     defaultUser = UserData.load("default")
@@ -44,8 +45,3 @@ except UserNotFoundError:
 
 from cyanoConstruct.routesFuncs import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
 from cyanoConstruct.routes import *
-
-##yeah
-"""for user in UserDataDB.query.all():
-	if(user.getGoogleAssoc() is None):
-		user.setGoogleAssoc(False)"""
