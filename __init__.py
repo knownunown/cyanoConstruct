@@ -43,5 +43,5 @@ try:
 except UserNotFoundError:
     defaultUser = UserData.new("default")
 
-from cyanoConstruct.routesFuncs import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
+from cyanoConstruct.routesFuncs import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addSpacerAssemblyGB, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
 from cyanoConstruct.routes import *

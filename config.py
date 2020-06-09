@@ -27,4 +27,5 @@ class Config(object):
 
     SQLALCHEMY_POOL_RECYCLE = 299
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    static_folder = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static')
 """

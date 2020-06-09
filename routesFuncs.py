@@ -30,19 +30,19 @@ def makePass():
 	temp = uuid.uuid4().hex + uuid.uuid4().hex
 
 	characters = "{letters}{digits}{d1}{d2}".format(
-	            letters = ascii_letters,
-	            digits = digits,
-	            d1 = digits[random.randrange(10)],
-	            d2 = digits[random.randrange(10)])
+				letters = ascii_letters,
+				digits = digits,
+				d1 = digits[random.randrange(10)],
+				d2 = digits[random.randrange(10)])
 
 	password = []
 
 	for i in range(0, 64, 2):
-	    index1 = int(temp[i : i + 2], 16)
-	    index = (int) (index1 / 4)
+		index1 = int(temp[i : i + 2], 16)
+		index = (int) (index1 / 4)
 
-	    password.append(characters[index])
-	    
+		password.append(characters[index])
+		
 	return "".join(password)
 
 #Design
@@ -235,9 +235,20 @@ def validateBackbone(newName, newSeq):
 
 
 #Assembly
+def addSpacerAssemblyGB(spacer, features, i):
+	lenSpacer = len(spacer)
+	features.append("\tmisc_feature\t{start}..{end}".format(
+										start = i + 1,
+										end = i + lenSpacer))
+	features.append("\t\t\t/note=\"spacer\"")
+	features.append("\t\t\t/ApEinfo_fwdcolor=#E6855F")
+	features.append("\t\t\t/ApEinfo_revcolor=#E6855F")
+
+	return i + lenSpacer
+
 def addCompAssemblyGB(comp, features, i):
 	"""Add feature of component for a GenBank file."""
-	lenSeq = len(comp.getFullSeq())
+	lenSeq = len(comp.getSeq())
 	
 	if(comp.getType() == "GOI"):
 		features.append("\tgene\t\t" + str(i + 1) + ".." + str(i + lenSeq))
@@ -250,7 +261,6 @@ def addCompAssemblyGB(comp, features, i):
 
 		features.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
 		features.append("\t\t\t/regulatory_class=" + regName)
-											#get a longer thing to say here
 		features.append("\t\t\t/note=\"" + longType + " " + comp.getName() + "\"")
 	
 	return i + lenSeq
@@ -270,21 +280,23 @@ def finishCompAssemblyGB(features, fullSeq):
 	i = 0
 	origin = ["ORIGIN"]
 	
+	#most lines (60 nucleotides per line)
 	while(i < (len(seq) // 60)):
 		i60 = i * 60
 		line = "{number} {block1} {block2} {block3} {block4} {block5} {block6}".format(
-				**{"number" : str(i60 + 1).rjust(9, " "),
-				"block1" : seq[i60 : i60 + 10],
-				"block2" : seq[i60 + 10 : i60 + 20],
-				"block3" : seq[i60 + 20 : i60 + 30],
-				"block4" : seq[i60 + 30 : i60 + 40],
-				"block5" : seq[i60 + 40 : i60 + 50],
-				"block6" : seq[i60 + 50 : i60 + 60]})
+				number = str(i60 + 1).rjust(9, " "),
+				block1 = seq[i60 : i60 + 10],
+				block2 = seq[i60 + 10 : i60 + 20],
+				block3 = seq[i60 + 20 : i60 + 30],
+				block4 = seq[i60 + 30 : i60 + 40],
+				block5 = seq[i60 + 40 : i60 + 50],
+				block6 = seq[i60 + 50 : i60 + 60])
 
 		origin.append(line)
 
 		i += 1
 		
+	#final line
 	remainder = len(seq) % 60
 	if(remainder != 0):
 		

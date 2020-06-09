@@ -11,7 +11,7 @@ cyanoConstruct routes file
 from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, AccessError
 from cyanoConstruct import app, UserData, SpacerData, PrimerData, NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB, session
 from cyanoConstruct import login, current_user, login_user, logout_user, login_required
-from cyanoConstruct import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
+from cyanoConstruct import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addSpacerAssemblyGB, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
 from cyanoConstruct import defaultUser, nullPrimerData, printActions
 
 #flask
@@ -931,8 +931,6 @@ def assemblyZIP():
         return errorZIP("No assembled sequence.")
 
     try:
-        startEndComps = defaultUser.getStartEndComps()
-
         fullSeq = ""
 
         features = []
@@ -942,9 +940,20 @@ def assemblyZIP():
         for compID in compsList:
             comp = ComponentDB.query.get(compID)
             checkPermission(comp)
-            fullSeq += comp.getFullSeq()
-            i = addCompAssemblyGB(comp, features, i)
             
+            fullSeq += comp.getLeftSpacer() + comp.getSeq()
+            i = addSpacerAssemblyGB(comp.getLeftSpacer(), features, i)
+            print("adding {compID} left spacer: {spacer}".format(compID = comp.getNameID(), spacer = comp.getLeftSpacer()))
+            i = addCompAssemblyGB(comp, features, i)
+            print("adding {compID} seq".format(compID = comp.getNameID()))
+
+            #for element T, add right spacer
+            if(comp.getPosition() == 999):
+                fullSeq += comp.getRightSpacer()
+
+                i = addSpacerAssemblyGB(comp.getRightSpacer(), features, i)
+                print("adding {compID} right spacer: {spacer}".format(compID = comp.getNameID(), spacer = comp.getRightSpacer()))
+
         fileGB = finishCompAssemblyGB(features, fullSeq)
         fileFASTA = ">CyanoConstruct sequence\n" + fullSeq
 
