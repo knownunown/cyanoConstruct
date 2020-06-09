@@ -732,7 +732,7 @@ def newBackbone():
 
             libraryName = "Personal"
 
-            outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{BBname}'>{BBname}</a>.".format(
+            outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{BBname}Backbone'>{BBname}</a>.".format(
                                                                                         libraryName = libraryName,
                                                                                         BBname = BBname)
 
@@ -825,7 +825,7 @@ def processAssembly():
         #Validation where?
         
         if(printActions):
-            print("ASSEMBLING SEQUENCE FROM:\n" + str(dataDict))
+            print("ASSEMBLING SEQUENCE FROM:\n{}".format(dataDict))
         
         outputStr = "Backbone:<br>"
 
@@ -902,9 +902,8 @@ def processAssembly():
                     foundComp = getCurrUser().findComponent(comp["type"], comp["name"], posKey, terminalLetter)
                     libraryName = "Personal"
                     
-                #foundComp = allCompsDict[sessionID][comp["type"]][comp["name"]][comp["position"]][terminalLetter]
                 compsList.append(foundComp.getID())
-                #libraryName = "Personal"
+
                 outputStr += ("Found: <a target = '_blank' href ='/library#" + libraryName + foundComp.getNameID() + "'>" + 
                               foundComp.getNameID() + "</a><br>")
             except (SequenceNotFoundError, ComponentNotFoundError):
