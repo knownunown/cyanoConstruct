@@ -1,25 +1,23 @@
 #bodyDiv {
 	height: 100vh;
+	display: flex;
+	flex-direction: column;
 }
 
-@media (min-width: 600px) and (min-height: 550px){
-	#inputCol {
-		width: 40%;
-		float: left;
+@media (min-width: 600px) and (min-height: 450px){
+	#leftCol, #rightCol {
+		height: 100%;
 	}
 
-	#outputCol {
-		width: 60%;
-		float: right;
+	#leftCol {
+		width: 50%;
 	}
 
-	#input {
-		max-height: 80vh;
+	#rightCol {
+		flex-grow: 1;
 	}
 
-	#output {
-		max-height: 80vh;
-
+	#rightCol {
 		display: flex;
 		flex-direction: column;
 	}
@@ -27,17 +25,26 @@
 	#show-output {
 		flex-grow: 1;
 	}
-}
 
-@media (max-width: 600px) or (max-height: 550px){
-	#input, #output { /* looks kind of silly but I don't know what else to do */
-		max-width: 610px;
-		margin: auto;
+	#form {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	#mainContent {
+		overflow: auto;
+		display: flex;
+		height: 100%;
 	}
 }
 
-#input, #output {
-	padding: 10px;
+
+@media (max-width: 600px) or (max-height: 450px){
+	#leftCol, #rightCol { /* looks kind of silly but I don't know what else to do */
+		max-width: 600px;
+		margin: auto;
+	}
 }
 
 #showOutput {
@@ -52,10 +59,22 @@
 	margin: 0px;
 }
 
-#fidelityInput, #backboneInput {
+#fidelityInput, #backboneInput div {
 	display:flex;
 	flex-direction: row;
 	max-width: 600px;
+	margin: 8px 0px;
+}
+
+#backboneInput div div {
+	margin: 0px;
+}
+
+
+#backboneInput {
+	padding-left: 5px;
+	margin-left: 13px;
+	border-left: 2px solid #ddd;
 }
 
 div.elemDiv {
@@ -86,17 +105,6 @@ div.elemDiv > div{
 	margin: 5px;
 }
 
-@media (min-width: 600px) and (min-height: 550px){
-	#form {
-		display: flex;
-		flex-direction: column;
-		max-height: 80vh;
-	}
-
-	#elements {
-		flex-grow: 1;
-	}
-}
 
 #elements {
 	border: 1px dashed black;
@@ -104,4 +112,16 @@ div.elemDiv > div{
 
 	min-height: 20px;
 	max-width: 600px;
+}
+
+#backboneInput input[type=radio]{
+	margin-left: 20px;
+}
+
+#backboneDescriptionDiv p {
+	margin: 0px;
+}
+
+#backboneDescriptionDiv {
+	min-height: 3em;
 }

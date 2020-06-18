@@ -8,10 +8,10 @@ Created on Wed Apr  1 14:54:27 2020
 
 cyanoConstruct routes file
 """
-from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, AccessError
+import cyanoConstruct.enumsExceptions as ee
 from cyanoConstruct import app, UserData, SpacerData, PrimerData, NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB, session
 from cyanoConstruct import login, current_user, login_user, logout_user, login_required
-from cyanoConstruct import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addSpacerAssemblyGB, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
+import cyanoConstruct.routesFuncs as rf
 from cyanoConstruct import defaultUser, nullPrimerData, printActions
 
 #flask
@@ -28,6 +28,8 @@ from google.auth.transport import requests
 from ast import literal_eval as leval
 from werkzeug.urls import url_parse #for redirect parsing
 from time import time
+import os
+import re
 
 ##########################################################################################
 
@@ -54,42 +56,42 @@ def checkPermission(comp):
         raise TypeError("comp not a ComponentDB")
     
     if(comp.getUserID() != current_user.getID() and comp.getUserID() != defaultUser.getID()):
-        raise AccessError("Do not have permission to access component.")
+        raise ee.AccessError("Do not have permission to access component.")
 
 def checkPermissionNS(ns):
     if(type(ns) != NamedSequenceDB):
         raise TypeError("ns not a NamedSequenceDB")
     
     if(ns.getUserID() != current_user.getID() and ns.getUserID() != defaultUser.getID()):
-        raise AccessError("Do not have permission to access sequence.")
+        raise ee.AccessError("Do not have permission to access sequence.")
 
 def checkPermissionBB(bb):
     if(type(bb) != BackboneDB):
         raise TypeError("bb not a BackboneDB")
 
     if(bb.getUserID() != current_user.getID() and bb.getUserID() != defaultUser.getID()):
-        raise AccessError("Do not have permission to access this backbone.")
+        raise ee.AccessError("Do not have permission to access this backbone.")
 
 def permissionOwnNS(ns):
     if(type(ns) != NamedSequenceDB):
         raise TypeError("ns not a NamedSequenceDB")
 
     if(ns.getUserID() != current_user.getID()):
-        raise AccessError("Do not have permission to access this sequence.")
+        raise ee.AccessError("Do not have permission to access this sequence.")
 
 def permissionOwnComp(comp):
     if(type(comp) != ComponentDB):
         raise TypeError("comp not a ComponentDB")
 
     if(comp.getUserID() != current_user.getID()):
-        raise AccessError("Do not have permission to access component.")
+        raise ee.AccessError("Do not have permission to access component.")
 
 def permissionOwnBB(bb):
     if(type(bb) != BackboneDB):
         raise TypeError("bb not a BackboneDB")
 
     if(bb.getUserID() != current_user.getID()):
-        raise AccessError("Do not have permission to access this backbone.")
+        raise ee.AccessError("Do not have permission to access this backbone.")
 
 #Selected objects (for designing components)
 def getSelectedNS():
@@ -135,7 +137,7 @@ def clearSelected():
         except Exception:
             pass
 
-##################################     ERRORS     ################################
+##################################   ERRORS    ################################
 ##################################################################################
 
 @app.errorhandler(404)
@@ -158,7 +160,7 @@ def errorZIP(error):
 def privacyPolicy():
     return render_template("privacy.html", loggedIn = checkLoggedIn())
 
-##################################     LOG IN     ################################
+##################################   LOG IN    ################################
 ##################################################################################
 
 @app.route("/login", methods = ["POST", "GET"])
@@ -191,7 +193,7 @@ def loginProcess():
         email = loginData["email"]
 
         try:
-            remember = boolJS(loginData["remember"])
+            remember = rf.boolJS(loginData["remember"])
         except Exception:
             raise ValueError("invalid remember me")
 
@@ -227,7 +229,7 @@ def loginGoogle():
         token = loginData["IDtoken"]
         email = loginData["email"]
         try:
-            remember = boolJS(loginData["remember"])
+            remember = rf.boolJS(loginData["remember"])
         except Exception:
             raise ValueError("invalid remember me")
 
@@ -255,7 +257,7 @@ def loginGoogle():
             else:
                 raise Exception("Account with this email already exists, not associated with Google.")
 
-        except UserNotFoundError:
+        except ee.UserNotFoundError:
             user = UserData.new(email)
 
             user.setGoogleAssoc(True)
@@ -282,7 +284,7 @@ def loginGoogle():
 @app.route("/logout", methods = ["POST", "GET"])
 def logoutProcess():
     logout_user()
-    clearSelected()    
+    clearSelected() 
     
     return redirect("/index")
         
@@ -297,7 +299,7 @@ def registerProcess():
         registrationData = leval(request.form["registrationData"])
         email = registrationData["email"]
         try:
-            remember = boolJS(registrationData["remember"])
+            remember = rf.boolJS(registrationData["remember"])
         except Exception:
             raise ValueError("invalid remember me")
 
@@ -306,7 +308,7 @@ def registerProcess():
     except Exception:
         outputStr = "ERROR: could not get valid data from form.<br>"
     
-    if(validInput):    
+    if(validInput): 
         try:
             user = UserData.new(email)
             login_user(user, remember = remember)
@@ -322,7 +324,7 @@ def registerProcess():
         return jsonify({"output": outputStr, "succeeded": succeeded})
     
 
-################################     USER PAGE     ################################
+################################     USER PAGE   ################################
 ###################################################################################
     
 @app.route("/account", methods = ["POST", "GET"])
@@ -388,11 +390,11 @@ def googleConnect():
 
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-#################################     DESIGN     ##################################
+#################################    DESIGN     ##################################
 ###################################################################################
 @app.route("/design", methods = ["POST", "GET"])
 @login_required
-def design():        
+def design():      
     userNamedSequences = getCurrUser().getSortedNS()
     defaultNamedSequences = defaultUser.getSortedNS()
     
@@ -425,7 +427,7 @@ def design():
                            namedSequencesSequences = NSSequencesJSONifiable,
                            loggedIn = checkLoggedIn())
 
-################################     Component     ################################
+################################     Component   ################################
 
 #in order to set it to the global
 @app.route("/findNamedSeq", methods = ["POST"])
@@ -448,7 +450,7 @@ def findNamedSeq():
                 outputStr = ""
                 succeeded = True
 
-            except AccessError:
+            except ee.AccessError:
                 outputStr = "ERROR: You do not have permission to access this sequence."
 
             except Exception as e:
@@ -477,7 +479,7 @@ def findSpacers():
         outputStr = "ERROR: invalid input received.<br>"
 
     if(validInput):
-        validInput, outputStr, newPos, isTerminal = validateSpacers(newPosStr, newTerminalStr)
+        validInput, outputStr, newPos, isTerminal = rf.validateSpacers(newPosStr, newTerminalStr)
     
     #obtain the actual spacers
     if(validInput):
@@ -530,7 +532,7 @@ def findPrimers():
 
     #skip primers if relevant
     try:
-        skipPrimers = boolJS(skipStr)
+        skipPrimers = rf.boolJS(skipStr)
     except Exception:
         validInput = False
         outputStr += "ERROR: Skip primers value not true or false.<br>"
@@ -545,9 +547,9 @@ def findPrimers():
     elif(validInput):
         #that thrilling data validation
         if(validInput):
-            validInput, outputStr, TMnum, rangeNum = validatePrimers(TMstr, rangeStr)
+            validInput, outputStr, TMnum, rangeNum = rf.validatePrimers(TMstr, rangeStr)
         
-        if(validInput):        
+        if(validInput):  
             #is there a spacer selected
             selectedSpacers = getSelectedSD()
             if(selectedSpacers == None):
@@ -584,8 +586,8 @@ def findPrimers():
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
 #actually creates the component
-@app.route("/finishDomestication", methods = ["POST"])
-def finishDomestication():
+@app.route("/finishComponent", methods = ["POST"])
+def finishComponent():
     #validation
     validInput = getAllSelected()
     succeeded = False
@@ -603,22 +605,22 @@ def finishDomestication():
             #check if it already exists in defaults
             try:
                 defaultUser.findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
-                raise AlreadyExistsError("Component already exists as a default component.")
-            except (SequenceNotFoundError, ComponentNotFoundError):
+                raise ee.AlreadyExistsError("Component already exists as a default component.")
+            except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
                 pass
             
             #check if it already exists in personal library
             try:
                 getCurrUser().findComponent(selectedNS.getType(), selectedNS.getName(), selectedSpacers.getPosition(), selectedSpacers.getTerminalLetter())
-                raise AlreadyExistsError("Component already exists as a user-made component.")
-            except (SequenceNotFoundError, ComponentNotFoundError):
+                raise ee.AlreadyExistsError("Component already exists as a user-made component.")
+            except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
                 pass
             
             #add NS to personal library if it's not from there
             try:
                 tempNS = currUser.addNSDB(selectedNS)
                 selectedNS = tempNS
-            except AlreadyExistsError:
+            except ee.AlreadyExistsError:
                 pass
     
             newComponent = currUser.createComp(selectedNS, selectedSpacers, selectedPrimers)
@@ -649,7 +651,7 @@ def newCompZIP():
         checkPermission(comp)
         compZIP = comp.getCompZIP()
 
-        data = makeZIP(compZIP)
+        data = rf.makeZIP(compZIP)
 
     except Exception as e:
         print("FAILED TO CREATE ZIP BECAUSE: " + str(e))
@@ -662,7 +664,7 @@ def newCompZIP():
     return Response(data, headers = {"Content-Type": "application/zip",
                                      "Condent-Disposition": "attachment; filename='sequences.zip';"})
 
-################################     Sequence     ################################
+################################     Sequence    ################################
 @app.route("/newNamedSeq", methods = ["POST"])
 def newNamedSeq():
     outputStr = ""
@@ -683,7 +685,7 @@ def newNamedSeq():
 
     #validation
     if(validInput):
-        validInput, outputStr = validateNewNS(newNSType, newNSName, newNSSeq)
+        validInput, outputStr = rf.validatenewNS(newNSType, newNSName, newNSSeq)
     
     #finish validation
     if(validInput):
@@ -706,9 +708,9 @@ def newNamedSeq():
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
 
-################################     Backbone     ################################
+################################     Backbone    ################################
 @app.route("/newBackbone", methods = ["POST"])
-def newBackbone():
+def newBackbone2():
     outputStr = ""
     validInput = True
     succeeded = False
@@ -717,41 +719,233 @@ def newBackbone():
         backboneData = leval(request.form["newBackboneData"])
 
         BBname = backboneData["backboneName"]
-        BBseq = backboneData["backboneSeq"].upper()
+        BBdesc = backboneData["backboneDesc"]
+        BBseq = backboneData["backboneSeq"]
+        BBtype = backboneData["backboneType"]
+        BBfeatures = backboneData["backboneFeatures"]
 
-    except Exception:
+    except Exception as e:
+        print(e)
         validInput = False
         outputStr = "ERROR: invalid input received.<br>"
 
     if(validInput):
-        validInput, outputStr = validateBackbone(BBname, BBseq)
+        try:
+            getCurrUser().findBackbone(BBname)
+            outputStr = "ERROR: Backbone {name} already exists in your personal library.".format(name = BBname)
+            validInput = False
+        except ee.BackboneNotFoundError:
+            pass            
 
+    #general validation
+    if(validInput):
+        validInput, outputStr = rf.validateBackbone(BBname, BBdesc, BBseq, BBtype, BBfeatures)
+
+    #validation of the sequence & features
+    if(validInput):
+        outputStr, validInput, BBdata = rf.processGBfeatures(BBseq, BBfeatures.splitlines(keepends = True), outputStr)
+    
+        seqBefore = BBdata["seqBefore"]
+        seqAfter = BBdata["seqAfter"]
+        features = BBdata["featureSection"]
+    
     if(validInput):
         try:
-            getCurrUser().createBackbone(BBname, BBseq)
+            getCurrUser().createBackbone(BBname, BBtype, BBdesc, seqBefore, seqAfter, features)
 
             libraryName = "Personal"
 
             outputStr += "Successfully created <a target = '_blank' href = '/library#{libraryName}{BBname}Backbone'>{BBname}</a>.".format(
-                                                                                        libraryName = libraryName,
-                                                                                        BBname = BBname)
-
+                                                                                        libraryName = libraryName,                                                                                        BBname = BBname)
             succeeded = True
         except Exception as e:
-            outputStr += "ERROR: {error}<br>".format(error = str(e))
+            outputStr += "ERROR: {}<br>".format(e)
 
-    if(not succeeded):
-        outputStr += "Backbone not created."
-
+    
     return jsonify({"output": outputStr, "succeeded": succeeded})
 
-##############################     ASSEMBLY     ##############################
+@app.route("/backbonePreview", methods = ["POST"])
+def backbonePreview():
+    outputStr = ""
+    validInput = True
+    succeeded = False
+
+    featureStr = "FEATURES\t\tLocation/Qualifiers\n"
+
+
+    try:
+        previewData = leval(request.form["previewData"])
+        #maybe evaluate the length of the thing before evaluating it? Because apparently leval could crash python if it's too much
+        
+        #remove all empty ones    
+        keyList = list(previewData.keys())
+        
+        if(len(keyList) >= 64):
+            validInput = False
+            outputStr += "ERROR: only 64 features are allowed.<br>"
+        
+        for key in keyList:
+            if(previewData[key] == {}):
+                del previewData[key]
+            int(key) #ensures all keys are integers
+                
+        print(previewData)
+    except Exception as e:
+        validInput = False
+        print(e)
+        outputStr = "ERROR: Invalid input received.<br>"
+    
+    if(validInput):
+    
+        allMolTypes = {"genomicDNA": "genomic DNA", "genomicRNA": "genomic RNA", "mRNA": "mRNA", "tRNA": "tRNA", "rRNA": "rRNA", "otherRNA": "other RNA", "otherDNA": "other DNA", "transcribedRNA": "transcribed RNA", "viralcRNA": "viral cRNA", "unassignedDNA": "unassigned DNA", "unassignedRNA": "unassigned RNA"}
+        try:
+            for key in previewData.keys():
+                field = previewData[key]
+                featType = field["featureType" + key]
+                
+                #get locations
+                if(featType == "origin"):
+                    locOrig = int(field["locationOrigin" + key])
+                    if(locOrig < 1):
+                        validInput = False
+                        outputStr += "ERROR: origin location must be at least 1.<br>"
+                        
+                else:
+                    locStart =  int(field["locationStart" + key])
+                    locEnd =  int(field["locationEnd" + key])
+                    
+                    if(locStart < 1 or locEnd < 1):
+                        outputStr += "ERROR: locations for feature #{} must be at least 1.<br>".format(key)
+                    
+                    if(locStart > locEnd):
+                        validInput = False
+                        outputStr += "ERROR: start location for feature #{} is greater than its end location.<br>".format(key)
+                    
+                #add to the featureStr
+                if(featType == "origin"):
+                    
+                    featureStr += "\trep_origin\t{orig}\n".format(orig = locOrig)
+                    
+                    direction = False
+                    
+                    try:
+                        direction = field["direction" + key]
+                    except Exception:
+                        pass
+                    
+                    if(direction):
+                        if(direction not in ["left", "right", "both"]):
+                            raise Exception("invalid direction {}".format(direction))
+                        else:
+                            featureStr += "\t\t\t/direction={direction}\n".format(direction = direction)
+                    
+                elif(featType == "source"):
+                    organism = field["organism" + key]
+                    molType = field["molType" + key]
+                    
+                    if(len(organism) > 64):
+                        validInput = False
+                        outputStr += "ERROR: organism name must be at most 64 characters long.<br>"
+                    
+                    molLong = allMolTypes[molType]
+                    
+                    featureStr += "\tsource\t\t{start}..{end}\n\t\t\t/organism=\"{organism}\"\n\t\t\t/mol_type=\"{molLong}\"\n".format(
+                                    start = locStart,
+                                    end = locEnd,
+                                    organism = organism,
+                                    molLong = molLong)
+                    
+                elif(featType == "CDS"):
+                    gene = field["geneName" + key]
+                    
+                    if(len(gene) > 64):
+                        validInput = False
+                        outputStr += "ERROR: gene name must be at most 64 characters long.<br>"
+                    
+                    featureStr += "\tCDS\t\t{start}..{end}\n\t\t\t/gene=\"{geneName}\"\n".format(
+                            start = locStart,
+                            end = locEnd,
+                            geneName = gene)
+                    
+                elif(featType == "misc"):
+                    note = field["miscNote" + key]
+                    
+                    if(len(note) > 1024):
+                        validInput = False
+                        outputStr += "ERROR: note must be at most 1024 characters long.<br>"
+                    
+                    featureStr += "\tmisc_feature\t{start}..{end}\n\t\t\t/note=\"{note}\"\n".format(
+                            start = locStart,
+                            end = locEnd,
+                            note = note)
+                    
+                else:
+                    raise Exception("invalid featType {}".format(featType))
+
+        except Exception as e:
+            validInput = False
+            print(e)
+            outputStr = "ERROR: Invalid input received.<br>"
+        
+        if(validInput):
+            succeeded = True
+            #temp = featureStr.replace("\n", "<br>")
+            #temp = temp.replace("\t", "&emsp;&emsp;&emsp;&emsp;")
+            #outputStr += "<pre>" + temp + "</pre>"
+            print(featureStr)
+        
+    return jsonify({"output": outputStr, "succeeded": succeeded, "featureStr": featureStr})#.replace("\n", "<br>")})
+
+@app.route("/backboneFileProcess", methods = ["POST"])
+def backboneFile():
+    outputStr = ""
+    validInput = True
+    succeeded = False
+    featureSection = ""
+    sequenceOutput = ""
+    definition = ""
+    name = ""
+
+    try:
+        backboneData = request.data
+        size = int(request.args.get("size"))
+    except Exception as e:
+        validInput = False
+        print(e)
+        outputStr = "ERROR: Invalid input received."
+    
+    if(validInput):
+        try:
+            #check the size of the data received & size of the data sent are the same
+            if(len(backboneData) != size):
+                raise Exception("File was not completely uploaded to server. Please try again.")
+                        
+            #otherwise
+            outputStr, validInput, fileData = rf.readBackboneGB(backboneData, outputStr)
+            
+            name = fileData["name"]
+            definition = fileData["definition"]
+            featureSection = fileData["features"]
+            sequenceOutput = fileData["sequence"]
+            
+            succeeded = True
+                        
+        except Exception as e:
+            validInput = False
+            print(e)
+            outputStr = "ERROR: {}".format(e)
+    
+    return jsonify({"output": outputStr, "succeeded": succeeded, "featureStr": featureSection,
+                    "sequence": sequenceOutput, "definition": definition,
+                    "name": name})
+
+##############################   ASSEMBLY  ##############################
 ##############################################################################
     
 #the page for assembly
 @app.route("/assemble", methods = ["POST", "GET"])
 @login_required
-def assemble():       
+def assemble():    
     allDefaultNS = defaultUser.getSortedNS()
     allSessionNS = getCurrUser().getSortedNS()
     
@@ -768,7 +962,7 @@ def assemble():
                         
             posTerminalComb[ns.getName()] = []
             
-            for comp in ns.getAllComponents():                                
+            for comp in ns.getAllComponents():                
                 #the combination
                 posTermCombRow = {"position": comp.getPosition(), "terminalLetter": comp.getTerminalLetter()}
                 if(posTermCombRow not in posTerminalComb[ns.getName()]):
@@ -795,15 +989,24 @@ def assemble():
     fidelityLimits = {"98.1%": SpacerData.max981, "95.8%": SpacerData.max958, "91.7%": SpacerData.max917}
     
     #list of backbones & IDs
-    availableBackbones = {}
+    availableBackbones = {"i": [], "r": []}
+    backboneDescs = {}
     for BB in defaultUser.getSortedBB():
-        availableBackbones[BB.getID()] = BB.getName()
+        availableBackbones[BB.getType()].append([BB.getID(), BB.getName()])
+        backboneDescs[BB.getID()] = BB.getDesc()
+    for BB in getCurrUser().getSortedBB():
+        availableBackbones[BB.getType()].append([BB.getID(), BB.getName()])
+        backboneDescs[BB.getID()] = BB.getDesc()
+
+    seqElements = [["Pr", "Promoter"], ["RBS", "RBS"], ["GOI", "Gene"], ["Term", "Terminator"]]
 
     return render_template("assembly.html", fidelities = fidelities,
                            fidelityLimits = fidelityLimits,
                            availableElements = allAvailableNames, 
                            posTermComb = posTerminalComb,
                            availableBackbones = availableBackbones,
+                           backboneDescs = backboneDescs,
+                           seqElements = seqElements,
                            loggedIn = checkLoggedIn())
 
 #process assembly
@@ -837,6 +1040,7 @@ def processAssembly():
 
             if(bb is None):
                 validInput = False
+                suceeded = False
                 outputStr = "ERROR: Could not find backbone."
             else:
                 try:
@@ -849,14 +1053,19 @@ def processAssembly():
                     else:
                         libraryName = "Personal"
 
-                    outputStr += "Found:  <a target = '_blank' href = '/library#{libraryName}{BBname}'>{BBname}</a><br>".format(
+                    outputStr += "Found:  <a target = '_blank' href = '/library#{libraryName}{BBname}Backbone'>{BBname}</a><br>".format(
                                                                             BBname = bb.getName(),
                                                                             libraryName = libraryName)
 
-                except AccessError:
+                    session["assemblyBackbone"] = bb.getID()
+
+                except ee.AccessError:
                     validInput = False
+                    suceeded = False
                     errorMessage = "ERROR: You do not have permission to use this backbone."
         except Exception as e:
+            validInput = False
+            suceeded = False
             print(e)
 
         #remove from the dict. the info. that doesn't need to be processed
@@ -898,7 +1107,7 @@ def processAssembly():
                 try:                    #search defaults
                     foundComp = defaultUser.findComponent(comp["type"], comp["name"], posKey, terminalLetter)
                     libraryName = "Default"
-                except (SequenceNotFoundError, ComponentNotFoundError):       #search user-made
+                except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):    #search user-made
                     foundComp = getCurrUser().findComponent(comp["type"], comp["name"], posKey, terminalLetter)
                     libraryName = "Personal"
                     
@@ -906,7 +1115,7 @@ def processAssembly():
 
                 outputStr += ("Found: <a target = '_blank' href ='/library#" + libraryName + foundComp.getNameID() + "'>" + 
                               foundComp.getNameID() + "</a><br>")
-            except (SequenceNotFoundError, ComponentNotFoundError):
+            except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
                 outputStr += ("Could not find:<br>Type: " + comp["type"] + "<br>Name: " + comp["name"] + 
                               "<br>Position: " + str(posKey) + "<br>Terminal letter: " + terminalLetter + "<br>")
                 
@@ -927,37 +1136,58 @@ def processAssembly():
 def assemblyZIP():
     try:
         compsList = session["assemblyCompIDs"]
+        bbID = session["assemblyBackbone"]
     except KeyError:
         return errorZIP("No assembled sequence.")
 
     try:
-        fullSeq = ""
-
-        features = []
-        i = 0 #index (starting at zero) of the fullSeq to add at
+        #get the backbone information.
+        bb = BackboneDB.query.get(bbID)
+        checkPermissionBB(bb)
+        
+        fullSeq = bb.getSeqBefore()
+        
+        i = len(fullSeq) #index (starting at zero) of the fullSeq to add at
+        
+        features = bb.getFeatures().splitlines()
 
         #add the sequence of the component
         for compID in compsList:
             comp = ComponentDB.query.get(compID)
             checkPermission(comp)
-            
-            fullSeq += comp.getLeftSpacer() + comp.getSeq()
-            i = addSpacerAssemblyGB(comp.getLeftSpacer(), features, i)
-            print("adding {compID} left spacer: {spacer}".format(compID = comp.getNameID(), spacer = comp.getLeftSpacer()))
-            i = addCompAssemblyGB(comp, features, i)
-            print("adding {compID} seq".format(compID = comp.getNameID()))
 
-            #for element T, add right spacer
-            if(comp.getPosition() == 999):
-                fullSeq += comp.getRightSpacer()
+            if(comp.getPosition() == 0):
+                fullSeq += comp.getSeq()
+                i = rf.addCompAssemblyGB(comp, features, i)
+                print("adding {compID} seq".format(compID = comp.getNameID()))
 
-                i = addSpacerAssemblyGB(comp.getRightSpacer(), features, i)
-                print("adding {compID} right spacer: {spacer}".format(compID = comp.getNameID(), spacer = comp.getRightSpacer()))
+            else:
+                fullSeq += comp.getLeftSpacer() + comp.getSeq()
+                i = rf.addSpacerAssemblyGB(comp.getLeftSpacer(), features, i)
+                print("adding {compID} left spacer: {spacer}".format(compID = comp.getNameID(), spacer = comp.getLeftSpacer()))
+                i = rf.addCompAssemblyGB(comp, features, i)
+                print("adding {compID} seq".format(compID = comp.getNameID()))
 
-        fileGB = finishCompAssemblyGB(features, fullSeq)
-        fileFASTA = ">CyanoConstruct sequence\n" + fullSeq
+        lengthInsertion = i - len(bb.getSeqBefore())
 
-        data = makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
+        #process the features
+        for j in range(len(features)):
+            featRow = features[j].split("[AddLength]")
+
+            if(len(featRow) > 1):
+                for k in range(1, len(featRow), 2):
+                    origIndex = int(featRow[k])
+                    featRow[k] = str(origIndex + lengthInsertion)
+
+                features[j] = "".join(featRow)
+
+        #finish it off
+        fullSeq += bb.getSeqAfter()
+
+        fileGB = rf.finishCompAssemblyGB(features, fullSeq)
+        fileFASTA = ">CyanoConstruct assembled sequence\n" + fullSeq
+
+        data = rf.makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
 
     except Exception as e:
         return errorZIP(e)
@@ -969,8 +1199,7 @@ def assemblyZIP():
                                      "Condent-Disposition": "attachment; filename='sequences.zip';"})
 
 
-##############################     LIBRARY     ##############################
-#components page
+##############################   LIBRARY   ##############################
 @app.route("/components", methods = ["GET"])
 def displayComps():
     return redirect("/library")
@@ -1006,7 +1235,7 @@ def getComponentZIP():
         
         compZIP = comp.getCompZIP()
 
-        data = makeZIP(compZIP)
+        data = rf.makeZIP(compZIP)
 
     except Exception as e:
         return errorZIP(e)
@@ -1040,7 +1269,7 @@ def removeComponent():
                 
                 succeeded = True
 
-            except AccessError:
+            except ee.AccessError:
                 errorMessage = "You do not have permission to modify this component."
                     
             except Exception as e:
@@ -1071,7 +1300,7 @@ def removeSequence():
 
                 succeeded = True
 
-            except AccessError:
+            except ee.AccessError:
                 errorMessage = "You do not have permission to modify this sequence."
 
             except Exception as e:
@@ -1104,7 +1333,7 @@ def removeBackbone():
 
                 succeeded = True
 
-            except AccessError:
+            except ee.AccessError:
                 errorMessage = "You do not have permission to modify this backbone."
 
             except Exception as e:
@@ -1119,7 +1348,7 @@ def removeBackbone():
 def downloadLibrary():
     libraryName = request.form["libraryName"]
     
-    succeeded = False    
+    succeeded = False   
     
     if(libraryName == "Default"):
         session["libraryName"] = "Default"
@@ -1144,13 +1373,13 @@ def libraryZIP():
 
         if(libraryName == "Default"):
             try:
-                data = makeAllLibraryZIP(defaultUser)
+                data = rf.makeAllLibraryZIP(defaultUser)
                 succeeded = True
             except Exception as e:
                 errorMessage = str(e)
         elif(libraryName == "Personal"):
             try:
-                data = makeAllLibraryZIP(getCurrUser())
+                data = rf.makeAllLibraryZIP(getCurrUser())
                 succeeded = True
             except Exception as e:
                 errorMessage = str(e)
@@ -1203,7 +1432,7 @@ linkers/overhangs: need a database of them & which positions they'll be at
 
 personal libraries; accounts
 
-ids as mostly numbers (G00101 e.g.) (ID which one and Pos (not huge))
+ids as mostly numbers (G00101 ee.g.) (ID which one and Pos (not huge))
 - personal libraries
 
 in domestication tab

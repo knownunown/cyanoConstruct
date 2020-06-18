@@ -284,7 +284,7 @@ function createComponent(){
 	$.ajax({
 		data : {},
 		type : 'POST',
-		url : '/finishDomestication'
+		url : '/finishComponent'
 		})
 	.done(function(data){
 		document.getElementById("createOutput").innerHTML = data.output;
@@ -404,23 +404,66 @@ function resetSeq(){
 
 /* backbone */
 function validateBackbone(){
+	/* UPDATE! */
 	var canProceed = true;
 
+	var errorArray = Array();
+
+	//name
 	if(document.getElementById("backboneName").value == ""){
 		canProceed = false;
 		document.getElementById("backboneNameError").textContent = "Need a name 1-20 characters long.";
+		errorArray.push("name");
+	}
+	else if(document.getElementById("backboneName").value.length > 20){
+		canProceed = false;
+		document.getElementById("backboneNameError").textContent = "Name must be 20 or fewer characters long.";
+		errorArray.push("name");
 	}
 	else{
 		document.getElementById("backboneNameError").textContent = "";
+	}
+
+	//description
+	if(document.getElementById("backboneDesc").value == ""){
+		canProceed = false;
+		document.getElementById("backboneDescError").textContent = "Need a description 1-128 characters long.";
+		errorArray.push("description");
+	}
+	else if(document.getElementById("backboneDesc").value.length > 128){
+		canProceed = false;
+		document.getElementById("backboneDescError").textContent = "Description must be 128 or fewer characters long.";
+		errorArray.push("description");
+	}
+	else{
+		document.getElementById("backboneDescError").textContent = "";
 	}
 
 	//sequence
 	if(document.getElementById("backboneSeq").value == ""){
 		canProceed = false;
 		document.getElementById("backboneSeqError").textContent = "Need a sequence.";
+		errorArray.push("sequence");
 	}
 	else{
 		document.getElementById("backboneSeqError").textContent = "";
+	}
+
+	if(!canProceed){
+		var errorStr = "Error";
+		if(errorArray.length > 1){
+			errorStr += "s";
+		}
+
+		errorStr += " with the ";
+
+		for(i = 0; i < errorArray.length - 2; i++){
+			errorStr += errorArray[i] + ", ";
+		}
+
+		errorStr += errorArray[errorArray.length - 2] + " and " + errorArray[errorArray.length - 1] + ".";
+
+		document.getElementById("backboneOutput").textContent = errorStr;
 	}
 
 	return canProceed;
@@ -433,8 +476,11 @@ function newBackbone(){
 
 	document.getElementById("backboneSeq").value = document.getElementById("backboneSeq").value.replace(/\s/g,"");
 
-	var newBackboneData = "{'backboneName' : '" + document.getElementById("backboneName").value +
-						  "', 'backboneSeq' : '" + document.getElementById("backboneSeq").value + "'}";
+	var newBackboneData = "{'backboneName': '" + document.getElementById("backboneName").value +
+						  "', 'backboneSeq': '" + document.getElementById("backboneSeq").value + 
+						  "', 'backboneDesc': '" + document.getElementById("backboneDesc").value + 
+						  "', 'backboneType': '" + document.getElementById("backboneType").value +
+						  "', 'backboneFeatures': \"\"\"" + document.getElementById("featureOutput").value + "\"\"\"}";
 
 	$.ajax({
 		data : {"newBackboneData": newBackboneData},
@@ -442,6 +488,7 @@ function newBackbone(){
 		url : '/newBackbone'
 		})
 	.done(function(data){
+		console.log(data)
 		document.getElementById("backboneOutput").innerHTML = data.output;
 
 		//only can proceed if successfully created
@@ -452,6 +499,44 @@ function newBackbone(){
 		}
 	});
 	event.preventDefault();
+}
+
+function backboneFileProcess(){
+	var files = document.getElementById("backboneFile").files;
+	if(files.length == 0){
+		document.getElementById("backboneFileError").textContent = "No file selected";
+		return false;
+	}
+	else {
+
+		var backboneFileData = files[0];
+
+		//alert(backboneFileData.size);
+
+		$.ajax({
+			data : backboneFileData,
+			type : 'POST',
+		    processData: false,
+		    contentType: false,
+			url : '/backboneFileProcess?size=' + backboneFileData.size.toString()
+			})
+		.done(function(data){
+			document.getElementById("backboneFileError").innerHTML = data.output;
+
+			//only can proceed if successfully created
+			if(data.succeeded){
+				document.getElementById("featureOutput").value = data.featureStr;
+				document.getElementById("backboneSeq").value = data.sequence;
+				document.getElementById("backboneDesc").value = data.definition;
+				document.getElementById("backboneName").value = data.name;
+				document.getElementById("resetBackboneForm").disabled = false;
+			}
+			else{
+			}
+		});
+		event.preventDefault();
+
+	}
 }
 
 function resetBackbone(){
@@ -495,6 +580,205 @@ function clearEverything(scrollToNS){
 	}
 
 	return false;
+}
+
+var featureCount = 0;
+
+function formatFeature(selection, id){
+	var value = selection.value;
+
+	var str = "";
+
+	//location
+	switch(value){
+		case "origin":
+			var locID = "locationOrigin" + id.toString();
+			str += "<div class = 'location'><label for = '" + locID + "'>Location</label>";
+			str += "<input type = 'number' min = '1' id = '" + locID + "' name = '" + locID + "' class = 'featureField' size = '5'>";
+			str += "<input type = 'button' value = 'Highlight' class = 'highlightButton' onclick = \"highlight('" + locID + "','" + locID + "')\"></div>";
+
+			break;
+		default:
+			var locIDstart = "locationStart" + id.toString();
+			var locIDend = "locationEnd" + id.toString();
+			str += "<div class = 'location'><span>Location: </span><label for = '" + locIDstart + "'>from</label>";
+			str += "<input type = 'number' min = '1' id = '" + locIDstart + "' name = '" + locIDstart + "' class = 'featureField' size = '5'>";
+			str += "<label for = '" + locIDend + "'>to</label>";
+			str += "<input type = 'number' min = '1' id = '" + locIDend + "' name = '" + locIDend + "' class = 'featureField' size = '5'>";
+			str += "<input type = 'button' value = 'Highlight' class = 'highlightButton' onclick = \"highlight('" + locIDstart + "','" + locIDend + "')\"></div>";
+
+			break;
+	}
+
+	//other things
+	switch(value){
+		case "origin":
+			var dirID = "direction" + id.toString();
+			str += "<div class = 'direction'><label for = '" + dirID + "'>Direction</label>";
+			str += "<select class = 'featureField direction' id = '" + dirID + "' name = '" + dirID + "'><option value = 'none'>None</option><option value = 'left'>Left</option><option value = 'right'>Right</option><option value = 'both'>Both</option></select>";
+			str += "</div>";
+
+			break;
+		case "CDS":
+			var geneID = "geneName" + id.toString();
+			str += "<div class = 'name'><label for = '" + geneID + "'>Gene name</label>";
+			str += "<input type = 'text' name = '" + geneID + "' id = '" + geneID + "' maxlength = '64'></div>";
+
+			break;
+		case "misc":
+			var miscID = "miscNote" + id.toString();
+			str += "<div class = 'note'><label for = '" + miscID + "'>Note</label>";
+			str += "<input type = 'text' name = '" + miscID + "' id = '" + miscID + "' maxlength = '1024'></div>";
+
+			break;
+		case "source":
+			var organismID = "organism" + id.toString();
+			str += "<div class = 'organism'><label for = '" + organismID + "'>Organism</label>";
+			str += "<input type = 'text' name = '" + organismID + "' id = '" + organismID + "' maxlength = '64'></div>";
+
+			var molID = "molType" + id.toString();
+			str += "<div class = 'molType'><label for = '" + molID + "'>Molecule</label>";
+			str += "<select class = 'featureField' id = '" + molID + "' name = '" + molID + "'><option value = 'genomicDNA'>Genomic DNA</option><option value = 'otherDNA'>Other DNA</option><option value = 'unassignedDNA'>Unassigned DNA</option>";
+			str += "<option value = 'genomicRNA'>Genomic RNA</option><option value = 'mRNA'>mRNA</option><option value = 'tRNA'>tRNA</option><option value = 'rRNA'>rRNA</option><option value = 'otherRNA'>Other RNA</option><option value = 'transcribedRNA'>Transcribed RNA</option><option value = 'viralcRNA'>Viral cRNA</option><option value = 'unassignedRNA'>Unassigned RNA</option>";
+			str += "</select></div>";
+
+			break;
+		default:
+
+			break;
+	}
+
+	selection.parentNode.nextSibling.innerHTML = str;
+
+
+	console.log(str);
+
+	return false;
+}
+
+function addFeature(){
+	if(featureCount >= 64){
+		document.getElementById("backboneFeaturesError").innerText = "Cannot create more than 64 features.";
+	}
+	else{
+		var newDiv = document.createElement("div");
+		newDiv.classList.add("feature");
+		newDiv.id = "feature" + featureCount.toString();
+		var selectID = "featureType" + featureCount.toString();
+		newDiv.innerHTML = "<div class = 'featureTypeDiv'><label for = '" + selectID + "'>Feature #" + featureCount.toString() + ": Type</label><select class = 'featureType featureField' id = '" + selectID + "'  name = '" + selectID + "' onchange = 'formatFeature(this," + featureCount.toString() + ")'><option value = 'none'>None</option><option value = 'origin'>Origin</option><option value = 'CDS'>Protein-coding</option><option value = 'source'>Source</option><option value = 'misc'>Miscellaneous</option></select></div><div class = 'featureAdditional'></div>";
+
+		document.getElementById("backboneFeatures").appendChild(newDiv);
+
+		document.getElementById("backboneFeaturesError").innerText = "";
+
+		featureCount = featureCount + 1;
+	}
+
+	return false;
+}
+
+function removeFeature(){
+	var backboneFeatures = document.getElementById("backboneFeatures");
+	if(backboneFeatures.children.length > 0){
+		backboneFeatures.removeChild(backboneFeatures.lastChild);
+		featureCount = featureCount - 1;
+	}
+	else {
+		document.getElementById("backboneFeaturesError").innerText = "No feature to remove.";
+	}
+
+	return false;
+}
+
+function allInput(element, array){
+	if(element.nodeName == "SELECT" || element.nodeName == "INPUT"){
+		array.push(element);
+	}
+	else{
+		for(child of element.children){
+			allInput(child, array);
+		}
+	}
+
+	return array;
+}
+
+function highlight(startID, endID){
+	var start = parseInt(document.getElementById(startID).value);
+	start -= 1;
+	var end = parseInt(document.getElementById(endID).value);
+
+	if(start <= end){
+		const input = document.getElementById("backboneSeq");
+		input.focus();
+		input.setSelectionRange(start, end);
+  	}
+
+  	return false;
+}
+
+function previewFeatures(){
+	var array = Array();
+
+	var validInput = true;
+
+	var features = document.getElementsByClassName("feature");
+
+	var previewData = "{";
+
+	for(i = 0; i < features.length; i++){
+
+		var featureData = Array();
+		allInput(features[i], featureData);
+
+		previewData += "'" + i.toString() + "' : {";
+		
+
+		for(j = 0; j < featureData.length; j++){
+			if(featureData[j].value == ""){
+				validInput = false;
+				break;
+			}
+			if(featureData[j].value != "none"){
+				previewData += "'" + featureData[j].name + "': '" + featureData[j].value + "'";
+			}
+
+			if(j != featureData.length - 1){
+				previewData += ", ";
+			}
+		} //end loop through each input
+
+		previewData += "}";
+
+		if(i != features.length - 1){
+			previewData += ", ";
+		}
+	}//end loop through features
+
+	previewData += "}";
+	
+	if(validInput){
+		$.ajax({
+			data : {previewData: previewData},
+			type : 'POST',
+			url : '/backbonePreview'
+			})
+		.done(function(data){
+			document.getElementById("backboneOutput").innerHTML = data.output;
+
+			//only can proceed if successfully created
+			if(data.succeeded){
+				document.getElementById("featureOutput").value = data.featureStr;
+			}
+			else{
+			}
+		});
+		event.preventDefault();
+
+	}
+	else{
+		document.getElementById("backboneFeaturesError").innerText = "Not all features have values.";
+	}
 }
 
 function startOver(){

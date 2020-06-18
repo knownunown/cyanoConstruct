@@ -201,7 +201,7 @@ class NamedSequenceDB(db.Model):
 
                             <p><span class = 'emphasized'>Complete Sequence:</span></p>
                             <div class = "sequence monospaced">
-                                {fullSeq}
+                                {seqHTML}
                             </div>
 
                             <br>
@@ -210,7 +210,7 @@ class NamedSequenceDB(db.Model):
                                                         libraryName = libraryName,
                                                         compNameID = comp.getNameID(),
                                                         compHTML = comp.getHTMLstr(),
-                                                        fullSeq = comp.getFullSeq(),
+                                                        seqHTML = comp.getSeqHTML(),
                                                         compID = comp.getID()
                                                         ))
 
@@ -479,6 +479,19 @@ class ComponentDB(db.Model):
 
 
     #complicated getters
+    def getSeqHTML(self):
+        retStr = ("<span class = 'enzymeSeq'>{enzymeLeft}</span><span class = 'nnSeq'>{nnLeft}</span><span class = 'spacerSeq'>{spacerLeft}</span>"
+                    "<span class = 'seq'>{seq}</span>"
+                    "<span class = 'spacerSeq'>{spacerRight}</span><span class = 'nnSeq'>{nnRight}</span><span class = 'enzymeSeq'>{enzymeRight}</span>").format(
+                    enzymeLeft = SpacerDataDB.start,
+                    nnLeft = self.getLeftNN(),
+                    spacerLeft = self.getLeftSpacer(),
+                    seq = self.getSeq(),
+                    spacerRight = self.getRightSpacer(),
+                    nnRight = self.getRightNN(),
+                    enzymeRight = SpacerDataDB.end)
+        return retStr
+
     def getFullSeq(self):
         return self.getFullSpacerLeft() + self.getSeq() + self.getFullSpacerRight()
     
@@ -553,7 +566,7 @@ class ComponentDB(db.Model):
         fileByLines = []
         fileByLines.append("LOCUS\t\t" + self.getNameID() + "\t" + str(lenTotal) + " bp\tDNA\tlinear\t" + date)#the date?
         fileByLines.append("DEFINITION\t" + self.getNameID() + " (" + self.getName() + ") component from CyanoConstruct.")
-        fileByLines.append("FEATURES\tLocation/Qualifiers")
+        fileByLines.append("FEATURES\t\tLocation/Qualifiers")
         
         i = 0
 
@@ -787,8 +800,13 @@ class BackboneDB(db.Model):
     #gross
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(20))
-    seq = db.Column(db.Text())
-    desc = db.Column(db.String(128), nullable = False, default = "No description.")
+    desc = db.Column(db.String(128), nullable = False, default = "No description.") #Need to mark as unsafe for HTML
+
+    #new changes
+    type = db.Column(db.String(1), nullable = False, default = "i")
+    seqBefore = db.Column(db.Text(), nullable = False, default = "")
+    seqAfter = db.Column(db.Text(), nullable = False, default = "")
+    features = db.Column(db.Text(), nullable = False, default = "FEATURES\t\t\tLocation/Qualifiers")
 
     user_id = db.Column(db.Integer)
 
@@ -811,12 +829,28 @@ class BackboneDB(db.Model):
 
     def getName(self):
         return self.name
-    
-    def getSeq(self):
-        return self.seq
 
+    def getType(self):
+        return self.type
+
+    def getTypeLong(self):
+        longTypes = {"i": "integrative", "r": "replicative"}
+        return longTypes[self.getType()]
+    
     def getDesc(self):
         return self.desc
+
+    def getSeqBefore(self):
+        return self.seqBefore
+
+    def getSeqAfter(self):
+        return self.seqAfter
+
+    def getSeq(self):
+        return self.seqBefore + self.seqAfter
+
+    def getFeatures(self):
+        return self.features
 
     def getHTMLdisplay(self):
         if UserDataDB.query.get(self.getUserID()).getEmail() == "default":
@@ -838,12 +872,20 @@ class BackboneDB(db.Model):
                         <!-- info about the named sequence -->
                         <p>Backbone: {BBname}</p>
 
+                        <p>Type: {BBtype}</p>
+
+                        <p>Description:</p>
+                        <p>{BBdesc}</p>
+
                         <p>Sequence:</p>
-                        <div class = "sequence monospaced">{BBseq}</div>
+                        <div class = "sequence monospaced">{BBseqBefore}<span class = 'insertionSeq'>INSERTION</span>{BBseqAfter}</div>
 
                         <br>""".format(libraryName = libraryName,
                                         BBname = self.getName(),
-                                        BBseq = self.getSeq(),
+                                        BBtype = self.getTypeLong(),
+                                        BBdesc = Markup.escape(self.getDesc()),
+                                        BBseqBefore = self.getSeqBefore(),
+                                        BBseqAfter = self.getSeqAfter()
                                         ))
 
 

@@ -18,7 +18,7 @@ function validPos(pos, name){
 function formatElements(){ //just get a thing for the seqElements
 	var retString = "<select class = 'formField' name = 'elemType" + count + "' id = 'elemType" + count + "' onchange = 'updateForm(this)'>";
 	for(seqElem of seqElements){
-		retString += "<option value = '" + seqElem + "'>" + seqElem + "</option>"; //need an id?
+		retString += "<option value = '" + seqElem[0] + "'>" + seqElem[1] + "</option>"; //need an id?
 	}
 	retString += "</select>";
 	return retString;
@@ -61,7 +61,7 @@ function formatSec0(){
 	format += "<span class = 'elemName'>0:</span>";
 	//first select
 	format += "<label for = 'elemType0'>Type</label>";
-	format += "<div><select class = 'formField' name = 'elemType0' id = 'elemType0'><option value = 'Pr'>Pr</option></select></div>";
+	format += "<div><select class = 'formField' name = 'elemType0' id = 'elemType0'><option value = 'Pr'>Promoter</option></select></div>";
 	//second select
 	format += "<label for = 'elemName0'>Name</label>";
 	format += "<div>";
@@ -75,7 +75,7 @@ function formatSecT(){
 	format += "<span class = 'elemName'>T:</span>";
 	//first select
 	format += "<label for = 'elemType999'>Type</label>";
-	format += "<div><select class = 'formField' name = 'elemType999' id = 'elemType999'><option value = 'Term'>Term</option></select></div>";
+	format += "<div><select class = 'formField' name = 'elemType999' id = 'elemType999'><option value = 'Term'>Terminator</option></select></div>";
 	//second select
 	format += "<label for = 'elemName999'>Name</label>";
 	format += "<div>";
@@ -123,7 +123,7 @@ function addElem(){
 }
 
 function rmLastElem(){
-	if (document.getElementsByClassName("elemDiv").length > 0){
+	if (document.getElementsByClassName("elemDiv").length > 2){
 		var lastChild = document.getElementById("elements").lastChild;
 		document.getElementById("elements").removeChild(lastChild);
 
@@ -299,7 +299,6 @@ function downloadFile(){
 
 //
 function fidelityChanged(){
-	//great
 	var fidelitySelect = document.getElementById("fidelity");
 
 	currFidLimit = fidelityLimits[fidelitySelect.value];
@@ -309,9 +308,38 @@ function fidelityChanged(){
 	}
 }
 
+function getBackboneType(){
+	for(radio of document.getElementsByName("backboneType")){
+		if(radio.checked){
+			return radio.value;
+		}
+	}
+}
+
+function backboneChanged(){
+	var currBackboneID = document.getElementById("backboneName").value;
+	var currBackboneType = getBackboneType();
+	document.getElementById("backboneDescription").textContent = backboneDescs[currBackboneID];
+}
+
+function backboneTypeChanged(){
+	var currBackboneType = getBackboneType();
+
+	var newOptions = "";
+
+	for(bb of backbones[currBackboneType]){
+		newOptions += "<option value = '" + bb[0] + "'>" + bb[1] + "</option>";
+	}
+
+	document.getElementById("backboneName").innerHTML = newOptions;
+
+}
+
 
 function bodyOnload(){
 	fidelityChanged();
+	backboneTypeChanged();
+	backboneChanged();
 
 	document.getElementById("elem0").innerHTML = formatSec0();
 	document.getElementById("elemT").innerHTML = formatSecT();

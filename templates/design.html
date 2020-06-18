@@ -12,6 +12,38 @@
 	var namedSequencesSeqs = {{ namedSequencesSequences|tojson }};
 	</script>
 	<script src = "/static/js/designJS.js" ></script>
+
+	<style>
+		div#backboneFeatures {
+			min-height: 10px;
+			padding: 10px;
+			border: 1px dashed black;
+			max-width: 580px;
+		}
+
+		div.feature {
+			background: #D0E6C8;
+			padding: 5px;
+			margin: 5px;
+			border: 1px solid black;
+		}
+		div.feature div {
+			/*display: inline-block;*/
+			width: max-content;
+			margin: auto;
+		}
+
+		textarea#featureOutput {
+			height: 400px;
+		}
+
+		input.highlightButton {
+			margin: 0px;
+			padding: 2px;
+			/*background: white;
+			border: none;*/
+		}
+	</style>
 {% endblock %}
 
 {% block designClass %}active{% endblock %}
@@ -220,26 +252,78 @@
 
 </form>
 
-<form id = "backboneForm" name = "backboneForm" style = "display: none">
+<form id = "backboneForm" name = "backboneForm" style = "display: none"  enctype="multipart/form-data">
 	<div class = "formSection"><fieldset id = "createBackbone" method = "POST">
 		<legend>2. Create New Backbone</legend>
+
+		<h4>Upload a Genbank file to auto-fill part of the form.</h4>
+		<label for = "backboneFile">Select a .gb file to upload.</label>
+		<br>
+		<input type = "file" name = "backboneFile" id = "backboneFile" accept = ".gb">
+
+		<input type = "button" class = "styledButton" name = "submitBackbone" id = "submitBackbone" value = "Submit File" onclick = "backboneFileProcess()">
+
+		<br>
+
+		<span class = "errorMessage" id = "backboneFileError"></span>
+
+		<h4>Information</h4>
 
 		<label for = "backboneName">Name</label>
 		<input type = "text" id = "backboneName" name = "backboneName">
 		<span class = "errorMessage" id = "backboneNameError"></span>
 
 		<br>
+		<label for = "backboneType">Type</label>
+		<select class = "formField" name = "backboneType" id = "backboneType">
+			<option value = "i">Integrative</option>
+			<option value = "r">Replicative</option>
+		</select>
 
-		<label for = "backboneSeq">Sequence</label>
+		<br>
+
+		<label for = "backboneDesc">Short Description</label>
+		<br>
+		<textarea class = "formField" name = "backboneDesc" id = "backboneDesc" maxlength = "128"></textarea>
+		<br>
+		<span class = "errorMessage" id = "backboneDescError"></span>
+
+
+		<h4>Sequence</h4>
+
+		<label for = "backboneSeq">Input Sequence</label>
 		<br>
 		<textarea class = "formField" name = "backboneSeq" id = "backboneSeq"></textarea>
 		<br>
 		<span class = "errorMessage" id = "backboneSeqError"></span>
 
+		<p>(Include some kind of explanation of the motifs/patterns desired.)</p>
+		<p>AGGANNGTCTTC and GAAGACNNTACA</p>
+		<p>The region between AGGA and TACA will be replaced by the sequence from assembly</p>
+
+		<h4>Features</h4>
+
+		<textarea name = "featureOutput" id = "featureOutput" readonly = "readonly">FEATURES		Location/Qualifiers</textarea>
+
+		<p><strong>User-input features (optional)</strong></p>
+		<p>If features were extracted from a file upload, do not use user-input features unless you want the features from the file to be overwritten. Additionally, user-input features are simple and limited; it's recommended to generate a .gb file and upload it for more complex features.</p>
+
+		<div id = "backboneFeatures">
+		</div>
+		<span class = "errorMessage" id = "backboneFeaturesError"></span>
 
 		<br>
 
-		<input type = "button" class = "styledButton" name = "submitBackbone" id = "submitBackbone" value = "Submit" onclick = "newBackbone()">
+		<input type = "button" class = "styledButton" value = "New Feature" onclick = "addFeature()">
+		<input type = "button" class = "styledButton" value = "Remove Last Feature" onclick = "removeFeature()">
+
+		<br>
+
+		<input type = "button" class = "styledButton" name = "prev" id = "prev" value = "Generate Features from User Input" onclick = "previewFeatures()">
+
+		<br><br>
+
+		<input type = "button" class = "styledButton" name = "submitBackbone" id = "submitBackbone" value = "Submit Backbone" onclick = "newBackbone()">
 
 		<p id = "backboneOutput"></p>
 

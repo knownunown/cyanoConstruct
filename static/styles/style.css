@@ -157,11 +157,12 @@ input[type=button]:active, input[type=button]:focus, input[type=submit]:active, 
 	flex-grow: 1;
 }
 
+.noMargin {
+	margin: 0px;
+}
 
 /* navigation */
 #navigation {
-	overflow: hidden;
-	/*border-bottom: 2px solid black;*/
 	display: flex;
 }
 
@@ -241,6 +242,10 @@ legend {
 
 #specialPositions p, #specialPositions div {
 	display: inline-block;
+}
+
+#backboneDesc {
+	height: 40px;
 }
 
 #googleWrapper {

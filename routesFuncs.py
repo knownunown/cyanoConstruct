@@ -1,11 +1,13 @@
 #misc other stuff
 
 #design
-from cyanoConstruct import defaultUser, checkType, SequenceMismatchError, SequenceNotFoundError, maxPosition, printActions
+from cyanoConstruct.enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
+from cyanoConstruct import defaultUser, checkType, maxPosition, printActions
 from string import ascii_letters, digits
 
 #assembly
 from datetime import datetime
+import re
 
 #zips
 import os
@@ -176,13 +178,13 @@ def validatePrimers(TMstr, rangeStr):
 	return (validInput, outputStr, TMnum, rangeNum)
 
 
-def validateBackbone(newName, newSeq):
+def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	"""Validates the input from creating a new NamedSequence on the design page."""
 	validInput = True
 	outputStr = ""
 
 						#####	TYPE CHECKING	#####
-	if(type(newName) != type(newSeq) != str):
+	if(type(newName) != type(newDesc) != type(newSeq) != str) != type(newType) != type(newFeatures):
 		validInput = False
 		outputStr += "ERROR: input received not all strings.<br>"
 	
@@ -214,6 +216,11 @@ def validateBackbone(newName, newSeq):
 			outputStr += "ERROR: '" + character + "' is not allowed in a sequence's name.<br>"
 			invalidCharactersName.append(character)
 
+						#####	VALIDATE DESCRIPTION 	#####
+	if(len(newDesc) < 1 or len(newDesc) > 128):
+		validInput = False
+		outputStr += "ERROR: Description must be 1-128 characters long.<br>"
+
 
 						#####	VALIDATE SEQUENCE 	#####
 	#length
@@ -222,7 +229,7 @@ def validateBackbone(newName, newSeq):
 		outputStr += "ERROR: Sequence must be 1-999999 nucleotides.<br>"
 	
 	#characters
-	validNucleotides = "AGTCBDHKMNRSVWY"
+	validNucleotides = "AGTCBDHKMNRSVWYagtcbdhkmnrsvwy"
 	
 	invalidCharactersSeq = []
 	for character in newSeq:
@@ -231,9 +238,446 @@ def validateBackbone(newName, newSeq):
 			outputStr += "ERROR: '" + character + "' is not an allowed nucleotide.<br>"
 			invalidCharactersSeq.append(character)
 
+						#####	VALIDATE TYPE 	#####	
+	if(newType != "i" and newType != "r"):
+		validInput = False
+		outputStr += "ERROR: Invalid backbone type received.<br>"
+		
+						#####	VALIDATE Features 	#####
+	#very simple, actually
+	if(newFeatures.find("FEATURES") == -1):
+		validInput = False
+		outputStr += "ERROR: no features received.<br>"
+
 	return (validInput, outputStr)
 
+def searchBackbone(seq):
+	#search the main sequence
+	patternL = "{spacerL}\w\w{start}".format(spacerL = "AGGA", start = "GTCTTC")
+	patternR = "{end}\w\w{spacerR}".format(end = "GAAGAC", spacerR = "TACA")
 
+	sitesL = [m.start() for m in re.finditer(patternL, seq)]
+	sitesR = [m.start() for m in re.finditer(patternR, seq)]
+
+	#search the very end and beginning, combined (since it's ciruclar)
+	loopLen = 11 #length of the pattern (spacer-4 bp, NN-2 bp, recog.-6 bp) - 1
+	
+	veryEnd = seq[-loopLen:] + seq[0:loopLen]
+	
+	matchL = re.search(patternL, veryEnd)
+	if(matchL):
+		index = matchL.start()
+		if(index < loopLen):
+			index = len(seq) - (loopLen - index)
+		else:
+			index -= loopLen
+
+		sitesL.append(index)
+
+	matchR = re.search(patternR, veryEnd)
+	if(matchR):
+		index = matchR.start()
+		if(index < loopLen):
+			index = len(seq) - (loopLen - index)
+		else:
+			index -= loopLen
+			
+		sitesR.append(index)
+
+	return (sitesL, sitesR)
+
+def validateSearchBackbone(outputStr, seq):
+	validInput = True
+	sitesL, sitesR = searchBackbone(seq)
+
+	if(len(sitesL) == 0):
+		validInput = False
+		sitesL.append(None)
+		outputStr += "ERROR: No match found for the <span class = 'monospaced'>AGGANNGTCTTC</span> pattern.<br>"
+	elif(len(sitesL) > 1):
+		validInput = False
+		outputStr += "ERROR: Multiple matches found for the <span class = 'monospaced'>AGGANNGTCTTC</span> pattern.<br>"
+
+	if(len(sitesR) == 0):
+		validInput = False
+		sitesR.append(None)
+		outputStr += "ERROR: No match found for the <span class = 'monospaced'>GAAGACNNTACA</span> pattern.<br>"
+	elif(len(sitesL) > 1):
+		validInput = False
+		outputStr += "ERROR: Multiple matches found for the <span class = 'monospaced'>GAAGACNNTACA</span> pattern.<br>"
+
+	return (validInput, outputStr, sitesL[0], sitesR[0])
+
+def extractSequence(originSeq):
+	"""Remove all numbers and whitespace from a string."""
+	seq = re.sub("\s|\d", "", originSeq)
+	return seq
+
+def readBackboneGB(dataBytes, outputStr):
+	validInput = True
+
+	features = None
+	definition = None
+	name = None
+	molType = None
+	seq = None
+	division = None
+
+	try:
+		backboneData = dataBytes.splitlines(keepends = True)
+		
+		for i in range(len(backboneData)):
+			backboneData[i] = backboneData[i].decode()
+					
+	except Exception as e:
+		validInput = False
+		print(e)
+		outputStr += "ERROR: Invalid input received."  
+	
+	if(validInput):
+		#check the first line
+		try:
+			header = backboneData[0].split()
+			
+			if(header[0] != "LOCUS"):
+				raise Exception("no LOCUS")
+						
+			lengthIndex = -1
+			
+			#find the length
+			for i in range(len(header) - 1):
+				if(header[i + 1][-2:] == "bp"):
+					if(header[i + 1][-3:-2] == "-"):
+						try:
+							length = int(header[i + 1][0:-3])
+							lengthIndex = i + 1
+						except Exception:
+							pass
+					else:
+						try:
+							length = int(header[i + 1][0:-2])
+							lengthIndex = i + 1
+						except Exception:
+							pass
+				else:
+					try:
+						length = int(header[i + 1])
+						lengthIndex = i + 1
+					except Exception:
+						pass
+			
+			if(lengthIndex == -1):
+				raise Exception("Could not find length of sequence.")
+			
+			#remove "bp" if it's there
+			if(header[lengthIndex + 1] == "bp"):
+				header.pop(lengthIndex + 1)
+						
+			if(len(header) < lengthIndex + 3):
+				raise Exception("First line is too short. It must have the format: LOCUS locus_name sequence_length molecule_type (optional: circular or linear) (optional: GenBank_division) modification_date")
+			elif(len(header) > lengthIndex + 5):
+				raise Exception("First line is too long. It must have the format: LOCUS locus_name sequence_length molecule_type (optional: circular or linear) (optional: GenBank_division) modification_date")
+
+			#name
+			name = " ".join(header[1:lengthIndex])
+			
+			#sequence type (molecule type) & division
+			molType = header[lengthIndex + 1]
+			if(molType.find("DNA") == -1):
+				raise Exception("Sequence must be a DNA sequence.")
+			
+			if(header[lengthIndex + 2] == "linear"):
+				raise Exception("Sequence must be circular, not linear.")
+			elif(header[lengthIndex + 2] == "circular"):
+				if(len(header) == 6):
+					division = ""
+				else:
+					division = header[lengthIndex + 3]
+			else: #assume it is the division
+				if(len(header) == 7):
+					raise Exception("Unexpected word: {}".format(header[lengthIndex + 2]))
+				else:
+					if(len(header) == 5): #it is not the division, but the modification date
+						division = ""
+					else:
+						division = header[lengthIndex + 2] #it is the division
+						
+			#the modification date will be dropped
+			
+			#definition
+			defRow = backboneData[1].split(maxsplit = 1)
+			
+			if(defRow[0] != "DEFINITION"):
+				raise Exception("No DEFINITION")
+			
+			if(len(defRow) == 1):
+				definition = ""
+			else:
+				definition = defRow[1].rstrip()
+			
+			#IGNORES other information like Accession, Source, Journal, etc.
+			
+			#search for the relevant regions: the FEATURES and the ORIGIN
+			featureIndex = -1
+			originIndex = -1
+			originEnd = -1
+						
+			for i in range(len(backboneData) - 2):
+				if backboneData[i + 2][0:6] == "ORIGIN":
+					originIndex = i + 2
+				elif backboneData[i + 2][0:8] == "FEATURES":
+					featureIndex = i + 2
+				elif backboneData[i + 2][0:2] == "//":
+					originEnd = i + 2
+			
+			if(featureIndex == -1):
+				raise Exception("No FEATURE section found.")
+			if(originIndex == -1):
+				raise Exception("No ORIGIN section found.")
+			if(originEnd == -1):
+				raise Exception("No end of .gb (//) found.")
+			if(originIndex < featureIndex):
+				raise Exception("Origin section should not be before feature section.")
+			if(originEnd < originIndex):
+				raise Exception("End of .gb should be after Origin section.")
+				
+			#first look at the origin
+			seq = extractSequence("\n".join(backboneData[originIndex + 1 : originEnd]))
+			
+			if(len(seq) != length):
+				raise Exception("Length of sequence declared in the first line ({firstLine} bp) and of the actual sequence in the ORIGIN section ({originSec} bp) are inconsistent.".format(
+						firstLine = length,
+						originSec = len(seq)))
+			
+			features = "".join(backboneData[featureIndex:originIndex])
+
+		except Exception as e:
+			validInput = False
+			outputStr += "ERROR: {}".format(e)
+		
+	return (outputStr, validInput, {"name": name, "molType": molType, "division": division, "definition": definition, "features" : features, "sequence": seq})
+			
+def processGBfeatures(seq, features, outputStr):
+	sequenceBefore = None
+	sequenceAfter = None
+	featureSection = None
+	
+	#do some MORE processing whee
+	validInput, outputStr, siteL, siteR = validateSearchBackbone(outputStr, seq)
+
+	length = len(seq)
+
+	if(printActions):
+		print("siteL {} siteR {}".format(siteL, siteR))
+
+	if(validInput):
+		try:
+			if(siteL + 4 >= length):
+				insL = 5 - (length - siteL)
+			else:
+				insL = siteL + 5
+			
+			if(siteR + 7 >= length):
+				insR = 8 - (length - siteR)
+			else:
+				insR = siteR + 8
+
+			if(printActions):
+				print((insL, insR))
+
+			if(insR >= insL):
+				insertionAdjustment = (insR - insL) + 1
+				rightmost = insR
+			else: #if the insertion region wraps back around
+				insertionAdjustment = insR
+				rightmost = length + 1
+
+			if(printActions):
+		 		print("insertionAdjustment {} rightmost {}".format(insertionAdjustment, rightmost))
+			
+			deleteNextLine = False
+
+			#Go through every feature
+			for i in range(len(features)):
+				features[i] = features[i].lstrip()
+				
+				if(features[i]):
+					if(features[i][0] != "/"):
+						#extract the row
+						row = features[i].split(maxsplit = 1)
+
+						if(printActions):
+							print(features[i])
+
+						if(len(row) > 1):
+							#should have numbers in the string of the format NUMBER..NUMBER							
+							rowElements = re.split("(\d+..\d+)", row[1])
+							if(rowElements[0] == "join("):
+								isJoin = True
+							else:
+								isJoin = False
+
+							pairsRemove = 0
+
+							for j in range(1, len(rowElements), 2):
+								removeFeature = False
+								
+								#this SHOULD be the pattern
+								startIndex, endIndex = rowElements[j].split("..")
+								newStart = int(startIndex)
+								
+								if(newStart > length):
+									newStart -= length
+									
+								newEnd = int(endIndex)
+								if(newEnd > length):
+									newEnd -= length
+								
+								if(printActions):
+									print("newStart {} newEnd {} \t insL {} insR {}".format(newStart, newEnd,
+										  insL, insR))
+								
+								if(insR >= insL):
+									if(newStart >= insL and newStart <= insR):
+										#start within insertion region
+										if(newEnd >= insL and newEnd <= insR):
+											removeFeature = True
+											
+											if(printActions):
+												print("need to remove the entire thing")
+
+										else:
+											newStart = insR + 1
+											if(newStart > length):
+												newStart = newStart - length
+									elif(newEnd > insL and newEnd <= insR):
+										#end within insertion region
+										newEnd = insL - 1
+										if(newEnd < 1):
+											newEnd = length + newEnd
+										
+									#what is insR2 I'm not sure
+									insR2 = insR
+
+								else:
+									if(newStart <= insR):
+										#start within insertion region
+										if(newEnd <= insR):
+											removeFeature = True
+
+											if(printActions):
+												print("need to remove the entire thing")
+											#remove the entire thing
+										else:
+											newStart = insR + 1
+											if(newStart > length):
+												newStart = newStart - length
+									if(newEnd >= insL):
+										#end within insertion region
+										if(newStart >= insL):
+											removeFeature = True
+
+											if(printActions):
+												print("need to remove the entire thing")
+										else:
+											newEnd = insL - 1
+											if(newEnd < 1):
+												newEnd = length + newEnd
+
+									if(printActions):
+										print("newStart {} newEnd {} insR {}".format(newStart, newEnd, insR))
+
+										print("newStart -= insR; newEnd -= insR")
+
+									newStart -= insR
+									newEnd -= insR
+									
+									insR2 = length - insR
+
+								#add to the numbers as necessary
+								#get the strings to replace them with
+								if(newStart >= insR2):
+
+									if(newStart >= rightmost):
+										startStr = "[AddLength]{}[AddLength]".format(newStart - insertionAdjustment)
+									else:
+										startStr = str(newStart - insertionAdjustment)
+								else:
+									startStr = str(newStart)
+								
+								if(newEnd >= insR2):
+									if(newEnd >= rightmost):
+										endStr = "[AddLength]{}[AddLength]".format(newEnd - insertionAdjustment)
+									else:
+										endStr = str(newEnd - insertionAdjustment)
+								else:
+									endStr = str(newEnd)
+									
+								#finalllyyyyy
+								if(removeFeature):
+									rowElements[j] = ""
+									pairsRemove += 1
+								else:
+									rowElements[j] = "{start}..{end}".format(start = startStr, end = endStr)
+
+							if(pairsRemove == int(len(rowElements) / 2)):
+								deleteNextLine = True
+								features[i] = ""
+								if(printActions):
+									print("isJoin = {} \tpairsRemove = {} \tint(len(rowElements) / 2) - 1) = {}".format(
+										isJoin, pairsRemove, int(len(rowElements) / 2) - 1))
+							else:
+								if(printActions):
+									print("isJoin = {} \tpairsRemove = {} \tint(len(rowElements) / 2) - 1) = {}".format(
+										isJoin, pairsRemove, int(len(rowElements) / 2) - 1))
+								deleteNextLine = False
+
+								#replace the row with the properly formatted one
+								if(len(row[0]) <= 3):
+									features[i] = "\t{row1}\t\t{row2}".format(row1 = row[0], row2 = "".join(rowElements))
+								else:
+									features[i] = "\t{row1}\t{row2}".format(row1 = row[0], row2 = "".join(rowElements))
+
+							#remove empty numbers in a join
+							if(isJoin):
+								while(features[i].find(",,") != -1):
+									features[i] = features[i].replace(",,", ",")
+								features[i] = features[i].replace("(,", "(")
+								features[i] = features[i].replace(",)", ")")
+								features[i] = features[i].replace("( ", "(")
+								features[i] = features[i].replace(" )", ")")
+
+								#remove the join() if there's only one set of numbers remaining
+								if(pairsRemove == int(len(rowElements) / 2) - 1):
+									features[i] = features[i].replace("join(", "")
+									features[i] = features[i].replace(")", "")
+
+							if(printActions):
+								print(features[i])
+								print("===")
+					else:
+						#add three tabs to the beginning
+						features[i] = "\t\t\t" + features[i]
+
+				if(deleteNextLine):
+					features[i] = ""
+
+			featureSection = "".join(features)
+
+			#remove the stuff
+			if(insL <= insR):
+				sequenceBefore = seq[0:insL - 1]
+				sequenceAfter = seq[insR:]
+			else:
+				sequenceBefore = seq[insR:insL - 1]
+				sequenceAfter = ""
+
+		except Exception as e:
+			outputStr += "ERROR: {}".format(e)
+			validInput = False
+	
+	return(outputStr, validInput, {"seqBefore": sequenceBefore, "seqAfter": sequenceAfter, "featureSection": featureSection})
+	
 #Assembly
 def addSpacerAssemblyGB(spacer, features, i):
 	lenSpacer = len(spacer)
@@ -270,9 +714,9 @@ def finishCompAssemblyGB(features, fullSeq):
 	#fileHead	
 	date = datetime.today().strftime("%d-%b-%Y").upper()
 	
-	completeFile = ["LOCUS\tAssembled sequence\t" + str(len(fullSeq)) + " bp\tDNA\tlinear\t" + date,
+	completeFile = ["LOCUS\t\tAssembled_sequence\t" + str(len(fullSeq)) + " bp\tDNA\tcircular\tSYN\t" + date,
 				"DEFINITION\tSequence assembled from CyanoConstruct",
-				"FEATURES\tLocation/Qualifiers"]
+				"FEATURES\t\tLocation/Qualifiers"]
 	
 	#process sequence for ORIGIN section
 	seq = fullSeq.lower()
@@ -314,6 +758,8 @@ def finishCompAssemblyGB(features, fullSeq):
 	completeFile.append("//")
 	
 	return "\n".join(completeFile)	
+
+
 
 
 #ZIP-related functions

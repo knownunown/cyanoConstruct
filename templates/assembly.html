@@ -8,14 +8,17 @@
 
 <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
 <script>
-var seqElements = ["Pr", "RBS", "GOI", "Term"];
+var seqElements = {{ seqElements|tojson }};
 
 var elemOptions = {{ availableElements|tojson }}; //all the available elements, sorted by type
 
 var fidelityLimits = {{ fidelityLimits|tojson }};
 
-var posTermComb = {{ posTermComb|tojson }}
+var posTermComb = {{ posTermComb|tojson }};
 
+var backbones = {{ availableBackbones|tojson }};
+
+var backboneDescs = {{ backboneDescs|tojson }};
 </script>
 
 <script src = "/static/js/assembleJS.js" ></script>
@@ -27,47 +30,79 @@ var posTermComb = {{ posTermComb|tojson }}
 
 
 {% block content %}
-<div id = "inputCol"><div id = "input">
-	<form id = "form" method = "POST" onsubmit = "validate(); return false;">
-		<div>
-			<h3>Sequence</h3>
+<div id = "mainContent" class = "shouldGrow">
+	<div id = "leftCol">
+		<form id = "form">
+			<div>
+				<h3>Sequence</h3>
 
-			<div id = "fidelityInput">
-				<label for = "fidelity">Spacer Fidelity</label>
-				<div class = "shouldGrow"></div>
-				<select class = "formField" name = "fidelity" id = "fidelity" onchange = "fidelityChanged()">
-					{% for num in fidelities %}
-						<option value = "{{ num }}">{{ num }}</option>
-					{% endfor %}
-				</select>
+				<div id = "fidelityInput">
+					<label for = "fidelity">Spacer Fidelity</label>
+					<div class = "shouldGrow"></div>
+					<select class = "formField" name = "fidelity" id = "fidelity" onchange = "fidelityChanged()">
+						{% for num in fidelities %}
+							<option value = "{{ num }}">{{ num }}</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<p class = "noMargin">Backbone</p>
+
+				<div id="backboneInput">	
+					<div id = "backboneTypeDiv">
+						<span>Type</span>
+						<div class = "shouldGrow"></div>
+						<div onchange = "backboneTypeChanged(); backboneChanged();">
+							<input type = "radio" name = "backboneType" id = "typeIntegrative" value = "i" checked><label for = "typeIntegrative">Integrative</label>
+							<input type = "radio" name = "backboneType" id = "typeReplicative" value = "r"><label for = "typeReplicative">Replicative</label>
+						</div>
+					</div>
+
+					<div>
+						<label for="backbone">Name</label>
+						<div class="shouldGrow"></div>
+						<select class="formField" name="backbone" id="backboneName" onchange = "backboneChanged()"></select>
+					</div>
+
+					<div id = "backboneDescriptionDiv">
+						<p class = "noMargin">Description: <span id = "backboneDescription"></span></p>
+					</div>
+				</div>
+
+
 			</div>
+			<div id = "showOutput" class = "monospaced shouldGrow">
+				<p id = "outputParagraph" class = "monospaced">
+					Available components by position:
+				</p>
+				
+				<ul>
+				{% for key in posTermComb %}
 
-			<br>
+					<li>{{ key }}: 
+					{% for row in posTermComb[key] %}
 
-			<div id="backboneInput">
-				<label for="backbone">Backbone (doesn't do anything yet)</label>
-				<div class="shouldGrow"></div>
-				<select class="formField" name="backbone" id="backbone">
-					{% for key in availableBackbones.keys() %}
-						<option value = "{{ key }}">{{ availableBackbones[key]}}</option>
+						{{ row["position"] }}{{ row["terminalLetter"]}} 
+
 					{% endfor %}
-				</select>
+					</li>
+
+				{% endfor %}
+				</ul>
 			</div>
+			<hr style = "width: 100%">
+			<div>
+				<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
+				<span id = "downloadMessage"></span>
+			</div>
+		</form>
+	</div>
 
+	<div id = "spacerCol" style = "width: 20px"></div>
 
-		</div>
+	<div id = "rightCol">
+		<h3>Components</h3>
 
-<!--		<div class="elemDiv">
-			<span class="elemName">0:</span>
-			<label for="elemType0">Type</label>
-			<div><select class="formField" name="elemType0" id="elemType0"><option value="Pr">Pr</option></select></div>
-
-			<label for="elemName0">Name</label>
-			<div><select class="formField" name="elemName0" id="elemName0"><option value="psbA">psbA</option></select></div>
-				<select class = 'formField' name = 'elemName0' id = 'elemName0'><option value = 'psbA'>psbA</option></select>
-
-		</div>
--->
 		<div id = "elem0"></div>
 
 		<div id = "elements">
@@ -75,54 +110,19 @@ var posTermComb = {{ posTermComb|tojson }}
 
 		<div id = "elemT"></div>
 
-		<!--
-		<div class="elemDiv">
-			<span class="elemName">T:</span>
-			<label for="elemType999">Type</label>
-			<div><select class="formField" name="elemType999" id="elemType999"><option value="Term">Term</option></select></div>
-			<label for="elemName999">Name</label>
-			<div><select class="formField" name="elemName999" id="elemName999"><option value="T1">T1</option></select></div>
-		</div>-->
-
+		<div class = "shouldGrow"></div>
 
 		<div>
 			<span class = "errorMessage" id = "elementError"></span>
 			<br>
-			<input name = "newElement" type = "button" class = "styledButton" onclick = "addElem()" value = "New Element">
-			<input name = "rmElement" type = "button" class = "styledButton" onclick = "rmLastElem()" value = "Remove Last Element">
+			<input name = "newElement" type = "button" class = "styledButton" onclick = "addElem()" value = "New Component">
+			<input name = "rmElement" type = "button" class = "styledButton" onclick = "rmLastElem()" value = "Remove Last Component">
 			<hr>
 
-			<input type = "submit" id = "threeSubmit" value = "Submit" class = "styledButton">
+			<input type = "button" id = "threeSubmit" value = "Submit" class = "styledButton" onclick = "validate()">
 		</div>
-	</form>
-</div></div>
 
-<div id = "outputCol"><div id = "output">
-	<h3>Output</h3>
-	<div id = "showOutput" class = "monospaced">
-		<p id = "outputParagraph" class = "monospaced">
-			Available components by position:
-		</p>
-		
-		<ul>
-		{% for key in posTermComb %}
-
-			<li>{{ key }}: 
-			{% for row in posTermComb[key] %}
-
-				{{ row["position"] }}{{ row["terminalLetter"]}} 
-
-			{% endfor %}
-			</li>
-
-		{% endfor %}
-		</ul>
 	</div>
-	<hr style = "width: 100%">
-	<div>
-		<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
-		<span id = "downloadMessage"></span>
-	</div>
-</div></div>
+</div>
 
 {% endblock %}

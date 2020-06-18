@@ -70,6 +70,29 @@ hr {
 	border: 1px solid #0E1B45;
 }
 
+span.insertionSeq {
+	font-size: inherit;
+	color: #AE5200;
+	margin: 1em 0px;
+	display: block;
+}
+
+div.sequence span {
+	font-size: inherit;
+}
+
+span.enzymeSeq {
+	color: #07288a;
+}
+
+span.nnSeq {
+	color: #647108;
+}
+
+span.spacerSeq {
+	color: #076076;
+}
+
 /* library */
 #allLibraryTabs {
 	/*background: #ddd;*/

@@ -8,7 +8,7 @@ Created on Wed Apr  1 21:32:02 2020
 cyanoConstruct __init__ file
 """
 printActions = True
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 
 #import statements
 from flask import Flask, session
@@ -30,7 +30,7 @@ migrate = Migrate(app, db)
 
 
 #import modules
-from cyanoConstruct.enumsExceptions import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, BackboneNotFoundError, NotLoggedInError, AccessError
+import cyanoConstruct.enumsExceptions
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 db.create_all()
 from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, checkType, inverseSeq
@@ -43,5 +43,5 @@ try:
 except UserNotFoundError:
     defaultUser = UserData.new("default")
 
-from cyanoConstruct.routesFuncs import boolJS, validateNewNS, validateSpacers, validatePrimers, validateBackbone, addSpacerAssemblyGB, addCompAssemblyGB, finishCompAssemblyGB, makeZIP, makeAllLibraryZIP
+import cyanoConstruct.routesFuncs
 from cyanoConstruct.routes import *

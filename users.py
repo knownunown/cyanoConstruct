@@ -10,7 +10,7 @@ cyanoConstruct sessionUsers file (UserData class)
 from cyanoConstruct import printActions
 from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 from cyanoConstruct import NamedSequence, SpacerData, PrimerData, checkType
-from cyanoConstruct import AlreadyExistsError, SequenceMismatchError, SequenceNotFoundError, ComponentNotFoundError, UserNotFoundError, BackboneNotFoundError, NotLoggedInError
+import cyanoConstruct.enumsExceptions as e
 
 class UserData:
     def __init__(self):
@@ -31,7 +31,7 @@ class UserData:
                             
         #see if it already exists
         if(UserDataDB.query.filter_by(email = email).all() != []):
-            raise AlreadyExistsError("User with email " + email + " already exists.")
+            raise e.AlreadyExistsError("User with email " + email + " already exists.")
 
         #begin creating stuff
         newUserData = cls()
@@ -61,7 +61,7 @@ class UserData:
         
         #check results
         if(len(queryResults) == 0):
-            raise UserNotFoundError("Could not find user.")
+            raise e.UserNotFoundError("Could not find user.")
         elif(len(queryResults) > 1):
             raise Exception("Multiple users exists with this email.")
         else:
@@ -212,7 +212,7 @@ class UserData:
                 
         #handle the results from the query
         if(len(namedSeqList) == 0):
-            raise SequenceNotFoundError("Could not find sequence.")
+            raise e.SequenceNotFoundError("Could not find sequence.")
         if(len(namedSeqList) > 1):
             raise Exception("Multiple sequences found.")
         else:
@@ -232,7 +232,7 @@ class UserData:
         if(foundNS.getSeq() == seq):
             return foundNS
         else:
-            raise SequenceMismatchError("Sequence does not match stored sequence.")
+            raise e.SequenceMismatchError("Sequence does not match stored sequence.")
 
     def findComponent(self, compType, compName, compPos, compTerminalLetter):
         """Searches UserDataDB for component with specifications."""
@@ -253,7 +253,7 @@ class UserData:
                    return comp
         
         #did not find it
-        raise ComponentNotFoundError("Could not find component.")
+        raise e.ComponentNotFoundError("Could not find component.")
 
     def findBackbone(self, name):
         """Searches BackboneDB for backbone with the same name."""
@@ -261,7 +261,7 @@ class UserData:
 
         #handle the results from the query
         if(len(backboneList) == 0):
-            raise BackboneNotFoundError("Could not find backbone.")
+            raise e.BackboneNotFoundError("Could not find backbone.")
         if(len(backboneList) > 1):
             raise Exception("Multiple backbones found.")
         else:
@@ -321,7 +321,7 @@ class UserData:
         foundBB = BackboneDB.query.get(id)
 
         if(foundBB is None):
-            raise BackboneNotFoundError("Backbone with that id was not found.")
+            raise e.BackboneNotFoundError("Backbone with that id was not found.")
         
         db.session.delete(foundBB)
 
@@ -339,9 +339,9 @@ class UserData:
             self.findNamedSequence(namedSeq.getType(), namedSeq.getName(), namedSeq.getSeq())
             
             #raise error if it exists
-            raise AlreadyExistsError("Sequence already exists.")
+            raise e.AlreadyExistsError("Sequence already exists.")
             
-        except SequenceNotFoundError:
+        except e.SequenceNotFoundError:
             pass
 
         #make entry
@@ -373,9 +373,9 @@ class UserData:
             self.findNamedSequence(namedSeq.getType(), namedSeq.getName(), namedSeq.getSeq())
             
             #an error will be raised if it exists
-            raise AlreadyExistsError("Sequence already exists.")
+            raise e.AlreadyExistsError("Sequence already exists.")
             
-        except SequenceNotFoundError:
+        except e.SequenceNotFoundError:
             pass
 
         #make entry
@@ -426,8 +426,8 @@ class UserData:
         try:
             self.findComponent(NSentry.getType(), NSentry.getName(), spacerData.getPosition(), spacerData.getTerminalLetter())
 
-            raise AlreadyExistsError("Component already exists.")
-        except ComponentNotFoundError:
+            raise e.AlreadyExistsError("Component already exists.")
+        except e.ComponentNotFoundError:
             pass
         
         #create database entries
@@ -487,17 +487,17 @@ class UserData:
         
         return self.makeWithNamedSequence(ns, position, isTerminal, TMgoal, TMrange)
 
-    def createBackbone(self, name, seq):
+    def createBackbone(self, name, type, desc, seqBefore, seqAfter, features):
         """Create a BackboneDB using its name and sequence."""
         #see if it exists already
         try:
             self.findBackbone(name)
-            raise AlreadyExistsError("Backbone {name} already exists.".format(name = name))
-        except BackboneNotFoundError:
+            raise e.AlreadyExistsError("Backbone {name} already exists.".format(name = name))
+        except e.BackboneNotFoundError:
             pass
 
         #create
-        bb = BackboneDB(name = name, seq = seq, user_id = self.getID())
+        bb = BackboneDB(name = name, type = type, desc = desc, seqBefore = seqBefore, seqAfter = seqAfter, features = features, user_id = self.getID())
 
         db.session.add(bb)
 
