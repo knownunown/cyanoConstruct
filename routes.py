@@ -770,7 +770,7 @@ def backbonePreview():
     validInput = True
     succeeded = False
 
-    featureStr = "FEATURES\t\tLocation/Qualifiers\n"
+    featureStr = ""
 
 
     try:

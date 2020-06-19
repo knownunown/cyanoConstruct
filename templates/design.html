@@ -18,7 +18,7 @@
 			min-height: 10px;
 			padding: 10px;
 			border: 1px dashed black;
-			max-width: 580px;
+			max-width: 590px;
 		}
 
 		div.feature {
@@ -27,14 +27,39 @@
 			margin: 5px;
 			border: 1px solid black;
 		}
+
 		div.feature div {
 			/*display: inline-block;*/
 			width: max-content;
 			margin: auto;
 		}
 
-		textarea#featureOutput {
-			height: 400px;
+		div#featuresWrapper {
+			outline: 1px solid black;
+			background: #eee;
+			min-width: 400px;
+			width: max-content;
+		}
+
+		div#allFeatures {
+			padding: 5px;
+			min-width: 400px;
+			min-height: 50px;
+			max-width: 1000px;
+			max-height: 1500px;
+			overflow: auto;
+
+			resize: both;
+		}
+
+		div#allFeatures pre {
+			margin: 0px;
+			white-space: pre-wrap;
+			word-break: break-all;
+		}
+
+		#featuresInput {
+			font-weight: bold;
 		}
 
 		input.highlightButton {
@@ -303,10 +328,16 @@
 
 		<h4>Features</h4>
 
-		<textarea name = "featureOutput" id = "featureOutput" readonly = "readonly">FEATURES		Location/Qualifiers</textarea>
+		<div id = "featuresWrapper">
+			<div id = "allFeatures" style = "height: 400px !important; width: 600px !important;">
+				<pre id = "featuresHeader">FEATURES		Location/Qualifiers</pre>
+				<pre id = "featuresFile"></pre>
+				<pre id = "featuresInput"></pre>
+			</div>
+		</div>
 
 		<p><strong>User-input features (optional)</strong></p>
-		<p>If features were extracted from a file upload, do not use user-input features unless you want the features from the file to be overwritten. Additionally, user-input features are simple and limited; it's recommended to generate a .gb file and upload it for more complex features.</p>
+		<p>User-input features are simple and limited; it's recommended to generate a .gb file and upload it for more complex features.</p>
 
 		<div id = "backboneFeatures">
 		</div>

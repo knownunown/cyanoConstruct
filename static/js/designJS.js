@@ -476,11 +476,16 @@ function newBackbone(){
 
 	document.getElementById("backboneSeq").value = document.getElementById("backboneSeq").value.replace(/\s/g,"");
 
+	var features = document.getElementById("featuresFile").innerText + "\n" + 
+				   document.getElementById("featuresInput").innerText;
+
+	console.log(features);
+
 	var newBackboneData = "{'backboneName': '" + document.getElementById("backboneName").value +
 						  "', 'backboneSeq': '" + document.getElementById("backboneSeq").value + 
 						  "', 'backboneDesc': '" + document.getElementById("backboneDesc").value + 
 						  "', 'backboneType': '" + document.getElementById("backboneType").value +
-						  "', 'backboneFeatures': \"\"\"" + document.getElementById("featureOutput").value + "\"\"\"}";
+						  "', 'backboneFeatures': \"\"\"" + features + "\"\"\"}";
 
 	$.ajax({
 		data : {"newBackboneData": newBackboneData},
@@ -525,7 +530,7 @@ function backboneFileProcess(){
 
 			//only can proceed if successfully created
 			if(data.succeeded){
-				document.getElementById("featureOutput").value = data.featureStr;
+				document.getElementById("featuresFile").innerText = data.featureStr;
 				document.getElementById("backboneSeq").value = data.sequence;
 				document.getElementById("backboneDesc").value = data.definition;
 				document.getElementById("backboneName").value = data.name;
@@ -692,7 +697,9 @@ function removeFeature(){
 
 function allInput(element, array){
 	if(element.nodeName == "SELECT" || element.nodeName == "INPUT"){
-		array.push(element);
+		if(element.type != "button"){
+			array.push(element);
+		}
 	}
 	else{
 		for(child of element.children){
@@ -730,6 +737,7 @@ function previewFeatures(){
 
 		var featureData = Array();
 		allInput(features[i], featureData);
+		console.log(featureData)
 
 		previewData += "'" + i.toString() + "' : {";
 		
@@ -768,7 +776,7 @@ function previewFeatures(){
 
 			//only can proceed if successfully created
 			if(data.succeeded){
-				document.getElementById("featureOutput").value = data.featureStr;
+				document.getElementById("featuresInput").innerText = data.featureStr;
 			}
 			else{
 			}

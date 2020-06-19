@@ -244,10 +244,7 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 		outputStr += "ERROR: Invalid backbone type received.<br>"
 		
 						#####	VALIDATE Features 	#####
-	#very simple, actually
-	if(newFeatures.find("FEATURES") == -1):
-		validInput = False
-		outputStr += "ERROR: no features received.<br>"
+	#currently assumes it's fine
 
 	return (validInput, outputStr)
 
@@ -448,8 +445,23 @@ def readBackboneGB(dataBytes, outputStr):
 				raise Exception("Length of sequence declared in the first line ({firstLine} bp) and of the actual sequence in the ORIGIN section ({originSec} bp) are inconsistent.".format(
 						firstLine = length,
 						originSec = len(seq)))
+
+			#replace spacing of the FEATURES section with tabs
+			for i in range(featureIndex + 1, originIndex):
+				if(backboneData[i].lstrip()[0] != "/"):
+					row = backboneData[i].split(maxsplit = 1)
+
+					if(len(row) == 2):
+						if(len(row[0]) <= 6):
+							backboneData[i] = "\t{row1}\t\t{row2}".format(row1 = row[0], row2 = row[1])
+						else:
+							backboneData[i] = "\t{row1}\t{row2}".format(row1 = row[0], row2 = row[1])
+					else:
+						backboneData[i] = "\t{row}".format(row = row[0])
+				else:
+					backboneData[i] = "\t\t\t{row}\n".format(row = backboneData[i].strip())
 			
-			features = "".join(backboneData[featureIndex:originIndex])
+			features = "".join(backboneData[featureIndex + 1:originIndex])
 
 		except Exception as e:
 			validInput = False
