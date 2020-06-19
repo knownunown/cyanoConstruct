@@ -34,22 +34,23 @@
 			margin: auto;
 		}
 
-		div#featuresWrapper {
+		div#allFeatures {
 			outline: 1px solid black;
 			background: #eee;
-			min-width: 400px;
-			width: max-content;
-		}
-
-		div#allFeatures {
 			padding: 5px;
 			min-width: 400px;
 			min-height: 50px;
-			max-width: 1000px;
+			max-width: calc(80vw - 25px);
 			max-height: 1500px;
 			overflow: auto;
 
 			resize: both;
+		}
+
+		@media(max-width: 600px){
+			div#allFeatures {
+				max-width: calc(90vw - 25px);
+			}
 		}
 
 		div#allFeatures pre {
@@ -328,12 +329,10 @@
 
 		<h4>Features</h4>
 
-		<div id = "featuresWrapper">
-			<div id = "allFeatures" style = "height: 400px !important; width: 600px !important;">
-				<pre id = "featuresHeader">FEATURES		Location/Qualifiers</pre>
-				<pre id = "featuresFile"></pre>
-				<pre id = "featuresInput"></pre>
-			</div>
+		<div id = "allFeatures" style = "height: 400px; width: 600px;">
+			<pre id = "featuresHeader">FEATURES		Location/Qualifiers</pre>
+			<pre id = "featuresFile"></pre>
+			<pre id = "featuresInput"></pre>
 		</div>
 
 		<p><strong>User-input features (optional)</strong></p>

@@ -54,7 +54,7 @@ a:active {
 
 @media (max-width: 600px){
 	#bodyDiv{
-		padding: 10px 5vw;
+		padding: 0px 5vw;
 	}
 }
 
