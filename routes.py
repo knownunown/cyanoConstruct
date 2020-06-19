@@ -225,8 +225,13 @@ def loginGoogle():
 
     try:
         print(str(request.form["loginData"]))
-        print(len(request.form["loginData"]))
-        loginData = leval(request.form["loginData"])
+        loginData = leval(str(request.form["loginData"]))   #the str isn't really necessary but
+                                                            #when printing, the IDtoken gets cut off
+                                                            #and some other issue must have existed so it couldn't
+                                                            #read the IDtoken. Now it can, despite not being able to
+                                                            #print it?
+                                                            #so it works but I don't know why
+                                                            #this feels like a trainwreck waiting to happen
 
         token = loginData["IDtoken"]
         email = loginData["email"]
