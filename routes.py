@@ -225,7 +225,7 @@ def loginGoogle():
 
     try:
         print(request.form["loginData"])
-        print(size(request.form["loginData"]))
+        print(len(request.form["loginData"]))
         loginData = leval(request.form["loginData"])
 
         token = loginData["IDtoken"]
