@@ -224,6 +224,7 @@ def loginGoogle():
     outputStr = ""
 
     try:
+        print(request.form["loginData"].replace("\", "\\"))
         print(request.form["loginData"])
         loginData = leval(request.form["loginData"])
 
