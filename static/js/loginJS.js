@@ -57,8 +57,10 @@ function onSignIn(googleUser) {
 
 	var IDtoken = googleUser.getAuthResponse().id_token;
 
-	var loginData = "{'test': 'worked', 'fullName': \"\"\"" + profile.getName() + "\"\"\", 'email': \"\"\"" + profile.getEmail() + 
+	var loginData = "{'fullName': \"\"\"" + profile.getName() + "\"\"\", 'email': \"\"\"" + profile.getEmail() + 
 					"\"\"\", 'remember': '" + document.getElementById("googleRememberMe").checked.toString() + "', 'IDtoken': \"\"\"" + IDtoken + "\"\"\"}";
+
+	console.log(loginData.length);
 
 	alert(loginData);
 
