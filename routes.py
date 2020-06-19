@@ -296,6 +296,8 @@ def registerProcess():
     succeeded = False
     
     try:
+        print(request.form["registrationData"])
+        
         registrationData = leval(request.form["registrationData"])
         email = registrationData["email"]
         try:

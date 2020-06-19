@@ -55,6 +55,8 @@ function register(){
 function onSignIn(googleUser) {
 	var profile = googleUser.getBasicProfile();
 
+	console.log(profile);
+
 	var IDtoken = googleUser.getAuthResponse().id_token;
 
 	var loginData = "{'IDtoken': '" + IDtoken + "', 'fullName': '" + profile.getName() + "', 'email': '" + profile.getEmail() + 
