@@ -224,6 +224,7 @@ def loginGoogle():
     outputStr = ""
 
     try:
+        print(request.form["loginData"])
         loginData = leval(request.form["loginData"])
 
         token = loginData["IDtoken"]
@@ -295,9 +296,7 @@ def registerProcess():
     outputStr = ""
     succeeded = False
     
-    try:
-        print(request.form["registrationData"])
-        
+    try:        
         registrationData = leval(request.form["registrationData"])
         email = registrationData["email"]
         try:
