@@ -60,8 +60,6 @@ function onSignIn(googleUser) {
 	var loginData = "{'fullName': \"\"\"" + profile.getName() + "\"\"\", 'email': \"\"\"" + profile.getEmail() + 
 					"\"\"\", 'remember': '" + document.getElementById("googleRememberMe").checked.toString() + "', 'IDtoken': \"\"\"" + IDtoken + "\"\"\"}";
 
-	alert(loginData);
-
 	$.ajax({
 		data : {loginData: loginData},
 		type : 'POST',
