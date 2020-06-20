@@ -2,74 +2,17 @@
 
 {% extends "base.html" %}
 
-{% block pageName %}Design Components{% endblock %}
+{% block pageName %}Design{% endblock %}
 
 {% block headContent %}
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
-	<script>
-	var namedSequencesNames = {{ namedSequencesNames|tojson }};
+	<link rel = "stylesheet" type = "text/css" href = "/static/styles/designStyle.css">
 
-	var namedSequencesSeqs = {{ namedSequencesSequences|tojson }};
+	<script>
+		var namedSequencesNames = {{ namedSequencesNames|tojson }};
+
+		var namedSequencesSeqs = {{ namedSequencesSequences|tojson }};
 	</script>
 	<script src = "/static/js/designJS.js" ></script>
-
-	<style>
-		div#backboneFeatures {
-			min-height: 10px;
-			padding: 10px;
-			border: 1px dashed black;
-			max-width: 590px;
-		}
-
-		div.feature {
-			background: #D0E6C8;
-			padding: 5px;
-			margin: 5px;
-			border: 1px solid black;
-		}
-
-		div.feature div {
-			/*display: inline-block;*/
-			width: max-content;
-			margin: auto;
-		}
-
-		div#allFeatures {
-			outline: 1px solid black;
-			background: #eee;
-			padding: 5px;
-			min-width: 400px;
-			min-height: 50px;
-			max-width: calc(80vw - 25px);
-			max-height: 1500px;
-			overflow: auto;
-
-			resize: both;
-		}
-
-		@media(max-width: 600px){
-			div#allFeatures {
-				max-width: calc(90vw - 25px);
-			}
-		}
-
-		div#allFeatures pre {
-			margin: 0px;
-			white-space: pre-wrap;
-			word-break: break-all;
-		}
-
-		#featuresInput {
-			font-weight: bold;
-		}
-
-		input.highlightButton {
-			margin: 0px;
-			padding: 2px;
-			/*background: white;
-			border: none;*/
-		}
-	</style>
 {% endblock %}
 
 {% block designClass %}active{% endblock %}

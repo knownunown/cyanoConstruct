@@ -7,9 +7,7 @@ function scrollToId(id){
 	document.getElementById(id).scrollIntoView({block: "start", inline: "start", behavior: "smooth"})
 }
 
-
 function selectForm(){
-
 	if(document.getElementById("designComponent").checked){
 		document.getElementById("componentForm").style.display = "block";
 

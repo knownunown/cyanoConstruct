@@ -1,0 +1,172 @@
+<!--cyanoConstruct about page-->
+
+{% extends "base.html" %}
+
+{% block pageName %}About{% endblock %}
+
+{% block aboutClass %}active{% endblock %}
+
+{% block headContent %}
+<link rel = "stylesheet" type = "text/css" href = "/static/styles/aboutStyle.css">
+<script>
+	function bodyOnload(){
+		return false;
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>About</h1>
+<p>Information about how to use CyanoConstruct</p>
+
+<figure>
+<figcaption><span class = "figCaption">Figure 1. Layout of a component pre-digestion.</span> The left side of the component's central sequence is composed of, from 5' to 3': the BbsI recognition site, two random nucleotides, and the left spacer. The right of the sequence is composed of: the right spacer, two random nucleotides, and the inverse recognition site for BbsI.</figcaption>
+
+<div class = "longOuter">
+	<div class = "longDiagram">
+		<div class = "strand centered offset">
+			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+
+			<div class = "shouldGrow"></div>
+
+			<div class = "component">
+				<div class = "enzymeRecog">GAAGAC</div><div class = "NN">NN</div><div class = "spacer">TAGA</div><div class = "seq">Element A Forward Sequence</div><div class = "spacer">GATA</div><div class = "NN">NN</div><div class = "enzymeRecog">GTCTTC</div>
+			</div>
+
+			<div class = "shouldGrow"></div>
+
+		</div>
+
+		<div class = "strand centered offset">
+			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+
+			<div class = "shouldGrow"></div>
+
+			<div class = "component">
+				<div class = "enzymeRecog">CTTCTG</div><div class = "NN">NN</div><div class = "spacer">ATCT</div><div class = "seq">Element A Reverse Sequence</div><div class = "spacer">CTAT</div><div class = "NN">NN</div><div class = "enzymeRecog">CAGAAG</div>
+			</div>
+
+			<div class = "shouldGrow"></div>
+
+		</div>
+
+		<div class = "scrollbarSpacer"></div>
+
+	</div>
+</div>
+</figure>
+
+<figure>
+	<figcaption><span class = "figCaption">Figure 2. Layout of a component post-digestion.</span> BbsI digestion removes the random nucleotides and enzyme recognition sites from both sides. Two sticky ends are left. The left overhang is the left spacer, on the foward strand, while the right overhang is the complementary sequence to the right spacer, on the reverse strand.</figcaption>
+<div class = "longOuter">
+	<div class = "longDiagram">
+		<div class = "strand centered offset">
+			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+
+			<div class = "shouldGrow"></div>
+
+			<div class = "component">
+				<div class = "spacer">TAGA</div><div class = "seq">Element A Forward Sequence</div>
+			</div>
+
+			<div class = "component hidden">
+				<div class = "spacer">GATA</div>
+			</div>
+
+
+			<div class = "shouldGrow"></div>
+
+		</div>
+
+		<div class = "strand centered">
+			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+
+			<div class = "shouldGrow"></div>
+
+			<div class = "component hidden">
+				<div class = "spacer">ATCT</div>
+			</div>
+
+			<div class = "component">
+				<div class = "seq">Element A Reverse Sequence</div><div class = "spacer">CTAT</div>
+			</div>
+
+			<div class = "shouldGrow"></div>
+
+		</div>
+
+		<div class = "scrollbarSpacer"></div>
+
+	</div>
+</div>
+
+</figure>
+
+
+<figure>
+<figcaption><span class = "figCaption">Figure 3. Layout of assembled sequence.</span> The spacer overhangs ensure the components join in the correct order.</figcaption>
+
+<div class = "longOuter">
+	<div class = "longDiagram">
+		<div class = "strand">
+			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+			<div class = "component">
+				<div class = "spacer">TAGA</div><div class = "seq">Element A Forward Sequence</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "spacer">GATA</div><div class = "seq">Element B Forward Sequence</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "spacer">ATTA</div><div class = "seq">Element C Forward Sequence</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "spacer">CTAA</div><div class = "seq">Element D Forward Sequence</div>
+			</div>
+
+		</div>
+
+
+		<div class = "strand offset">
+			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
+			<div class = "component hidden" id = "offsetSpacer">
+				<div class = "spacer hidden">ATCT</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "seq">Element A Reverse Sequence</div><div class = "spacer">CTAT</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "seq">Element B Reverse Sequence</div><div class = "spacer">TAAT</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "seq">Element C Reverse Sequence</div><div class = "spacer">GATT</div>
+			</div><!--
+
+		 --><div class = "component">
+				<div class = "seq">Element D Reverse Sequence</div><div class = "spacer">CTAT</div>
+			</div>
+
+
+		</div>
+
+		<div class = "scrollbarSpacer"></div>
+
+	</div>
+</div>
+</figure>
+
+<figure>
+	<figcaption><span class = "figCaption">Legend</span></figcaption>
+<div id = "diagramLegend">
+	<div class = "spacer">Spacer</div>
+	<div class = "NN">Randomly decided nucleotides</div>
+	<div class = "enzymeRecog">Enzyme recognition site</div>
+	<div class = "seq">Component sequence</div>
+</div>
+</figure>
+{% endblock %}

@@ -9,7 +9,7 @@
 <meta name="google-signin-client_id" content="431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleusercontent.com">
 
 <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
-<script src="https://apis.google.com/js/platform.js" async defer></script>
+<script src = "https://apis.google.com/js/platform.js" async defer></script>
 
 <script>
 function googleSignOut(){
@@ -26,10 +26,12 @@ function googleSignOut(){
 
 </head>
 <body onload = "bodyOnload();"><div id = "bodyDiv">
-
+<a id = "skipToMain" href = "#mainContent">Skip to main content</a>
 
 <div id = "navigation">
+	<a class = "sideSpacer"></a>
 	<a href = "/index" class = "{% block indexClass %}{% endblock %}">CyanoConstruct</a>
+	<a href = "/about" class = "{% block aboutClass %}{% endblock %}">About</a>
 	{% if not current_user.is_anonymous %}
 		<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
 		<a href = "/library"class = "{% block libraryClass %}{% endblock %}">Library</a>
@@ -46,13 +48,29 @@ function googleSignOut(){
 
 		<a href = "/login" id = "logInOut">Log In</a>
 	{% endif %}
+
+	<a class = " sideSpacer"></a>	
 </div>
 
-
+<div id = "mainContent">
 {% block content %}{% endblock %}
+</div>
 
 <div id = "footer">
-	<p>Copyright 2020 etc. Footer stuff</p>
+	<div class = "sideSpacer"></div>
+	<div class = "shouldGrow">
+		<p>Contact info.</p>
+	</div>
+	<div class = "shouldGrow">
+		<p>© 2020</p>
+	</div>
+	<div class = "shouldGrow">
+		<p><a href = "/privacy">Privacy & Cookies Policy</a></p>
+	</div>
+	<div>
+		<p><a id = "returnToTop" href = "#bodyDiv">Return to top of page</a></p>
+	</div>
+	<div class = "sideSpacer"></div>
 </div>
 
 </div></body>

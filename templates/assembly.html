@@ -30,99 +30,96 @@ var backboneDescs = {{ backboneDescs|tojson }};
 
 
 {% block content %}
-<div id = "mainContent" class = "shouldGrow">
-	<div id = "leftCol">
-		<form id = "form">
-			<div>
-				<h3>Sequence</h3>
+<div id = "leftCol">
+	<form id = "form">
+		<div>
+			<h3>Sequence</h3>
 
-				<div id = "fidelityInput">
-					<label for = "fidelity">Spacer Fidelity</label>
-					<div class = "shouldGrow"></div>
-					<select class = "formField" name = "fidelity" id = "fidelity" onchange = "fidelityChanged()">
-						{% for num in fidelities %}
-							<option value = "{{ num }}">{{ num }}</option>
-						{% endfor %}
-					</select>
-				</div>
-
-				<p class = "noMargin">Backbone</p>
-
-				<div id="backboneInput">	
-					<div id = "backboneTypeDiv">
-						<span>Type</span>
-						<div class = "shouldGrow"></div>
-						<div onchange = "backboneTypeChanged(); backboneChanged();">
-							<input type = "radio" name = "backboneType" id = "typeIntegrative" value = "i" checked><label for = "typeIntegrative">Integrative</label>
-							<input type = "radio" name = "backboneType" id = "typeReplicative" value = "r"><label for = "typeReplicative">Replicative</label>
-						</div>
-					</div>
-
-					<div>
-						<label for="backbone">Name</label>
-						<div class="shouldGrow"></div>
-						<select class="formField" name="backbone" id="backboneName" onchange = "backboneChanged()"></select>
-					</div>
-
-					<div id = "backboneDescriptionDiv">
-						<p class = "noMargin">Description: <span id = "backboneDescription"></span></p>
-					</div>
-				</div>
-
-
-			</div>
-			<div id = "showOutput" class = "monospaced shouldGrow">
-				<p id = "outputParagraph" class = "monospaced">
-					Available components by position:
-				</p>
-				
-				<ul>
-				{% for key in posTermComb %}
-
-					<li>{{ key }}: 
-					{% for row in posTermComb[key] %}
-
-						{{ row["position"] }}{{ row["terminalLetter"]}} 
-
+			<div id = "fidelityInput">
+				<label for = "fidelity">Spacer Fidelity</label>
+				<div class = "shouldGrow"></div>
+				<select class = "formField" name = "fidelity" id = "fidelity" onchange = "fidelityChanged()">
+					{% for num in fidelities %}
+						<option value = "{{ num }}">{{ num }}</option>
 					{% endfor %}
-					</li>
+				</select>
+			</div>
+
+			<p class = "noMargin">Backbone</p>
+
+			<div id="backboneInput">	
+				<div id = "backboneTypeDiv">
+					<span>Type</span>
+					<div class = "shouldGrow"></div>
+					<div onchange = "backboneTypeChanged(); backboneChanged();">
+						<input type = "radio" name = "backboneType" id = "typeIntegrative" value = "i" checked><label for = "typeIntegrative">Integrative</label>
+						<input type = "radio" name = "backboneType" id = "typeReplicative" value = "r"><label for = "typeReplicative">Replicative</label>
+					</div>
+				</div>
+
+				<div>
+					<label for="backbone">Name</label>
+					<div class="shouldGrow"></div>
+					<select class="formField" name="backbone" id="backboneName" onchange = "backboneChanged()"></select>
+				</div>
+
+				<div id = "backboneDescriptionDiv">
+					<p class = "noMargin">Description: <span id = "backboneDescription"></span></p>
+				</div>
+			</div>
+
+
+		</div>
+		<div id = "showOutput" class = "monospaced shouldGrow">
+			<p id = "outputParagraph" class = "monospaced">
+				Available components by position:
+			</p>
+			
+			<ul>
+			{% for key in posTermComb %}
+
+				<li>{{ key }}: 
+				{% for row in posTermComb[key] %}
+
+					{{ row["position"] }}{{ row["terminalLetter"]}} 
 
 				{% endfor %}
-				</ul>
-			</div>
-			<hr style = "width: 100%">
-			<div>
-				<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
-				<span id = "downloadMessage"></span>
-			</div>
-		</form>
-	</div>
+				</li>
 
-	<div id = "spacerCol" style = "width: 20px"></div>
-
-	<div id = "rightCol">
-		<h3>Components</h3>
-
-		<div id = "elem0"></div>
-
-		<div id = "elements">
+			{% endfor %}
+			</ul>
 		</div>
-
-		<div id = "elemT"></div>
-
-		<div class = "shouldGrow"></div>
-
+		<hr style = "width: 100%">
 		<div>
-			<span class = "errorMessage" id = "elementError"></span>
-			<br>
-			<input name = "newElement" type = "button" class = "styledButton" onclick = "addElem()" value = "New Component">
-			<input name = "rmElement" type = "button" class = "styledButton" onclick = "rmLastElem()" value = "Remove Last Component">
-			<hr>
-
-			<input type = "button" id = "threeSubmit" value = "Submit" class = "styledButton" onclick = "validate()">
+			<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
+			<span id = "downloadMessage"></span>
 		</div>
-
-	</div>
+	</form>
 </div>
 
+<div id = "spacerCol" style = "width: 20px"></div>
+
+<div id = "rightCol">
+	<h3>Components</h3>
+
+	<div id = "elem0"></div>
+
+	<div id = "elements">
+	</div>
+
+	<div id = "elemT"></div>
+
+	<div class = "shouldGrow"></div>
+
+	<div>
+		<span class = "errorMessage" id = "elementError"></span>
+		<br>
+		<input name = "newElement" type = "button" class = "styledButton" onclick = "addElem()" value = "New Component">
+		<input name = "rmElement" type = "button" class = "styledButton" onclick = "rmLastElem()" value = "Remove Last Component">
+		<hr>
+
+		<input type = "button" id = "threeSubmit" value = "Submit" class = "styledButton" onclick = "validate()">
+	</div>
+
+</div>
 {% endblock %}

@@ -1,0 +1,126 @@
+.longOuter {
+	overflow: auto;
+	border: 2px inset black;
+	padding: 5px 0px;
+}
+
+.longDiagram {
+	position: relative;
+	white-space: nowrap;
+	display: inline-block;
+	min-width: 100%;
+}
+
+.strand {
+	position: relative;
+}
+
+.strand div {
+	display: inline-block;
+	font-family: "Courier New", Courier, monospace;
+	padding: 2px;
+}
+
+.component div {
+	border: 1px solid black;
+}
+
+.strand.centered {
+	display:flex;
+}
+
+.strand.centered .component {
+	align-self: center;
+}
+
+.scrollbarSpacer {
+	visibility: hidden;
+	height: 16px;
+}
+
+span.figCaption {
+	font-weight: bold;
+}
+
+.backLine {
+	position: absolute;
+	top: 13px;
+	left: 0;
+	z-index: -100;
+	height: 2px;
+	width: 100%;
+	background: black;
+}
+
+div.component {
+	padding: 5px 0px;
+	border: 0px solid transparent;
+	margin: 0px;
+}
+
+div.component:nth-child(2){
+	margin-left: 5px;
+}
+
+div.component:last-child{
+	margin-right: 5px;
+}
+
+.component:nth-child(even), .strand.offset .component:nth-child(odd){
+	background: rgba(0,0,0,0.25);
+}
+
+.component:nth-child(odd), .strand.offset .component:nth-child(even){
+	background: rgba(150,150,150,0.25);
+}
+
+div.component div{
+	margin: 0px 5px;
+}
+
+div.spacer:last-child{
+	margin: 0px 9px;
+}
+
+div.spacer:nth-child(1){
+	margin: 0px 9px;
+}
+
+#offsetSpacer {
+	padding: 2px 0px;
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+#diagramLegend {
+	border: 2px solid black;
+	overflow: auto;
+}
+
+#diagramLegend div {
+	display: inline-block;
+	font-family: "Courier New", Courier, monospace;
+	border: 1px solid black;
+	margin: 5px 5px;
+	padding: 2px;
+}
+
+/* analogous colors */
+.spacer {
+	background: #7396F0;
+	background: #6692CC;
+}
+
+.NN {
+	background: #A5C3E8;
+}
+
+.enzymeRecog {
+	background: #3ABDBD;
+}
+
+.seq {
+	background: #73E686;
+}

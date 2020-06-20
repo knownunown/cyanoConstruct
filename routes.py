@@ -156,10 +156,6 @@ def errorZIP(error):
                             errorMessage = str(error),
                             loggedIn = checkLoggedIn())
 
-@app.route("/privacy")
-def privacyPolicy():
-    return render_template("privacy.html", loggedIn = checkLoggedIn())
-
 ##################################   LOG IN    ################################
 ##################################################################################
 
@@ -224,7 +220,6 @@ def loginGoogle():
     outputStr = ""
 
     try:
-        print(str(request.form["loginData"]))
         loginData = leval(str(request.form["loginData"]))   #the str isn't really necessary but
                                                             #when printing, the IDtoken gets cut off
                                                             #and some other issue must have existed so it couldn't
@@ -1406,7 +1401,6 @@ def libraryZIP():
 ################################################################################
 
 
-
 @app.route("/index", methods = ["GET", "POST"])
 @app.route("/", methods = ["GET", "POST"])
 def index():    
@@ -1418,77 +1412,12 @@ def index():
 
     return render_template("index.html", logInMessage = logInMessage, loggedIn = checkLoggedIn())
 
-"""
-#sets session timeout
-@app.before_request
-def before_request():
-    #set sessions to expire 30 days after being changed
-    session.permanent = True
-    app.permanent_session_lifetime = timedelta(days=30)
-    session.modified = True
-"""
 
-#############################################
+@app.route("/privacy")
+def privacyPolicy():
+    return render_template("privacy.html", loggedIn = checkLoggedIn())
 
-"""
-fasta label benchling
-ids for each elem. or total?
-linkers/overhangs: need a database of them & which positions they'll be at
-- recog. sequences allowed determined by fidelity; higher means fewer
-- add lower fidelity ones at the end, after the higher ones
-
-personal libraries; accounts
-
-ids as mostly numbers (G00101 ee.g.) (ID which one and Pos (not huge))
-- personal libraries
-
-in domestication tab
-- give: seq: position, class
-- TM for primers
-- makes annotated FASTA
-- adds seq. elem. to personal library
-- determines plasmid type (? wait what)
-- terminators & promoters can change position but will have fixed ones at the top & bottom
-
-prevent stop codons from being accidentally made
-
-terminator has dif. link; need to then define elements in domestication step as right before the terminator or not
-
-relationship b/t fidelity & num. elements (& linker sequences)
-- lower fidelity more elem.s allowed, throw them in after the higher fidelity ones though
-
-conflicting combinations? (of elements, linkers, etc. b/c would bind etc. stop codons as well)
-
-[linker]NNEnzymeRecog[element]EnzymeRecogNN[linker]
-
-can also add a reporter based on seq. & TM, no position
-
-also label the info spit out with ids of elements probably
-
-backbone: class and reporter (select)
-
-assembly, domestication, library: as tabs/pages
-- checkbox for actually own it
-
-assembly step, two fastas:
-    - operon construct w/out backbone
-    - w/ backbone; entire plasmid
-domestication:
-    - primer 1
-    - primer 2
-    - entire sequence
-
-assembly:
-    - select promoter (always pos 0.) (select which)
-    - add part
-        - select class
-        - options dependent on position & class
-    - will spit out FASTAs
-        - operon (entirety of the asembly steps, only need to access seq. data)
-        - total
-
-domesticate parts
-
-need options based on library; gray out not allowed
-"""
+@app.route("/about")
+def about():
+    return render_template("about.html", loggedIn = checkLoggedIn())
 

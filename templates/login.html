@@ -3,20 +3,33 @@
 {% block pageName %}Log In{% endblock %}
 
 {% block headContent %}
-<link rel = "stylesheet" type = "text/css" href = "/static/styles/style.css">
-<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+	<link rel = "stylesheet" type = "text/css" href = "/static/styles/style.css">
 
-<script>
-var returnURL = {{ returnURL|tojson }};
-</script>
+	<script>
+		var returnURL = {{ returnURL|tojson }};
+	</script>
 
-
-<script src = "/static/js/loginJS.js" ></script>
+	<script src = "/static/js/loginJS.js" ></script>
 {% endblock %}
 
 
 {% block content %}
-<h1>Existing Users</h1>
+<h1>Log In or Register through Google</h1>
+<p>Note: need to register this login.</p>
+
+<form id = "googleForm">
+	<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
+	<label for = "googleRememberMe">Remember me</label>
+	<input name = "googleRememberMe" id = "googleRememberMe" type = "checkbox">
+</form>
+<p id = "loginOutput">
+</p>
+<span id = "returnURL"></span>
+
+<hr>
+<p>Testing:</p>
+
+<h2>Existing Users</h2>
 <p>
 	<ul>
 		{% for email in allEmails %}
@@ -25,7 +38,7 @@ var returnURL = {{ returnURL|tojson }};
 	</ul>
 </p>
 
-<h1>Log In</h1>
+<h2>Log In</h2>
 <form id = "loginForm" onsubmit = "login()">
 	<label for = "emailLogin">Email</label>
 	<input name = "emailLogin" id = "emailLogin" type = "text">
@@ -40,7 +53,7 @@ var returnURL = {{ returnURL|tojson }};
 	<input name = "submitLogin" id = "submitLogin" type = "submit" value = "Log In">
 </form>
 
-<h1>Register</h1>
+<h2>Register</h2>
 <form id = "registrationForm" onsubmit="register()">
 	<label for = "emailRegister">Email</label>
 	<input name = "emailRegister" id = "emailRegister" type = "text">
@@ -53,16 +66,4 @@ var returnURL = {{ returnURL|tojson }};
 	<br><br>
 
 	<input name = "submitRegister" id = "submitRegister" type = "submit" value = "Register">
-
-<h1>TESTING: Log In or Register through Google</h1>
-<p>NOTE: this currently only works with umn.edu emails. Using other types of emails would require verification of this site by Google, which may take weeks.</p>
-
-<form id = "googleForm">
-	<div id = "googleWrapper"><div class = "g-signin2" data-onsuccess = "onSignIn"></div></div>
-	<label for = "googleRememberMe">Remember me</label>
-	<input name = "googleRememberMe" id = "googleRememberMe" type = "checkbox">
-</form>
-<p id = "loginOutput">
-</p>
-<span id = "returnURL"></span>
 {% endblock %}

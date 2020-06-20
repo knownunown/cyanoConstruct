@@ -6,16 +6,25 @@ body{
 
 #bodyDiv {
 	margin: 0px;
-	padding: 0px 10vw;
+	/*padding: 0px 10vw;*/
 
 	font-family: Verdana, Geneva, sans-serif;
+}
+
+#mainContent {
+	margin: auto;
+	width: 80vw;
+}
+
+.hidden {
+	visibility: hidden;
 }
 
 h1, h2, h3, h4, #navigation {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
-p, span, label, figcaption {
+p, span, label, figcaption, li {
 	font-size: small;
 }
 
@@ -52,23 +61,20 @@ a:active {
 	text-decoration: underline;
 }
 
-@media (max-width: 600px){
-	#bodyDiv{
-		padding: 0px 5vw;
-	}
+#footer {
+	border-top: 3px solid black;
+	padding: 10px 0px;
+	margin: 10px 0px 0px 0px;
+	display: flex;
 }
 
-#footer {
-	clear: both;
-	border-top: 3px solid black;
-	padding: 5px 0px;
-	margin: 5px 0px;
+#footer p {
+	margin: 0px;
 }
 
 .errorMessage {
 	color: red;
 }
-/* output */
 
 .monospaced {
 	font-family: "Courier New", Courier, monospace;
@@ -124,12 +130,6 @@ input[type=text]:focus, textarea:focus, input[type=number]:focus {
 	background-color: #D5E0ED;
 }
 
-/*
-input[type=button]:active, input[type=button]:focus, input[type=submit]:active, input[type=submit]:focus {
-	outline: 3px solid #439326;
-	outline-offset: -3px;
-}*/
-
 .styledButton {
 	background-color: white;
 	color: black;
@@ -152,7 +152,6 @@ input[type=button]:active, input[type=button]:focus, input[type=submit]:active, 
 	color: #999;
 }
 
-
 .shouldGrow {
 	flex-grow: 1;
 }
@@ -162,6 +161,22 @@ input[type=button]:active, input[type=button]:focus, input[type=submit]:active, 
 }
 
 /* navigation */
+a#skipToMain {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	color: black;
+	font-size: x-small;
+	opacity: 0.05;
+}
+
+a#skipToMain:hover, a#skipToMain:focus {
+	opacity: 0.7;
+}
+a#skipToMain:active {
+	opacity: 1;
+} 
+
 #navigation {
 	display: flex;
 }
@@ -235,23 +250,33 @@ legend {
 }
 
 /* why yes this is messy */
-/* design stuff */
-#specialPositions {
-	display: inline-block;
-}
-
-#specialPositions p, #specialPositions div {
-	display: inline-block;
-}
-
-#backboneDesc {
-	height: 40px;
-}
-
 #googleWrapper {
 	margin: 10px 0px;
 }
 
 #googleForm {
 	margin: 20px;
+}
+
+#navigation a.sideSpacer, #navigation a.sideSpacer:hover, #navigation a.sideSpacer:focus {
+	width: 10vw;
+	padding: 0px;
+	background: transparent;
+	color: transparent;
+	border-bottom-color: black;
+}
+
+#footer div.sideSpacer {
+	width: 10vw;
+}
+
+
+@media(max-width: 600px){
+	#mainContent {
+		width: 90vw;
+	}
+
+	.sideSpacer {
+		width: 5vw !important;
+	}
 }
