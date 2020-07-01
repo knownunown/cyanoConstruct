@@ -14,7 +14,7 @@ import os
 from shutil import rmtree, make_archive
 from uuid import uuid1, uuid4
 
-validCharacters = "_-:;.,[]{}()<>=+?@^~|/#$*&`! "
+validCharacters = ascii_letters + digits + "_-:;.,[]{}()<>=+?@^~|/#$*&`! "
 
 #misc.
 def boolJS(b):
