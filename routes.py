@@ -687,7 +687,7 @@ def newNamedSeq():
 
     #validation
     if(validInput):
-        validInput, outputStr = rf.validatenewNS(newNSType, newNSName, newNSSeq)
+        validInput, outputStr = rf.validateNewNS(newNSType, newNSName, newNSSeq)
     
     #finish validation
     if(validInput):
