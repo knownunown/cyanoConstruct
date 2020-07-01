@@ -371,7 +371,8 @@ function newNS(){
 	var name = document.getElementById("seqName").value;
 	name = name.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
-	var seq = document.getElementById("sequenceSeq").value.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+	var seq = document.getElementById("sequenceSeq");
+	seq = seq.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
 	//create the NamedSequence
 	var newNSData = "{'NStype': '" + document.getElementById("seqType").value +
