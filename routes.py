@@ -725,6 +725,7 @@ def newBackbone2():
         BBseq = backboneData["backboneSeq"]
         BBtype = backboneData["backboneType"]
         BBfeatures = backboneData["backboneFeatures"]
+        BBfeatures = BBfeatures.replace("&quot;", "\\\"").replace("&#039;", "\'")
 
     except Exception as e:
         print(e)
@@ -737,7 +738,7 @@ def newBackbone2():
             outputStr = "ERROR: Backbone {name} already exists in your personal library.".format(name = BBname)
             validInput = False
         except ee.BackboneNotFoundError:
-            pass            
+            pass
 
     #general validation
     if(validInput):

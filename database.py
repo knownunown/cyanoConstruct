@@ -177,7 +177,7 @@ class NamedSequenceDB(db.Model):
                         <div class = "sequence monospaced">{NSseq}</div>
 
                         <br>""".format(libraryName = libraryName,
-                                        NSname = self.getName(),
+                                        NSname = Markup.escape(self.getName()),
                                         longName = longName,
                                         NSseq = self.getSeq(),
                                         ))
@@ -881,7 +881,7 @@ class BackboneDB(db.Model):
                         <div class = "sequence monospaced">{BBseqBefore}<span class = 'insertionSeq'>INSERTION</span>{BBseqAfter}</div>
 
                         <br>""".format(libraryName = libraryName,
-                                        BBname = self.getName(),
+                                        BBname = Markup.escape(self.getName()),
                                         BBtype = self.getTypeLong(),
                                         BBdesc = Markup.escape(self.getDesc()),
                                         BBseqBefore = self.getSeqBefore(),

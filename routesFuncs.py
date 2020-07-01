@@ -15,6 +15,7 @@ from shutil import rmtree, make_archive
 from uuid import uuid1, uuid4
 
 validCharacters = ascii_letters + digits + "_-:;.,[]{}()<>=+?@^~|/#$*&`! "
+specialChars = {"&quot;" : "\"", "&#039;": "\'"}
 
 #misc.
 def boolJS(b):
@@ -27,6 +28,8 @@ def boolJS(b):
 			raise TypeError("b not a boolean")
 		else:
 			raise ValueError("b not true or false")
+
+
 
 #temporary passwords or something
 def makePass():
@@ -90,10 +93,12 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 			pass
 	
 	#characters
-	#validCharacters = ascii_letters + digits + "_-:;.,[]{}()<>=+?@^~|/#$*&`!% "
 	
+    for special in specialChars:
+        newNSName = newNSName.replace(special, specialChars[special])
+
 	invalidCharactersName = []
-	
+	    
 	for character in newNSName:
 		if((character not in validCharacters) and (character not in invalidCharactersName)):
 			validInput = False
@@ -111,6 +116,15 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 	validNucleotides = "AGTCBDHKMNRSVWY"
 	
 	invalidCharactersSeq = []
+    
+    #check special Chars first:
+    for special in specialChars:
+        if special in newNSSeq:
+            validInput = False
+            outputStr += "ERROR: " + specialChars[special] + " is not allowed in a sequence's name.<br>"
+            invalidCharactersSeq.append(specialChars[special])
+
+    
 	for character in newNSSeq:
 		if((character not in validNucleotides) and (character not in invalidCharactersSeq)):
 			validInput = False
@@ -207,15 +221,16 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 		except BackboneNotFoundError:
 			pass
 	
-	#characters
-	#validCharacters = ascii_letters + digits + "_-. "
-	
+	#characters	
 	invalidCharactersName = []
 	
+    for special in specialChars:
+        newName = newName.replace(special, specialChars[special])
+    
 	for character in newName:
 		if((character not in validCharacters) and (character not in invalidCharactersName)):
 			validInput = False
-			outputStr += "ERROR: '" + character + "' is not allowed in a sequence's name.<br>"
+			outputStr += "ERROR: '" + character + "' is not allowed in a backbone's name.<br>"
 			invalidCharactersName.append(character)
 
 						#####	VALIDATE DESCRIPTION 	#####
@@ -223,6 +238,8 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 		validInput = False
 		outputStr += "ERROR: Description must be 1-128 characters long.<br>"
 
+    for special in specialChars:
+        newDesc = newDesc.replace(special, specialChars[special])
 
 						#####	VALIDATE SEQUENCE 	#####
 	#length
@@ -233,6 +250,9 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	#characters
 	validNucleotides = "AGTCBDHKMNRSVWYagtcbdhkmnrsvwy"
 	
+    for special in specialChars:
+        newSeq = newSeq.replace(special, specialChars[special])
+    
 	invalidCharactersSeq = []
 	for character in newSeq:
 		if((character not in validNucleotides) and (character not in invalidCharactersSeq)):

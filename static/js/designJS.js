@@ -368,10 +368,15 @@ function newNS(){
 	//remove whitespace from sequence
 	document.getElementById("sequenceSeq").value = document.getElementById("sequenceSeq").value.replace(/\s/g,"");
 
+	var name = document.getElementById("seqName").value;
+	name = name.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+	var seq = document.getElementById("sequenceSeq").value.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
 	//create the NamedSequence
 	var newNSData = "{'NStype': '" + document.getElementById("seqType").value +
-					"', 'NSname': '" + document.getElementById("seqName").value + 
-					"', 'NSseq': '" + document.getElementById("sequenceSeq").value + "'}";
+					"', 'NSname': '" + name + 
+					"', 'NSseq': '" + seq + "'}";
 
 	//send request
 	$.ajax({
@@ -480,12 +485,22 @@ function newBackbone(){
 
 	var features = document.getElementById("featuresFile").innerText + "\n" + 
 				   document.getElementById("featuresInput").innerText;
+	features = features.replace(/"""/g, "&quot;&quot;&quot;").replace(/'''/g, "&#039;");
 
 	console.log(features);
 
-	var newBackboneData = "{'backboneName': '" + document.getElementById("backboneName").value +
-						  "', 'backboneSeq': '" + document.getElementById("backboneSeq").value + 
-						  "', 'backboneDesc': '" + document.getElementById("backboneDesc").value + 
+	var name = document.getElementById("backboneName").value;
+	name = name.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+	var seq = document.getElementById("backboneSeq").value;
+	seq = seq.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+	var desc = document.getElementById("backboneDesc").value;
+	desc = desc.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+	var newBackboneData = "{'backboneName': '" + name +
+						  "', 'backboneSeq': '" + seq + 
+						  "', 'backboneDesc': '" + desc + 
 						  "', 'backboneType': '" + document.getElementById("backboneType").value +
 						  "', 'backboneFeatures': \"\"\"" + features + "\"\"\"}";
 
