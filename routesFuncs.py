@@ -3,7 +3,7 @@
 #design
 from cyanoConstruct.enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
 from cyanoConstruct import defaultUser, checkType, maxPosition, printActions
-from string import ascii_letters, digits
+from string import ascii_letters, digits, punctuation
 
 #assembly
 from datetime import datetime
@@ -88,7 +88,7 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 			pass
 	
 	#characters
-	validCharacters = ascii_letters + digits + "_-. "
+	validCharacters = ascii_letters + digits + punctuation + " "
 	
 	invalidCharactersName = []
 	
@@ -206,7 +206,7 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 			pass
 	
 	#characters
-	validCharacters = ascii_letters + digits + "_-. "
+	validCharacters = ascii_letters + digits + punctuation + " "
 	
 	invalidCharactersName = []
 	
