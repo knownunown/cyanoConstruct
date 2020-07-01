@@ -93,12 +93,11 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 			pass
 	
 	#characters
-	
-    for special in specialChars:
-        newNSName = newNSName.replace(special, specialChars[special])
+	for special in specialChars:
+		newNSName = newNSName.replace(special, specialChars[special])
 
 	invalidCharactersName = []
-	    
+
 	for character in newNSName:
 		if((character not in validCharacters) and (character not in invalidCharactersName)):
 			validInput = False
@@ -116,15 +115,15 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 	validNucleotides = "AGTCBDHKMNRSVWY"
 	
 	invalidCharactersSeq = []
-    
-    #check special Chars first:
-    for special in specialChars:
-        if special in newNSSeq:
-            validInput = False
-            outputStr += "ERROR: " + specialChars[special] + " is not allowed in a sequence's name.<br>"
-            invalidCharactersSeq.append(specialChars[special])
+	
+	#check special Chars first:
+	for special in specialChars:
+		if special in newNSSeq:
+			validInput = False
+			outputStr += "ERROR: " + specialChars[special] + " is not allowed in a sequence's name.<br>"
+			invalidCharactersSeq.append(specialChars[special])
 
-    
+	
 	for character in newNSSeq:
 		if((character not in validNucleotides) and (character not in invalidCharactersSeq)):
 			validInput = False
@@ -224,9 +223,9 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	#characters	
 	invalidCharactersName = []
 	
-    for special in specialChars:
-        newName = newName.replace(special, specialChars[special])
-    
+	for special in specialChars:
+		newName = newName.replace(special, specialChars[special])
+	
 	for character in newName:
 		if((character not in validCharacters) and (character not in invalidCharactersName)):
 			validInput = False
@@ -238,8 +237,8 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 		validInput = False
 		outputStr += "ERROR: Description must be 1-128 characters long.<br>"
 
-    for special in specialChars:
-        newDesc = newDesc.replace(special, specialChars[special])
+	for special in specialChars:
+		newDesc = newDesc.replace(special, specialChars[special])
 
 						#####	VALIDATE SEQUENCE 	#####
 	#length
@@ -250,9 +249,9 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	#characters
 	validNucleotides = "AGTCBDHKMNRSVWYagtcbdhkmnrsvwy"
 	
-    for special in specialChars:
-        newSeq = newSeq.replace(special, specialChars[special])
-    
+	for special in specialChars:
+		newSeq = newSeq.replace(special, specialChars[special])
+	
 	invalidCharactersSeq = []
 	for character in newSeq:
 		if((character not in validNucleotides) and (character not in invalidCharactersSeq)):
