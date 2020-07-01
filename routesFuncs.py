@@ -3,7 +3,7 @@
 #design
 from cyanoConstruct.enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
 from cyanoConstruct import defaultUser, checkType, maxPosition, printActions
-from string import ascii_letters, digits, punctuation
+from string import ascii_letters, digits
 
 #assembly
 from datetime import datetime
@@ -13,6 +13,8 @@ import re
 import os
 from shutil import rmtree, make_archive
 from uuid import uuid1, uuid4
+
+validCharacters = "_-:;.,[]{}()<>=+?@^~|/#$*&`! "
 
 #misc.
 def boolJS(b):
@@ -88,7 +90,7 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 			pass
 	
 	#characters
-	validCharacters = ascii_letters + digits + punctuation + " "
+	#validCharacters = ascii_letters + digits + "_-:;.,[]{}()<>=+?@^~|/#$*&`!% "
 	
 	invalidCharactersName = []
 	
@@ -206,7 +208,7 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 			pass
 	
 	#characters
-	validCharacters = ascii_letters + digits + punctuation + " "
+	#validCharacters = ascii_letters + digits + "_-. "
 	
 	invalidCharactersName = []
 	

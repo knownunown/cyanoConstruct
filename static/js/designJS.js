@@ -450,17 +450,21 @@ function validateBackbone(){
 	if(!canProceed){
 		var errorStr = "Error";
 		if(errorArray.length > 1){
-			errorStr += "s";
+			errorStr += "s with the ";
+
+			for(i = 0; i < errorArray.length - 2; i++){
+				errorStr += errorArray[i] + ", ";
+		    }
+      
+			errorStr += errorArray[errorArray.length - 2] + " and " + errorArray[errorArray.length - 1];
+      
+		}
+	    else{
+	        errorStr += " with the " + errorArray[0];
 		}
 
-		errorStr += " with the ";
-
-		for(i = 0; i < errorArray.length - 2; i++){
-			errorStr += errorArray[i] + ", ";
-		}
-
-		errorStr += errorArray[errorArray.length - 2] + " and " + errorArray[errorArray.length - 1] + ".";
-
+		errorStr += ".";
+      
 		document.getElementById("backboneOutput").textContent = errorStr;
 	}
 
