@@ -39,7 +39,7 @@
 
 <form id = "componentForm" name = "componentForm" style = "display: none">
 	<div class = "formSection"><fieldset id = "selectNS" method = "POST">
-		<legend>2. Select Sequence</legend>
+		<legend>2. Select Sequence of Component</legend>
 
 		<!--Type of Named Sequence-->
 		<label for = "NStype">Type</label>
@@ -206,7 +206,14 @@
 		<br>
 		<span class = "errorMessage" id = "sequenceSeqError"></span>
 
-		<br>
+		<div id = "sequenceErrorConfirm" style = "display: none;">
+			<label for = "sequenceConfirm">Check to ignore sequence warning.</label>
+			<input type = "checkbox" name = "sequenceConfirm" id = "sequenceConfirm">
+		</div>
+
+		<span class = "errorMessage" id = "sequenceFinalError"></span>
+
+		<br><br>
 
 		<input type = "button" class = "styledButton" name = "submitSequence" id = "submitSequence" value = "Submit" onclick = "newNS()">
 
@@ -222,10 +229,10 @@
 </form>
 
 <form id = "backboneForm" name = "backboneForm" style = "display: none"  enctype="multipart/form-data">
-	<div class = "formSection"><fieldset id = "createBackbone" method = "POST">
+	<div class = "formSection"><fieldset id = "createBackboneInfo" method = "POST">
 		<legend>2. Create New Backbone</legend>
 
-		<h4>Upload a Genbank file to auto-fill part of the form.</h4>
+		<h4>Upload a Genbank file to auto-fill most of the form.</h4>
 		<label for = "backboneFile">Select a .gb file to upload.</label>
 		<br>
 		<input type = "file" name = "backboneFile" id = "backboneFile" accept = ".gb">
@@ -256,23 +263,45 @@
 		<textarea class = "formField" name = "backboneDesc" id = "backboneDesc" maxlength = "128"></textarea>
 		<br>
 		<span class = "errorMessage" id = "backboneDescError"></span>
-
-
-		<h4>Sequence</h4>
-
-		<label for = "backboneSeq">Input Sequence</label>
 		<br>
-		<textarea class = "formField" name = "backboneSeq" id = "backboneSeq"></textarea>
+
+		<input type = "button" class = "styledButton" name = "BBInfoFinish" id = "BBInfoFinish" value = "Next Step" onclick = "finishBBInfo()">
+
+	</fieldset></div>
+	<div class = "formSection"><fieldset id = "createBackboneSeq" method = "POST" disabled>
+		<legend>3. Input Backbone Sequence</legend>
+		
+		<input type = "button" class = "styledButton" name = "BBSeqBack" id = "BBSeqBack" value = "Go Back" onclick = "goBackBBSeq()">
+		<br><br>
+
+		<label for = "backboneSeq">Sequence</label>
+		<br>
+		<textarea class = "formField" name = "backboneSeq" id = "backboneSeq" onchange = "changeBBSeq()"></textarea>
 		<br>
 		<span class = "errorMessage" id = "backboneSeqError"></span>
+
+		<div id = "backboneErrorConfirm" style = "display: none;">
+			<label for = "backboneConfirm">Check to ignore sequence warning.</label>
+			<input type = "checkbox" name = "backboneConfirm" id = "backboneConfirm">
+		</div>
+
+		<span class = "errorMessage" id = "backboneFinalError"></span>
 
 		<p>(Include some kind of explanation of the motifs/patterns desired.)</p>
 		<p>AGGANNGTCTTC and GAAGACNNTACA</p>
 		<p>The region between AGGA and TACA will be replaced by the sequence from assembly</p>
 
-		<h4>Features</h4>
+		<br>
+		<input type = "button" class = "styledButton" name = "BBSeqFinish" id = "BBSeqFinish" value = "Next Step" onclick = "finishBBSeq()">
 
-		<div id = "allFeatures" style = "height: 400px; width: 600px;">
+	</fieldset></div>
+	<div class = "formSection"><fieldset id = "createBackboneFeatures" method = "POST" disabled>
+		<legend>4. Decide Features</legend>
+
+		<input type = "button" class = "styledButton" name = "BBFeaturesBack" id = "BBFeaturesBack" value = "Go Back" onclick = "goBackBBFeatures()">
+		<br><br>
+
+		<div id = "allFeatures">
 			<pre id = "featuresHeader">FEATURES		Location/Qualifiers</pre>
 			<pre id = "featuresFile"></pre>
 			<pre id = "featuresInput"></pre>
@@ -280,6 +309,7 @@
 
 		<p><strong>User-input features (optional)</strong></p>
 		<p>User-input features are simple and limited; it's recommended to generate a .gb file and upload it for more complex features.</p>
+		<p>Features generated this way are displayed in bold.</p>
 
 		<div id = "backboneFeatures">
 		</div>
@@ -295,10 +325,20 @@
 		<input type = "button" class = "styledButton" name = "prev" id = "prev" value = "Generate Features from User Input" onclick = "previewFeatures()">
 
 		<br><br>
+		<input type = "button" class = "styledButton" name = "BBSFeaturesFinish" id = "BBSFeaturesFinish" value = "Next Step" onclick = "finishBBFeatures()">
+
+	</fieldset></div>
+	<div class = "formSection"><fieldset id = "createBackboneFinish" method = "POST" disabled>
+		<legend>5. Finish.</legend>
+		<input type = "button" class = "styledButton" name = "BBFinishBack" id = "BBFinishBack" value = "Go Back" onclick = "goBackBBFinish()">
+
+		<br><br>
 
 		<input type = "button" class = "styledButton" name = "submitBackbone" id = "submitBackbone" value = "Submit Backbone" onclick = "newBackbone()">
 
 		<p id = "backboneOutput"></p>
+
+		<br>
 
 		<input type = "button" class = "styledButton" name = "resetBackboneForm" id = "resetBackboneForm" value = "Create Another" onclick = "resetBackbone();" disabled>
 

@@ -80,7 +80,7 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 	longNames = {"Pr": "promoter", "RBS": "ribosome binding site", "GOI": "gene", "Term": "terminator"}
 	for elemType in ["Pr", "RBS", "GOI", "Term"]:
 		try:
-			defaultUser.findNamedSequence(elemType, newNSName, newNSSeq)
+			defaultUser.findNamedSequenceNoSeq(elemType, newNSName)
 						
 			validInput = False
 			outputStr += "ERROR: " + newNSName + " already exists in the default library as a " + longNames[elemType] + ".<br>"

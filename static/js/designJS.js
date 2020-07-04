@@ -354,19 +354,105 @@ function validateSequence(){
 		document.getElementById("sequenceSeqError").textContent = "Need a sequence.";
 	}
 	else{
-		document.getElementById("sequenceSeqError").textContent = "";
+		//check if the confirmation button is checked
+		if(!(document.getElementById("sequenceConfirm").checked && document.getElementById("sequenceErrorConfirm").style.display == "block")){
+			//if not, check the BbsI sites
+			var recogSites = searchBbsI(document.getElementById("sequenceSeq").value);
+
+			if(recogSites[0] > 0 || recogSites[1] > 0){
+				canProceed = false;
+
+				var errorMsg = "WARNING: Unexpected BbsI recognition sites found in sequence: ";
+				if(recogSites[0] == 0){
+					errorMsg += recogSites[1] + " GTCTTC site";
+					if(recogSites[1] > 1){
+						errorMsg += "s";
+					}
+					errorMsg += "."
+				}
+				else if(recogSites[1] == 0){
+					errorMsg += recogSites[0] + " GAAGAC site";
+					if(recogSites[0] > 1){
+						errorMsg += "s";
+					}
+					errorMsg += "."
+				}
+				else{
+					errorMsg += recogSites[0] + " GAAGAC site";
+					if(recogSites[0] > 1){
+						errorMsg += "s";
+					}
+					errorMsg += " and ";
+					errorMsg += recogSites[1] + " GTCTTC site";
+					if(recogSites[1] > 1){
+						errorMsg += "s";
+					}
+					errorMsg += "."
+				}
+
+				errorMsg += " Change sequence or check below and re-submit to ignore warning.";
+
+				document.getElementById("sequenceSeqError").textContent = errorMsg;
+
+				document.getElementById("sequenceConfirm").checked = false;
+				document.getElementById("sequenceErrorConfirm").style.display = "block";
+
+			}
+			else{
+				document.getElementById("sequenceConfirm").checked = true;
+				document.getElementById("sequenceSeqError").textContent = "";
+				document.getElementById("sequenceErrorConfirm").style.display = "none";
+			}
+
+		}
+	}
+
+	//check if confirmation button is clicked
+	if(!document.getElementById("sequenceConfirm").checked){
+		canProceed = false;
+		document.getElementById("sequenceFinalError").textContent = "Need to resolve sequence warning.";
+	}
+	else{
+		document.getElementById("sequenceFinalError").textContent = "";
 	}
 
 	return canProceed;
 }
 
+function searchBbsI(sequence){
+	var seq = sequence + sequence.substring(sequence.length - 5, sequence.length);
+	seq = seq.toUpperCase();
+
+	var ret = [0, 0];
+
+	//search for GAAGAC
+	i = 0;
+	j = seq.indexOf("GAAGAC", i);
+	while(j > -1){
+		ret[0] ++;
+		i = j + 1;
+		j = seq.indexOf("GAAGAC", i);
+	}
+
+	//search for GTCTTC
+	i = 0;
+	j = seq.indexOf("GTCTTC", i);
+	while(j > -1){
+		ret[1] ++;
+		i = j + 1;
+		j = seq.indexOf("GTCTTC", i);
+	}
+
+	return ret;
+}
+
 function newNS(){
+	//remove whitespace from sequence
+	document.getElementById("sequenceSeq").value = document.getElementById("sequenceSeq").value.replace(/\s/g,"");
+
 	if(!validateSequence()){
 		return false; //not very useful return value
 	}
-
-	//remove whitespace from sequence
-	document.getElementById("sequenceSeq").value = document.getElementById("sequenceSeq").value.replace(/\s/g,"");
 
 	var name = document.getElementById("seqName").value;
 	name = name.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -407,22 +493,17 @@ function resetSeq(){
 }
 
 /* backbone */
-function validateBackbone(){
-	/* UPDATE! */
-	var canProceed = true;
-
-	var errorArray = Array();
+function validateBBInfo(){
+	canProceed = true;
 
 	//name
 	if(document.getElementById("backboneName").value == ""){
 		canProceed = false;
 		document.getElementById("backboneNameError").textContent = "Need a name 1-20 characters long.";
-		errorArray.push("name");
 	}
 	else if(document.getElementById("backboneName").value.length > 20){
 		canProceed = false;
 		document.getElementById("backboneNameError").textContent = "Name must be 20 or fewer characters long.";
-		errorArray.push("name");
 	}
 	else{
 		document.getElementById("backboneNameError").textContent = "";
@@ -432,49 +513,133 @@ function validateBackbone(){
 	if(document.getElementById("backboneDesc").value == ""){
 		canProceed = false;
 		document.getElementById("backboneDescError").textContent = "Need a description 1-128 characters long.";
-		errorArray.push("description");
 	}
 	else if(document.getElementById("backboneDesc").value.length > 128){
 		canProceed = false;
 		document.getElementById("backboneDescError").textContent = "Description must be 128 or fewer characters long.";
-		errorArray.push("description");
 	}
 	else{
 		document.getElementById("backboneDescError").textContent = "";
 	}
 
-	//sequence
+	return canProceed;
+}
+function finishBBInfo(){
+	if(!validateBBInfo()){
+		return false;
+	}
+
+	document.getElementById("createBackboneInfo").disabled = true;
+	document.getElementById("createBackboneSeq").disabled = false;
+
+	scrollToId("createBackboneSeq");
+	return false;
+
+}
+
+function goBackBBSeq(){
+	document.getElementById("createBackboneInfo").disabled = false;
+	document.getElementById("createBackboneSeq").disabled = true;
+
+	scrollToId("createBackboneInfo");
+	return false;
+}
+
+function validateBBSeq(){
+	var canProceed = true;
+
 	if(document.getElementById("backboneSeq").value == ""){
 		canProceed = false;
 		document.getElementById("backboneSeqError").textContent = "Need a sequence.";
-		errorArray.push("sequence");
 	}
 	else{
-		document.getElementById("backboneSeqError").textContent = "";
-	}
+		//check for specific patterns
 
-	if(!canProceed){
-		var errorStr = "Error";
-		if(errorArray.length > 1){
-			errorStr += "s with the ";
+		//check for extra BbsI
+		if(!(document.getElementById("backboneConfirm").checked && document.getElementById("backboneErrorConfirm").style.display == "block")){
+			//if not, check the BbsI sites
+			var recogSites = searchBbsI(document.getElementById("backboneSeq").value);
 
-			for(i = 0; i < errorArray.length - 2; i++){
-				errorStr += errorArray[i] + ", ";
-		    }
-      
-			errorStr += errorArray[errorArray.length - 2] + " and " + errorArray[errorArray.length - 1];
-      
+			if(recogSites[0] > 1 || recogSites[1] > 1){
+				canProceed = false;
+
+				var errorMsg = "WARNING: Unexpected BbsI recognition sites found in sequence: ";
+				if(recogSites[0] <= 1){
+					errorMsg += recogSites[1] + " GTCTTC sites.";
+				}
+				else if(recogSites[1] <= 1){
+					errorMsg += recogSites[0] + " GAAGAC sites.";
+				}
+				else{
+					errorMsg += recogSites[0] + " GAAGAC sites and ";
+					errorMsg += recogSites[1] + " GTCTTC sites.";
+				}
+
+				errorMsg += " (Expected 1 GTCTTC site and 1 GAAGAC site.) Change sequence or check below to ignore warning and be able to proceed.";
+
+				console.log(errorMsg);
+
+				document.getElementById("backboneSeqError").textContent = errorMsg;
+
+				document.getElementById("backboneConfirm").checked = false;
+				document.getElementById("backboneErrorConfirm").style.display = "block";
+
+			}
+			else{
+				document.getElementById("backboneConfirm").checked = true;
+				document.getElementById("backboneSeqError").textContent = "";
+				document.getElementById("backboneErrorConfirm").style.display = "none";
+			}
+
 		}
-	    else{
-	        errorStr += " with the " + errorArray[0];
-		}
-
-		errorStr += ".";
-      
-		document.getElementById("backboneOutput").textContent = errorStr;
 	}
 
 	return canProceed;
+}
+
+function finishBBSeq(){
+	if(!validateBBSeq()){
+		return false;
+	}
+
+	document.getElementById("createBackboneSeq").disabled = true;
+	document.getElementById("createBackboneFeatures").disabled = false;
+
+	scrollToId("createBackboneFeatures");
+	return false;
+
+}
+
+function changeBBSeq(){
+	document.getElementById("backboneConfirm").checked = false;
+}
+
+function goBackBBFeatures(){
+	document.getElementById("createBackboneSeq").disabled = false;
+	document.getElementById("createBackboneFeatures").disabled = true;
+
+	scrollToId("createBackboneSeq");
+	return false;	
+}
+
+function finishBBFeatures(){
+	document.getElementById("createBackboneFeatures").disabled = true;
+	document.getElementById("createBackboneFinish").disabled = false;
+
+	scrollToId("createBackboneFinish");
+	return false;	
+}
+
+function goBackBBFinish(){
+	document.getElementById("createBackboneFinish").disabled = true;
+	document.getElementById("createBackboneFeatures").disabled = false;
+
+	scrollToId("createBackboneFeatures");
+	return false;	
+}
+
+function validateBackbone(){
+	return true; //currently superfluous
 }
 
 function newBackbone(){
@@ -517,8 +682,13 @@ function newBackbone(){
 		//only can proceed if successfully created
 		if(data.succeeded){
 			document.getElementById("resetBackboneForm").disabled = false;
+			document.getElementById("BBFinishBack").disabled = true;
+			document.getElementById("submitBackbone").disabled = true;
 		}
 		else{
+			document.getElementById("resetBackboneForm").disabled = true;
+			document.getElementById("BBFinishBack").disabled = false;
+			document.getElementById("submitBackbone").disabled = false;
 		}
 	});
 	event.preventDefault();
@@ -552,7 +722,6 @@ function backboneFileProcess(){
 				document.getElementById("backboneSeq").value = data.sequence;
 				document.getElementById("backboneDesc").value = data.definition;
 				document.getElementById("backboneName").value = data.name;
-				document.getElementById("resetBackboneForm").disabled = false;
 			}
 			else{
 			}
@@ -566,6 +735,13 @@ function resetBackbone(){
 	document.getElementById("backboneForm").reset();
 
 	document.getElementById("resetBackboneForm").disabled = true;
+
+	document.getElementById("createBackboneFinish").disabled = true;
+	document.getElementById("createBackboneInfo").disabled = false;
+
+	scrollToNS("createBackboneInfo");
+
+	return false;
 }
 
 /* misc */
@@ -734,9 +910,16 @@ function highlight(startID, endID){
 	var end = parseInt(document.getElementById(endID).value);
 
 	if(start <= end){
-		const input = document.getElementById("backboneSeq");
-		input.focus();
-		input.setSelectionRange(start, end);
+		document.getElementById("createBackboneSeq").disabled = false;
+
+		scrollToId("backboneSeq");
+
+		setTimeout(function() {
+			const input = document.getElementById("backboneSeq");
+			input.focus();
+			input.setSelectionRange(start, end);
+		}, 300);
+
   	}
 
   	return false;
@@ -795,6 +978,7 @@ function previewFeatures(){
 			//only can proceed if successfully created
 			if(data.succeeded){
 				document.getElementById("featuresInput").innerText = data.featureStr;
+				scrollToId("featuresInput");
 			}
 			else{
 			}
@@ -805,6 +989,11 @@ function previewFeatures(){
 	else{
 		document.getElementById("backboneFeaturesError").innerText = "Not all features have values.";
 	}
+}
+
+function uncheckConfirms(){
+	document.getElementById("sequenceConfirm").checked = false;
+	document.getElementById("backboneConfirm").checked = false;
 }
 
 function startOver(){
@@ -818,6 +1007,8 @@ function bodyOnload(){
 	//clearEverything(false); //is this necessary?
 	formatNSname();
 	formatNSsequence();
+
+	uncheckConfirms();
 
 	return false;
 }

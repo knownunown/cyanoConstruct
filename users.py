@@ -370,7 +370,7 @@ class UserData:
         
         #check if it already exists
         try:
-            self.findNamedSequence(namedSeq.getType(), namedSeq.getName(), namedSeq.getSeq())
+            self.findNamedSequenceNoSeq(namedSeq.getType(), namedSeq.getName())
             
             #an error will be raised if it exists
             raise e.AlreadyExistsError("Sequence already exists.")

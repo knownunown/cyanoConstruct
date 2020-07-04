@@ -21,10 +21,15 @@ div#allFeatures {
 	outline: 1px solid black;
 	background: #eee;
 	padding: 5px;
+	
 	min-width: 400px;
-	min-height: 50px;
+	width: 600px;
 	max-width: calc(80vw - 25px);
+
+	min-height: 50px;
+	height: 400px;
 	max-height: 1500px;
+
 	overflow: auto;
 
 	resize: both;
@@ -61,4 +66,22 @@ input.highlightButton {
 
 #backboneDesc {
 	height: 40px;
+}
+
+textarea {
+	height: 100px;
+	min-height: 30px;
+	max-height: 1500px;
+	min-width: 200px;
+	width: 600px;
+
+	max-width: calc(80vw - 25px);
+}
+
+textarea#backboneSeq {
+	height: 250px;
+}
+
+#backboneErrorConfirm {
+	margin-left: 15%;
 }
