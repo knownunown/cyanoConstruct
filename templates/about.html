@@ -17,7 +17,9 @@
 
 {% block content %}
 <h1>About</h1>
-<p>Information about how to use CyanoConstruct</p>
+
+<p>CyanoConstruct is a molecular cloning system specifically designed with cyanobacteria in mind (e.g, <i>Synechococcus</i> and <i>Synechocystis</i>) though it should work with any other "scarless" Golden-Gate assembly strategies. The CyanoConstruct website allows users to design molecular part complexes such as functional operons and provides a recipe of sorts for one-pot construct and plasmid assembly along with an associated ligation fidelity. </p>
+<p>The CyanoConstruct system revolves around two major stages; first, individual part design and second, construct design or assembly where parts are orthologous combined into a final construct. In the first stage, part design, the user inputs a part sequence and name or selects from a list of parts in a database. The user then specifies the desired sequence location of the part within a greater construct such as first or second position and is provided with PCR primers which can be used to clone the part in question and amend the sequence with the position specific overhangs and restriction enzyme recognition sites. This amended sequence is then cloned into a plasmid for quick and streamlined bacterial amplification. In the second stage, the designed parts are used to design a greater construct <i>in silico</i>. The designed construct can then be verified by a sequence handling software or platform and once verified the ligation can be carried out and the product sent for sequencing. </p>
 
 <figure>
 <figcaption><span class = "figCaption">Figure 1. Layout of a component pre-digestion.</span> The left side of the component's central sequence is composed of, from 5' to 3': the BbsI recognition site, two random nucleotides, and the left spacer. The right of the sequence is composed of: the right spacer, two random nucleotides, and the inverse recognition site for BbsI.</figcaption>
@@ -30,7 +32,7 @@
 			<div class = "shouldGrow"></div>
 
 			<div class = "component">
-				<div class = "enzymeRecog">GAAGAC</div><div class = "NN">NN</div><div class = "spacer">TAGA</div><div class = "seq">Element A Forward Sequence</div><div class = "spacer">GATA</div><div class = "NN">NN</div><div class = "enzymeRecog">GTCTTC</div>
+				<div class = "enzymeRecog">GAAGAC</div><div class = "NN">NN</div><div class = "spacer">TAGA</div><div class = "seq">Component A Forward Sequence</div><div class = "spacer">GATA</div><div class = "NN">NN</div><div class = "enzymeRecog">GTCTTC</div>
 			</div>
 
 			<div class = "shouldGrow"></div>
@@ -43,7 +45,7 @@
 			<div class = "shouldGrow"></div>
 
 			<div class = "component">
-				<div class = "enzymeRecog">CTTCTG</div><div class = "NN">NN</div><div class = "spacer">ATCT</div><div class = "seq">Element A Reverse Sequence</div><div class = "spacer">CTAT</div><div class = "NN">NN</div><div class = "enzymeRecog">CAGAAG</div>
+				<div class = "enzymeRecog">CTTCTG</div><div class = "NN">NN</div><div class = "spacer">ATCT</div><div class = "seq">Component A Reverse Sequence</div><div class = "spacer">CTAT</div><div class = "NN">NN</div><div class = "enzymeRecog">CAGAAG</div>
 			</div>
 
 			<div class = "shouldGrow"></div>
@@ -66,7 +68,7 @@
 			<div class = "shouldGrow"></div>
 
 			<div class = "component">
-				<div class = "spacer">TAGA</div><div class = "seq">Element A Forward Sequence</div>
+				<div class = "spacer">TAGA</div><div class = "seq">Component A Forward Sequence</div>
 			</div>
 
 			<div class = "component hidden">
@@ -88,7 +90,7 @@
 			</div>
 
 			<div class = "component">
-				<div class = "seq">Element A Reverse Sequence</div><div class = "spacer">CTAT</div>
+				<div class = "seq">Component A Reverse Sequence</div><div class = "spacer">CTAT</div>
 			</div>
 
 			<div class = "shouldGrow"></div>
@@ -111,19 +113,19 @@
 		<div class = "strand">
 			<div class = "backLine" style = "border: 0px; margin: 0px; padding: 0px"></div>
 			<div class = "component">
-				<div class = "spacer">TAGA</div><div class = "seq">Element A Forward Sequence</div>
+				<div class = "spacer">TAGA</div><div class = "seq">Component A Forward Sequence</div>
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "spacer">GATA</div><div class = "seq">Element B Forward Sequence</div>
+				<div class = "spacer">GATA</div><div class = "seq">Component B Forward Sequence</div>
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "spacer">ATTA</div><div class = "seq">Element C Forward Sequence</div>
+				<div class = "spacer">ATTA</div><div class = "seq">Component C Forward Sequence</div>
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "spacer">CTAA</div><div class = "seq">Element D Forward Sequence</div>
+				<div class = "spacer">CTAA</div><div class = "seq">Component D Forward Sequence</div>
 			</div>
 
 		</div>
@@ -136,19 +138,19 @@
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "seq">Element A Reverse Sequence</div><div class = "spacer">CTAT</div>
+				<div class = "seq">Component A Reverse Sequence</div><div class = "spacer">CTAT</div>
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "seq">Element B Reverse Sequence</div><div class = "spacer">TAAT</div>
+				<div class = "seq">Component B Reverse Sequence</div><div class = "spacer">TAAT</div>
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "seq">Element C Reverse Sequence</div><div class = "spacer">GATT</div>
+				<div class = "seq">Component C Reverse Sequence</div><div class = "spacer">GATT</div>
 			</div><!--
 
 		 --><div class = "component">
-				<div class = "seq">Element D Reverse Sequence</div><div class = "spacer">CTAT</div>
+				<div class = "seq">Component D Reverse Sequence</div><div class = "spacer">CTAT</div>
 			</div>
 
 

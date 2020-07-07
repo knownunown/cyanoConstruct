@@ -505,20 +505,8 @@ class ComponentDB(db.Model):
         return retStr
 
     def getHTMLdisplay(self):
-        retStr = "ID: " + str(self.getNameID()) + "<br>"
 
-        retStr += "Position: " + str(self.getPosition()) + "<br>"
-        retStr += "Last?: " + str(self.getTerminal()) + "<br>"
-
-        retStr += "<br><span class = 'emphasized'>Spacers:</span><br>"
-        retStr += "Left: " + self.getLeftSpacer() + "<br>"
-        retStr += "Right: " + self.getRightSpacer() + "<br>"
-        
-        retStr += "<br><span class = 'emphasized'>Primers:</span><br>"
-        retStr += "Left primer:<br>GC content: " + str(round(self.getLeftGC() * 100, 4)) + "%<br>TM: " + str(round(self.getLeftTM(), 4)) + "<br>Sequence:<br>" + self.getLeftPrimer() + "<br><br>"
-        retStr += "Right primer:<br>GC content: " + str(round(self.getRightGC() * 100, 4)) + "%<br>TM: " + str(round(self.getRightTM(), 4)) + "<br>Sequence:<br>" + self.getRightPrimer() + "<br>"
-
-        return Markup(retStr)
+        return Markup(self.getHTMLstr())
     
     def getHTMLstr(self):
         retStr = "ID: " + str(self.getNameID()) + "<br>"
@@ -531,8 +519,8 @@ class ComponentDB(db.Model):
         retStr += "Right: " + self.getRightSpacer() + "<br>"
         
         retStr += "<br><span class = 'emphasized'>Primers:</span><br>"
-        retStr += "Left primer:<br>GC content: " + str(round(self.getLeftGC() * 100, 4)) + "%<br>TM: " + str(round(self.getLeftTM(), 4)) + "<br>Sequence:<br>" + self.getLeftPrimer() + "<br><br>"
-        retStr += "Right primer:<br>GC content: " + str(round(self.getRightGC() * 100, 4)) + "%<br>TM: " + str(round(self.getRightTM(), 4)) + "<br>Sequence:<br>" + self.getRightPrimer() + "<br>"
+        retStr += "Left primer:<br>GC content: " + str(round(self.getLeftGC() * 100, 4)) + "%<br>TM: " + str(round(self.getLeftTM(), 4)) + " °C<br>Sequence:<br><span class = 'monospaced'>" + self.getLeftPrimer() + "</span><br><br>"
+        retStr += "Right primer:<br>GC content: " + str(round(self.getRightGC() * 100, 4)) + "%<br>TM: " + str(round(self.getRightTM(), 4)) + " °C<br>Sequence:<br><span class = 'monospaced'>" + self.getRightPrimer() + "</span><br>"
 
         return retStr
     def getCompZIP(self):

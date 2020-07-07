@@ -24,8 +24,28 @@ h1, h2, h3, h4, #navigation {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
-p, span, label, figcaption, li {
-	font-size: small;
+* {
+	font-size: 14px;
+}
+
+h1 {
+	font-size: 20px;
+}
+
+h2 {
+	font-size: 18px;
+}
+
+h3 {
+	font-size: 16px;
+}
+
+h4 {
+	font-size: 15px;
+}
+
+select {
+	font-size: 12px;
 }
 
 p.bold {
@@ -76,11 +96,10 @@ a:active {
 	color: red;
 }
 
-.monospaced {
+.monospaced, .monospaced * {
 	font-family: "Courier New", Courier, monospace;
 	word-wrap: break-word;
-
-	font-size: medium;
+	font-size: 15px;
 }
 
 .sequence {
@@ -138,6 +157,7 @@ input[type=text]:focus, textarea:focus, input[type=number]:focus {
 	margin: 2px 15px 2px 0px;
 	transition-duration: 0.3s;
 	padding: 5px 10px;
+	font-size: 12px;
 }
 
 .styledButton:hover, .styledButton:focus, .styledButton:active {
@@ -187,6 +207,7 @@ a#skipToMain:active {
   	text-decoration: none;
 	padding: 10px;
 	outline: none;
+	font-size: 16px;
 }
 
 #navigation a:hover, #navigation a:focus {
