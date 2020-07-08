@@ -190,7 +190,9 @@ function validate(){
 	//check values of elements & make allData
 	var allFields = document.getElementsByClassName("formField");
 
-	var allData = "{";
+	var now = new Date();
+
+	var allData = "{'timezoneOffset': '" + now.getTimezoneOffset() + "', ";
 	for (i = 0; i < allFields.length; i++){
 
 		//check if something is selected

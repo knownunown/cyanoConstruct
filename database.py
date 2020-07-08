@@ -9,7 +9,7 @@ cyanoConstruct database file (UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerD
 """
 
 from jinja2 import Markup #for HTML display of Component
-from datetime import datetime #for time in GenBank file
+from datetime import datetime, timedelta #for time in GenBank file
 from time import time
 
 from cyanoConstruct import db
@@ -523,7 +523,7 @@ class ComponentDB(db.Model):
         retStr += "Right primer:<br>GC content: " + str(round(self.getRightGC() * 100, 4)) + "%<br>TM: " + str(round(self.getRightTM(), 4)) + " °C<br>Sequence:<br><span class = 'monospaced'>" + self.getRightPrimer() + "</span><br>"
 
         return retStr
-    def getCompZIP(self):
+    def getCompZIP(self, offset):
         #primers and complete sequence
         retDict = {}
         
@@ -533,11 +533,11 @@ class ComponentDB(db.Model):
         retDict[idStr + "-CompleteSequence.fasta"] = ">" + idStrAndName + " complete sequence\n" + self.getFullSeq()
         retDict[idStr + "-LeftPrimer.fasta"] = ">" + idStrAndName + " left primer\n" + self.getLeftPrimer()
         retDict[idStr + "-RightPrimer.fasta"] = ">" + idStrAndName + " right primer\n" + self.getRightPrimer()
-        retDict[idStr + "-CompleteSequence.gb"] = self.getGenBankFile()
+        retDict[idStr + "-CompleteSequence.gb"] = self.getGenBankFile(offset)
         
         return retDict
     
-    def getGenBankFile(self):
+    def getGenBankFile(self, offset):
         #lengths 
         lenSpacerL = 4  #all of these are fixed
         lenSpacerR = 4
@@ -549,7 +549,7 @@ class ComponentDB(db.Model):
         lenTotal = lenSpacerL + lenSpacerR + lenNNL + lenNNR + lenEnzymeL + lenEnzymeR + lenSeq
     
         #date
-        date = datetime.today().strftime("%d-%b-%Y")
+        date = (datetime.utcnow() - timedelta(minutes = offset)).strftime("%d-%b-%Y")
     
         fileByLines = []
         fileByLines.append("LOCUS\t\t" + self.getNameID() + "\t" + str(lenTotal) + " bp\tDNA\tlinear\t" + date)#the date?

@@ -57,7 +57,10 @@ function bodyOnload(){
 }
 
 function downloadComponentSequence(id){
-	window.location.href = "/componentZIP.zip?id=" + id;
+	var date = new Date();
+	var offset = date.getTimezoneOffset();
+
+	window.location.href = "/componentZIP.zip?id=" + id + "&timezoneOffset=" + offset;
 
 	return false;
 }

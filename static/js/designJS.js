@@ -322,7 +322,10 @@ function downloadZIPFile(){
 	if(submitted && (newID != -1)){
 		document.getElementById("downloadMessage").textContent = "Preparing files...";
 
-		window.location.href = "/newComponent.zip?id=" + newID.toString();
+		var date = new Date();
+		var offset = date.getTimezoneOffset();
+
+		window.location.href = "/newComponent.zip?id=" + newID.toString() + "&timezoneOffset=" + offset;
 		event.preventDefault();
 
 		document.getElementById("downloadMessage").textContent = "Downloaded.";

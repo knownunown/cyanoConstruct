@@ -17,9 +17,6 @@ from cyanoConstruct import defaultUser, nullPrimerData, printActions
 #flask
 from flask import request, render_template, jsonify, Response, redirect
 
-#session stuff
-from datetime import timedelta
-
 #Google Login stuff
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -649,9 +646,12 @@ def finishComponent():
 def newCompZIP():
     try:
         newCompID = request.args.get("id")
+
+        offset = int(request.args.get("timezoneOffset"))
+
         comp = ComponentDB.query.get(newCompID)
         checkPermission(comp)
-        compZIP = comp.getCompZIP()
+        compZIP = comp.getCompZIP(offset)
 
         data = rf.makeZIP(compZIP)
 
@@ -1037,6 +1037,10 @@ def processAssembly():
 
         #get the backbone
         try:
+            offset = int(dataDict["timezoneOffset"])
+
+            session["timezoneOffset"] = offset
+
             bbID = int(dataDict["backbone"])
 
             bb = BackboneDB.query.get(bbID)
@@ -1074,6 +1078,7 @@ def processAssembly():
         #remove from the dict. the info. that doesn't need to be processed
         del dataDict["fidelity"]
         del dataDict["backbone"]
+        del dataDict["timezoneOffset"]
 
         outputStr += "<br>Components:<br>"
         
@@ -1140,10 +1145,12 @@ def assemblyZIP():
     try:
         compsList = session["assemblyCompIDs"]
         bbID = session["assemblyBackbone"]
+        offset = session["timezoneOffset"]
     except KeyError:
         return errorZIP("No assembled sequence.")
 
     try:
+
         #get the backbone information.
         bb = BackboneDB.query.get(bbID)
         checkPermissionBB(bb)
@@ -1187,7 +1194,7 @@ def assemblyZIP():
         #finish it off
         fullSeq += bb.getSeqAfter()
 
-        fileGB = rf.finishCompAssemblyGB(features, fullSeq)
+        fileGB = rf.finishCompAssemblyGB(features, fullSeq, offset, bb.getName())
         fileFASTA = ">CyanoConstruct assembled sequence\n" + fullSeq
 
         data = rf.makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
@@ -1233,10 +1240,11 @@ def displayCompLib():
 def getComponentZIP():
     try:
         comp = ComponentDB.query.get(request.args.get("id"))
+        offset = int(request.args.get("timezoneOffset"))
 
         checkPermission(comp)
         
-        compZIP = comp.getCompZIP()
+        compZIP = comp.getCompZIP(offset)
 
         data = rf.makeZIP(compZIP)
 

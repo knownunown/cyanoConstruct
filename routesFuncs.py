@@ -6,7 +6,7 @@ from cyanoConstruct import defaultUser, checkType, maxPosition, printActions
 from string import ascii_letters, digits
 
 #assembly
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 #zips
@@ -742,13 +742,15 @@ def addCompAssemblyGB(comp, features, i):
 	
 	return i + lenSeq
 
-def finishCompAssemblyGB(features, fullSeq):
+def finishCompAssemblyGB(features, fullSeq, offset, backboneName):
 	"""Make the head and ORIGIN section of the GenBank file, then join all parts together into a single string."""
-	#fileHead	
-	date = datetime.today().strftime("%d-%b-%Y").upper()
+	#fileHead
+	dateObject = datetime.utcnow() - timedelta(minutes = offset)
+	print(dateObject.strftime("%d-%b-%Y %H:%M"))
+	date = dateObject.strftime("%d-%b-%Y").upper()
 	
 	completeFile = ["LOCUS\t\tAssembled_sequence\t" + str(len(fullSeq)) + " bp\tDNA\tcircular\tSYN\t" + date,
-				"DEFINITION\tSequence assembled from CyanoConstruct",
+				"DEFINITION\tSequence assembled from CyanoConstruct using backbone " + backboneName + ".",
 				"FEATURES\t\tLocation/Qualifiers"]
 	
 	#process sequence for ORIGIN section

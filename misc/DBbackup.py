@@ -11,7 +11,7 @@ FILE_PREFIX = "cyanoConstructDB"
 FILE_SUFFIX_DATE_FORMAT = "%Y-%m-%d-%H:%MUTC"
 USERNAME = "cyanogate"
 DBNAME = USERNAME + "$cyanoconstruct"
-DAYS_TO_KEEP = 2 #results in 3 files stored at any given time
+DAYS_TO_KEEP = 3 #results in 3 files stored at any given time
 
 #make today's backup
 timestamp = datetime.now().strftime(FILE_SUFFIX_DATE_FORMAT)
@@ -31,6 +31,6 @@ os.remove(backup_filename)
 for filename in os.listdir(DIR):
 	completePath = os.path.join(DIR, filename)
 	secLastMod = time() - os.stat(completePath).st_mtime
-	if(secLastMod > DAYS_TO_KEEP * 86400):
+	if(secLastMod > DAYS_TO_KEEP * (86400 - 600)):
 		print("REMOVING: " + completePath)
 		os.remove(completePath)
