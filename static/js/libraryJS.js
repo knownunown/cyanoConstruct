@@ -170,7 +170,9 @@ function downloadLibrary(libName){
 		})
 	.done(function(data){
 		if(data.succeeded){
-			window.location.href = "/library.zip";
+			var date = new Date();
+			var offset = date.getTimezoneOffset();
+			window.location.href = "/library.zip?timezoneOffset=" + offset;
 		}
 		else{
 			alert("ERROR: " + data.errorMessage);

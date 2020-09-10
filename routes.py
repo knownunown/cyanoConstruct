@@ -702,7 +702,7 @@ def findPrimers():
             #get selected spacers, to use for the primers
             selectedSpacers = getSelectedSD()
             #check if spacers have been selected yet
-            if(selectedSpacers == None):
+            if(selectedSpacers is None):
                 validInput = False
                 outputStr += "ERROR: No spacers selected.<br>"
             
@@ -712,7 +712,7 @@ def findPrimers():
             #get selected named sequence, to use for the primers
             selectedNS = getSelectedNS()
             #check if sequence has been selected yet
-            if(selectedNS == None):
+            if(selectedNS is None):
                 validInput = False
                 outputStr += "ERROR: No sequence selected.<br>"
             
@@ -813,6 +813,8 @@ def finishComponent():
             #get the ID of the new component, for the ZIP download link/button
             newID = newComponent.getID()
 
+            print("get ID")
+
             succeeded = True
             
         except Exception as e:
@@ -843,7 +845,7 @@ def newCompZIP():
         printIf("FAILED TO CREATE ZIP BECAUSE: {}".format(e))
         return errorZIP(e)
     
-    if(data == None):
+    if(data is None):
         return errorZIP("No/invalid component to create a ZIP from.")
 
     return Response(data,
@@ -951,6 +953,8 @@ def newBackbone2():
     if(validInput):
         try:
             getCurrUser().createBackbone(BBname, BBtype, BBdesc, seqBefore, seqAfter, features)
+
+            print("created")
 
             #outputStr
             libraryName = "Personal"
@@ -1471,7 +1475,7 @@ def assemblyZIP():
     except Exception as e:
         return errorZIP(e)
     
-    if(data == None):
+    if(data is None):
         return errorZIP("No assembled sequence.")
 
     return Response(data, headers = {"Content-Type": "application/zip",
@@ -1527,7 +1531,7 @@ def getComponentZIP():
     except Exception as e:
         return errorZIP(e)
     
-    if(data == None):
+    if(data is None):
         return errorZIP("No/invalid sequence to create a ZIP from.")
     
     else:
@@ -1664,18 +1668,19 @@ def libraryZIP():
     try:
         #get info. (set by downloadLibrary())
         libraryName = session["libraryName"]
+        offset = int(request.args.get("timezoneOffset"))
 
         if(libraryName == "Default"):
             try:
                 #make the .zip from the default library
-                data = rf.makeAllLibraryZIP(defaultUser)
+                data = rf.makeAllLibraryZIP(defaultUser, offset)
                 succeeded = True
             except Exception as e:
                 errorMessage = str(e)
         elif(libraryName == "Personal"):
             try:
                 #make the .zip from the current user
-                data = rf.makeAllLibraryZIP(getCurrUser())
+                data = rf.makeAllLibraryZIP(getCurrUser(), offset)
                 succeeded = True
             except Exception as e:
                 errorMessage = str(e)

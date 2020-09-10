@@ -139,13 +139,13 @@ class NamedSequenceDB(db.Model):
 		return "<NamedSequence {id}: {type}-{nameID} {name}>".format(
 					id = self.getID(),
 					type = self.getType(),
-					nameID = self.getNameID().zfill(3),
+					nameID = str(self.getNameID()).zfill(3),
 					name = self.getName())
 			
 	def __str__(self):
 		return "<NamedSequence {type}-{nameID}: {name}, {comps} components.".format(
 					type = self.getType(),
-					nameID = self.getNameID().zfill(3),
+					nameID = str(self.getNameID()).zfill(3),
 					name = self.getName(),
 					comps = len(self.getAllComponents()))
 
@@ -591,7 +591,7 @@ class ComponentDB(db.Model):
 					<br><span class = "emphasized">Spacers:</span><br>
 					Left: {leftSpacer}<br>
 					Right: <rightSpacer><br>
-					<br><span class = "emphasized">Primers:</span><br>"
+					<br><span class = "emphasized">Primers:</span><br>
 					Left Primer:<br>
 					GC content: {leftGC}%<br>
 					TM: {leftTM}°C<br>
@@ -609,8 +609,10 @@ class ComponentDB(db.Model):
 								terminal = self.getTerminal(),
 								leftSpacer = self.getLeftSpacer(),
 								rightSpacer = self.getRightSpacer(),
+								leftPrimer = self.getLeftPrimer(),
+								rightPrimer = self.getRightPrimer(),
 								leftGC = round(self.getLeftGC() * 100, 4),
-								lefTM = round(self.getLeftTM(), 4),
+								leftTM = round(self.getLeftTM(), 4),
 								rightGC = round(self.getRightGC() * 100, 4),
 								rightTM = round(self.getRightTM(), 4))
 
@@ -795,8 +797,8 @@ class ComponentDB(db.Model):
 		nameID = self.getNamedSequence().getNameID()
 		return "{type}-{nameID}-{pos}{terminal}".format(
 					type = self.getType(),
-					nameID = nameID.zfill(3),
-					pos = self.getPosition().zfill(3),
+					nameID = str(nameID).zfill(3),
+					pos = str(self.getPosition()).zfill(3),
 					terminal = self.getTerminalLetter())
 
 	#ids

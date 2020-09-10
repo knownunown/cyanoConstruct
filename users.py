@@ -699,12 +699,12 @@ class UserData:
 		
 		return self.makeWithNamedSequence(ns, position, isTerminal, TMgoal, TMrange)
 
-	def createBackbone(self, name, type, desc, seqBefore, seqAfter, features):
+	def createBackbone(self, name, BBtype, desc, seqBefore, seqAfter, features):
 		"""Create a BackboneDB and add it to the database.
 		
 		PARAMETERS:
 			name: string name of the backbone
-			type: string type of the backbone; is either "i" for integrative or
+			BBtype: string type of the backbone; is either "i" for integrative or
 				"r" for replicative
 			desc: string description of the backbone
 			seqBefore: string sequence of the backbone before the insertion region
@@ -721,9 +721,9 @@ class UserData:
 		#type checking
 		if(type(name) != str):
 			raise TypeError("backbone name not a string")
-		if(type(type) != str):
+		if(type(BBtype) != str):
 			raise TypeError("backbone type not a string")
-		elif(type not in ["i", "r"]):
+		elif(BBtype not in ["i", "r"]):
 			raise ValueError("backbone type not valid")
 		if(type(desc) != str):
 			raise TypeError("backbone desc not a string")
@@ -734,6 +734,8 @@ class UserData:
 		if(type(features) != str):
 			raise TypeError("backbone features not a string")
 		
+		print("done with the type checking")
+
 		#see if it exists already
 		try:
 			self.findBackbone(name)
@@ -742,7 +744,7 @@ class UserData:
 			pass
 
 		#create in database
-		bb = BackboneDB(name = name, type = type, desc = desc, seqBefore = seqBefore,
+		bb = BackboneDB(name = name, type = BBtype, desc = desc, seqBefore = seqBefore,
 						seqAfter = seqAfter, features = features, user_id = self.getID())
 
 		db.session.add(bb)

@@ -482,8 +482,11 @@ class PrimerData:
 					elif seq[i] == "C":
 						numCL +=1
 						
-					TML = 64.9 + 41*(numGL + numCL - 16.4)/(numAL + numTL + numGL + numCL)
-					
+					try:
+						TML = 64.9 + 41*(numGL + numCL - 16.4)/(numAL + numTL + numGL + numCL)
+					except ZeroDivisionError:
+						pass
+
 					i += 1
 						
 				#find the right primer
@@ -504,8 +507,11 @@ class PrimerData:
 					elif seq[j] == "C":
 						numCR +=1
 	
-					TMR = 64.9 + 41*(numGR + numCR - 16.4)/(numAR + numTR + numGR + numCR)
-	
+					try:
+						TMR = 64.9 + 41*(numGR + numCR - 16.4)/(numAR + numTR + numGR + numCR)
+					except ZeroDivisionError:
+						pass
+
 					j -= 1
 			
 				#compare the two; if the primers overlap, they aren't valid

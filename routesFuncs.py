@@ -707,20 +707,20 @@ def processGBfeatures(seq, features, outputStr):
 				insR = 8 - (length - siteR)
 			else:
 				insR = siteR + 8
-
+	
 			printIf((insL, insR))
-
+	
 			if(insR >= insL):
 				insertionAdjustment = (insR - insL) + 1
 				rightmost = insR
 			else: #if the insertion region wraps back around
 				insertionAdjustment = insR
 				rightmost = length + 1
-
+	
 			printIf("insertionAdjustment {} rightmost {}".format(insertionAdjustment, rightmost))
 			
 			deleteNextLine = False
-
+	
 			#go through every line of the features
 			for i in range(len(features)):
 				#remove whitespace on the left of the line
@@ -736,9 +736,9 @@ def processGBfeatures(seq, features, outputStr):
 					#split the line into row, which splits the type (?) and location
 					#so "gene 5..10" turns into ["gene", "5..10"]
 					row = features[i].split(maxsplit = 1)
-
+	
 					printIf(features[i])
-
+	
 					#if there is a range/location for the feature
 					if(len(row) > 1):
 						#should have numbers in the string of the format NUMBER..NUMBER							
@@ -748,9 +748,9 @@ def processGBfeatures(seq, features, outputStr):
 							isJoin = True
 						else:
 							isJoin = False
-
+	
 						pairsRemove = 0
-
+	
 						print(rowElements)
 						#every other element in the list should be a number pair
 						#the other elements will be "join(" etc.
@@ -805,7 +805,7 @@ def processGBfeatures(seq, features, outputStr):
 										newEnd = length + newEnd
 									
 								insR2 = insR
-
+	
 							#otherwise the insertion region DOES loop around
 							else:
 								#if newStart is within the insertion region
@@ -814,7 +814,7 @@ def processGBfeatures(seq, features, outputStr):
 									if(newEnd <= insR):
 										#need to remove the entire feature
 										removeFeature = True
-
+	
 										printIf("need to remove the entire thing")
 										
 									else:
@@ -830,7 +830,7 @@ def processGBfeatures(seq, features, outputStr):
 									if(newStart >= insL):
 										#rneed to remove the entire feature
 										removeFeature = True
-
+	
 										printIf("need to remove the entire thing")
 									else:
 										#shove newEnd to the beginning of the
@@ -839,18 +839,18 @@ def processGBfeatures(seq, features, outputStr):
 										
 										if(newEnd < 1):
 											newEnd = length + newEnd
-
+	
 								printIf("newStart {} newEnd {} insR {}".format(newStart, newEnd, insR))
-
+	
 								printIf("newStart -= insR; newEnd -= insR")
-
+	
 								#finally, subtract insR from newStart and newEnd
 								#to account for the removal of the insertion region
 								newStart -= insR
 								newEnd -= insR
 								
 								insR2 = length - insR
-
+	
 							#normally, rightmost = insR
 							#looping, rightmost = length + 1
 							
@@ -900,11 +900,11 @@ def processGBfeatures(seq, features, outputStr):
 						#i.e. have gone through all number pairs
 						
 						#proceed to deal with the line as a whole
-
+	
 						printIf(("isJoin = {} \tpairsRemove = {} \t"
 								"int(len(rowElements) / 2) - 1) = {}").format(
 								isJoin, pairsRemove, int(len(rowElements) / 2) - 1))
-
+	
 						#if the entire feature needs to be removed
 						if(pairsRemove == int(len(rowElements) / 2)):
 							deleteNextLine = True
@@ -912,7 +912,7 @@ def processGBfeatures(seq, features, outputStr):
 						#otherwise, the feature stays
 						else:
 							deleteNextLine = False
-
+	
 							#replace the row with the properly formatted one
 							#if row[0] is 3 characters or shorter
 							if(len(row[0]) <= 3):
@@ -924,7 +924,7 @@ def processGBfeatures(seq, features, outputStr):
 								#only one tab is needed
 								features[i] = "\t{row1}\t{row2}".format(row1 = row[0],
 												 row2 = "".join(rowElements))
-
+	
 						#remove empty numbers in a join
 						if(isJoin):
 							while(features[i].find(",,") != -1):
@@ -933,12 +933,12 @@ def processGBfeatures(seq, features, outputStr):
 							features[i] = features[i].replace(",)", ")")
 							features[i] = features[i].replace("( ", "(")
 							features[i] = features[i].replace(" )", ")")
-
+	
 							#remove the join() if there's only one set of numbers remaining
 							if(pairsRemove == int(len(rowElements) / 2) - 1):
 								features[i] = features[i].replace("join(", "")
 								features[i] = features[i].replace(")", "")
-
+	
 						printIf(features[i])
 						printIf("===")
 						
@@ -947,14 +947,14 @@ def processGBfeatures(seq, features, outputStr):
 				else:
 					#add three tabs to the beginning
 					features[i] = "\t\t\t" + features[i]
-
+	
 				#clear the line if deleteNextLine is true
 				#i.e. the feature needs to be deleted
 				if(deleteNextLine):
 					features[i] = ""
-
+	
 			featureSection = "".join(features)
-
+	
 			#remove the insertion region by setting sequenceBefore and sequenceAfter
 			if(insL <= insR):
 				sequenceBefore = seq[0:insL - 1]
@@ -1158,18 +1158,19 @@ def makeZIP(filesDict):
 
 	return data
 
-def makeAllLibraryZIP(user):
+def makeAllLibraryZIP(user, offset):
 	"""Create a .zip file of all components of a user.
 	
 	PARAMETER:
 		user: a UserData whose library will be turned into a .zip
-	
+		offset: integer number of minutes the user's timezone is off from UTC
+
 	RETURNS:
 		data: byte data of the completed .zip file
 	"""
 	#type checking
-	if(type(user) != UserData):
-		raise TypeError("user not a UserData")
+	#if(type(user) != UserData):
+	#	raise TypeError("user not a UserData")
 
 	#directories and paths
 	filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
@@ -1222,7 +1223,7 @@ def makeAllLibraryZIP(user):
 				os.mkdir(compDir)
 				
 				#get info. for the component (dict of file names and contents)
-				compZIP = comp.getCompZIP()
+				compZIP = comp.getCompZIP(offset)
 
 				#write the files for the component
 				for fileName in compZIP:
