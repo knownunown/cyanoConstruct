@@ -1,4 +1,5 @@
 function switchToggleText(headDiv){
+	//Change the text displayed due to toggling display
 	var span = headDiv.nextElementSibling;
 
 	if(span.textContent == "[Click to show]"){
@@ -10,6 +11,7 @@ function switchToggleText(headDiv){
 }
 
 function toggleDisplay(id){
+	//Toggle whether the div with the id is displayed
 	var div = document.getElementById(id);
 
 	if(div.style.display == "none"){
@@ -105,7 +107,6 @@ function removeComponent(id){
 			}
 
 		});
-		//event.preventDefault();
 
 
 		return true;
@@ -132,7 +133,6 @@ function removeSequence(id){
 			}
 
 		});
-		//event.preventDefault();
 
 
 		return true;
@@ -157,7 +157,6 @@ function removeBackbone(id){
 			}
 
 		});
-		//event.preventDefault();
 
 		return true;
 	}

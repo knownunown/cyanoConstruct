@@ -21,6 +21,7 @@
 <p>CyanoConstruct is a molecular cloning system specifically designed with cyanobacteria in mind (e.g, <i>Synechococcus</i> and <i>Synechocystis</i>) though it should work with any other "scarless" Golden-Gate assembly strategies. The CyanoConstruct website allows users to design molecular part complexes such as functional operons and provides a recipe of sorts for one-pot construct and plasmid assembly along with an associated ligation fidelity. </p>
 <p>The CyanoConstruct system revolves around two major stages; first, individual part design and second, construct design or assembly where parts are orthologous combined into a final construct. In the first stage, part design, the user inputs a part sequence and name or selects from a list of parts in a database. The user then specifies the desired sequence location of the part within a greater construct such as first or second position and is provided with PCR primers which can be used to clone the part in question and amend the sequence with the position specific overhangs and restriction enzyme recognition sites. This amended sequence is then cloned into a plasmid for quick and streamlined bacterial amplification. In the second stage, the designed parts are used to design a greater construct <i>in silico</i>. The designed construct can then be verified by a sequence handling software or platform and once verified the ligation can be carried out and the product sent for sequencing. </p>
 
+<!-- figure 1 -->
 <figure>
 <figcaption><span class = "figCaption">Figure 1. Layout of a component pre-digestion.</span> The left side of the component's central sequence is composed of, from 5' to 3': the BbsI recognition site, two random nucleotides, and the left spacer. The right of the sequence is composed of: the right spacer, two random nucleotides, and the inverse recognition site for BbsI.</figcaption>
 
@@ -57,7 +58,9 @@
 	</div>
 </div>
 </figure>
+<!-- end figure 1 -->
 
+<!-- figure 2 -->
 <figure>
 	<figcaption><span class = "figCaption">Figure 2. Layout of a component post-digestion.</span> BbsI digestion removes the random nucleotides and enzyme recognition sites from both sides. Two sticky ends are left. The left overhang is the left spacer, on the foward strand, while the right overhang is the complementary sequence to the right spacer, on the reverse strand.</figcaption>
 <div class = "longOuter">
@@ -101,10 +104,11 @@
 
 	</div>
 </div>
-
 </figure>
+<!-- end figure 2 -->
 
 
+<!-- figure 3 -->
 <figure>
 <figcaption><span class = "figCaption">Figure 3. Layout of assembled sequence.</span> The spacer overhangs ensure the components join in the correct order.</figcaption>
 
@@ -161,7 +165,9 @@
 	</div>
 </div>
 </figure>
+<!-- end figure 3 -->
 
+<!-- figure legend -->
 <figure>
 	<figcaption><span class = "figCaption">Legend</span></figcaption>
 <div id = "diagramLegend">
@@ -171,4 +177,5 @@
 	<div class = "seq">Component sequence</div>
 </div>
 </figure>
+<!-- end legend -->
 {% endblock %}

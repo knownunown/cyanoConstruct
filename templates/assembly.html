@@ -30,11 +30,13 @@ var backboneDescs = {{ backboneDescs|tojson }};
 
 
 {% block content %}
+<!-- left column: form for the fidelity and backbone and output of it-->
 <div id = "leftCol">
 	<form id = "form">
 		<div>
 			<h3>Sequence</h3>
 
+			<!-- fidelity -->
 			<div id = "fidelityInput">
 				<label for = "fidelity">Spacer Fidelity</label>
 				<div class = "shouldGrow"></div>
@@ -45,6 +47,7 @@ var backboneDescs = {{ backboneDescs|tojson }};
 				</select>
 			</div>
 
+			<!-- backbone -->
 			<p class = "noMargin">Backbone</p>
 
 			<div id="backboneInput">	
@@ -68,8 +71,8 @@ var backboneDescs = {{ backboneDescs|tojson }};
 				</div>
 			</div>
 
-
 		</div>
+		<!-- section for output of the assembly -->
 		<div id = "showOutput" class = "monospaced shouldGrow">
 			<p id = "outputParagraph" class = "monospaced">
 				Assemble a sequence from components. Sequences that are in the default library or your personal library, but not available for the current position are grayed out.
@@ -77,6 +80,7 @@ var backboneDescs = {{ backboneDescs|tojson }};
 				Available components by position:
 			</p>
 			
+			<!-- list components available to the user by the component's position -->
 			<ul>
 			{% for key in posTermComb %}
 
@@ -91,37 +95,48 @@ var backboneDescs = {{ backboneDescs|tojson }};
 			{% endfor %}
 			</ul>
 		</div>
+
 		<hr style = "width: 100%">
+
+		<!-- download button -->
 		<div>
 			<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
 			<span id = "downloadMessage"></span>
 		</div>
 	</form>
 </div>
+<!-- end left column -->
 
 <div id = "spacerCol" style = "width: 20px"></div>
 
+<!-- right column: assemble components in order -->
 <div id = "rightCol">
 	<h3>Components</h3>
 
+	<!-- element 0 -->
 	<div id = "elem0"></div>
 
+	<!-- middle elements -->
 	<div id = "elements">
 	</div>
 
+	<!-- element T -->
 	<div id = "elemT"></div>
 
+	<!-- visual spacer -->
 	<div class = "shouldGrow"></div>
 
+	<!-- error messages & buttons -->
 	<div>
 		<span class = "errorMessage" id = "elementError"></span>
 		<br>
+
 		<input name = "newElement" type = "button" class = "styledButton" onclick = "addElem()" value = "New Component">
 		<input name = "rmElement" type = "button" class = "styledButton" onclick = "rmLastElem()" value = "Remove Last Component">
 		<hr>
 
 		<input type = "button" id = "threeSubmit" value = "Submit" class = "styledButton" onclick = "validate()">
 	</div>
-
 </div>
+<!-- end right column -->
 {% endblock %}

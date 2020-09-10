@@ -30,10 +30,11 @@ migrate = Migrate(app, db)
 
 
 #import modules
+from cyanoConstruct.misc import printIf, checkType
 import cyanoConstruct.enumsExceptions
 from cyanoConstruct.database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 db.create_all()
-from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, checkType, inverseSeq
+from cyanoConstruct.component import NamedSequence, SpacerData, PrimerData, inverseSeq
 nullPrimerData = PrimerData.makeNull()
 maxPosition = SpacerData.getMaxPosition()
 from cyanoConstruct.users import UserData

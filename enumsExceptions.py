@@ -1,45 +1,43 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May  3 20:44:56 2020
+Contains custom errors. If enums were in use, they would be here too.
 
 @author: Lia Thomson
-
-cyanoConstruct enumsExceptions file
 """
 
-#from enum import Enum
-
+#Parent class for errors
 class Error(Exception):
-    def __init__(self, message):
-        if(type(message) != str):
-            raise TypeError("message not a string")
-            
-        self.__message = message
-    
-    def __str__(self):
-        return self.__message
+	def __init__(self, message):
+		if(type(message) != str):
+			raise TypeError("message not a string")
+			
+		self.__message = message
+	
+	def __str__(self):
+		return self.__message
 
+#Various errors with self-descriptive names
 class AlreadyExistsError(Error):
-    pass
-    
+	pass
+	
 class SequenceMismatchError(Error):
-    pass
-    
+	pass
+	
 class SequenceNotFoundError(Error):
-    pass
+	pass
 
 class ComponentNotFoundError(Error):
-    pass
+	pass
 
 class BackboneNotFoundError(Error):
-    pass
+	pass
 
 class UserNotFoundError(Error):
-    pass
+	pass
 
 class NotLoggedInError(Error):
-    pass
+	pass
 
 class AccessError(Error):
-    pass
+	pass

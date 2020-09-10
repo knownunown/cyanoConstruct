@@ -1,8 +1,15 @@
-#misc other stuff
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Functions that are used by the routes file.
+
+@author: Lia Thomson
+"""
 
 #design
 from cyanoConstruct.enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
-from cyanoConstruct import defaultUser, checkType, maxPosition, printActions
+from cyanoConstruct import UserData
+from cyanoConstruct import defaultUser, checkType, maxPosition, printIf
 from string import ascii_letters, digits
 
 #assembly
@@ -13,12 +20,23 @@ import re
 import os
 from shutil import rmtree, make_archive
 from uuid import uuid1, uuid4
+import random
 
 validCharacters = ascii_letters + digits + "_-:;.,[]{}()<>=+?@^~|/#$*&`! "
 specialChars = {"&quot;" : "\"", "&#039;": "\'"}
 
-#misc.
+#################################### MISC #####################################
 def boolJS(b):
+	"""Translates "true" and "false" strings into boolean counterparts.
+	Used for translating JavaScript data from the site to Python data.
+	
+	PARAMETER:
+		b: string that is "true" or "false"
+	
+	RETURNS:
+		Boolean counterpart of b
+	"""
+	
 	if(b == "true"):
 		return True
 	elif(b == "false"):
@@ -29,12 +47,19 @@ def boolJS(b):
 		else:
 			raise ValueError("b not true or false")
 
-
+def extractSequence(originSeq):
+	"""Remove all numbers and whitespace from a string."""
+	seq = re.sub("\s|\d", "", originSeq)
+	return seq
 
 #temporary passwords or something
 def makePass():
-	"""Return 32-character long string of random letters and numbers."""
-	temp = uuid.uuid4().hex + uuid.uuid4().hex
+	"""Return 32-character long string of random letters and numbers.
+	
+	NOTE:
+		For possible future generation of temporary, random passwords.
+		Not currently in use."""
+	temp = uuid4().hex + uuid4().hex
 
 	characters = "{letters}{digits}{d1}{d2}".format(
 				letters = ascii_letters,
@@ -52,9 +77,19 @@ def makePass():
 		
 	return "".join(password)
 
-#Design
+################################# DESIGN PAGE #################################
 def validateNewNS(newNSType, newNSName, newNSSeq):
-	"""Validates the input from creating a new NamedSequence on the design page."""
+	"""Validates the input from creating a new NamedSequence on the design page.
+	
+	PARAMETERS:
+		newNSType: string type for the named sequence ("Pr", "RBS", "GOI", or "Term")
+		newNSName: string name for the named sequence
+		newNSSeq: string sequence for the named sequence
+	
+	RETURNS:
+		validInput: boolean. True if all input is valid, False otherwise.
+		outputStr: HTML string to output to the website so errors are displayed.
+	"""
 	validInput = True
 	outputStr = ""
 
@@ -83,11 +118,17 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 			defaultUser.findNamedSequenceNoSeq(elemType, newNSName)
 						
 			validInput = False
-			outputStr += "ERROR: " + newNSName + " already exists in the default library as a " + longNames[elemType] + ".<br>"
+			outputStr += ("ERROR: {newNSName} already exists in the default "
+										 "library as a {longName}.<br>").format(
+												newNSName = newNSName,
+												longName = longNames[elemType])
 			break
 		except SequenceMismatchError:
 			validInput = False
-			outputStr += "ERROR: " + newNSName + " already exists in the default library as a " + longNames[elemType] + ", and with a different sequence.<br>"
+			outputStr += ("ERROR: {newNSName} already exists in the default "
+						 "library as a {longName}, and with a different sequence.<br>").format(
+									newNSName = newNSName,
+									longName = longNames[elemType])
 			break
 		except SequenceNotFoundError:
 			pass
@@ -120,7 +161,8 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 	for special in specialChars:
 		if special in newNSSeq:
 			validInput = False
-			outputStr += "ERROR: " + specialChars[special] + " is not allowed in a sequence's name.<br>"
+			outputStr += "ERROR: {char} is not allowed in a sequence's name.<br>".format(
+													char = specialChars[special])
 			invalidCharactersSeq.append(specialChars[special])
 
 	
@@ -133,23 +175,41 @@ def validateNewNS(newNSType, newNSName, newNSSeq):
 	return (validInput, outputStr)
 
 def validateSpacers(newPosStr, newTerminalStr):
+	"""Validates the input to create a new SpacerData on the design page.
+	
+	PARAMETERS:
+		newPosStr: string of an integer for the position of the component
+		newTerminalStr: string of a boolean for if the component is terminal
+		
+	RETURNS:
+		validInput: boolean. True if all input is valid, False otherwise.
+		outputStr: HTML string to output to the website so errors are displayed.
+		newPos: newPos as an integer
+		isTerminal: isTerminal as a boolean
+	"""
 	validInput = True
 	outputStr = ""
 
-	#position
+						####   VALIDATE POSITION   ####
+	#turn into integer
 	try:
 		newPos = int(newPosStr)
 	except Exception:
 		validInput = False
 		outputStr += "ERROR: position not an integer.<br>"
 		
+	#ensure its within range
 	if(validInput):
+		#if it is not within range
 		if((newPos < 0) or (newPos > maxPosition)):
+			#if newPos is not 999 (if it is 999, it is at position T)
 			if(newPos != 999):
 				validInput = False
-				outputStr += "ERROR: Position must be in range 1-" + str(maxPosition) + ".<br>"
+				outputStr += "ERROR: Position must be in range 1-{maxPosition}.<br>".format(
+																maxPosition = maxPosition)
 
-	#isTerminal
+						####   VALIDATE ISTERMINAL   ####
+	#turn into boolean
 	try:
 		isTerminal = boolJS(newTerminalStr)
 	except Exception:
@@ -159,33 +219,51 @@ def validateSpacers(newPosStr, newTerminalStr):
 	#if the position is the maximum allowed position, it must be terminal
 	if(validInput and (newPos == maxPosition) and (not isTerminal)):
 		validInput = False
-		outputStr += "ERROR: " + str(newPos) + " is the last allowed position, so it must be terminal.<br>"
+		outputStr += "ERROR: {newPos} is the last allowed position, so it must be terminal.<br>".format(
+																newPos = newPos)
 
 	return (validInput, outputStr, newPos, isTerminal)
 
 def validatePrimers(TMstr, rangeStr):
+	"""Validates the input to create a new PrimerData on the design page.
+	Specifically, when determining primers for a new component.
+	
+	PARAMETERS:
+		TMstr: string of a number that is the ideal TM, in Celsius
+		rangeStr: string of a number that is deviance allowed from the ideal TM
+	
+	RETURNS:
+		validInput: boolean. True if all input is valid, False otherwise.
+		outputStr: HTML string to output to the website so errors are displayed.
+		TMnum: ideal TM as a float
+		rangeNum: range as a float
+	"""
 	validInput = True
 	outputStr = ""
 
-	#type
+	#type checking
+	#TM
 	try:
 		TMnum = float(TMstr)
 	except Exception:
 		validInput = False
 		outputStr += "ERROR: TM not a number.<br>"
 	
+	#range
 	try:
 		rangeNum = float(rangeStr)
 	except Exception:
 		validInput = False
 		outputStr += "ERROR: TM range not a number.<br>"
 	
-	#proper ranges
+	#ensure the values are within the allowed ranges
 	if(validInput):	
+		#TM
 		if(TMnum < 20 or TMnum > 80): #I don't know what to actually limit it by
 			validInput = False
 			outputStr += "ERROR: Melting point out of range 20-80<br>"
 		
+		#range
 		if(rangeNum < 1 or rangeNum > 10):
 			validInput = False
 			outputStr += "ERROR: Range for melting point must be in range 1-10.<br>"
@@ -194,7 +272,21 @@ def validatePrimers(TMstr, rangeStr):
 
 
 def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
-	"""Validates the input from creating a new NamedSequence on the design page."""
+	"""Validates the input from creating a new backbone on the design page.
+	
+	PARAMETERS:
+		newName: string name of the new backbone
+		newDesc: string description for the backbone
+		newSeq: string for the sequence of the backbone
+		newType: string for the type of the backbone. Valid values are "i" and "r"
+			for integrative and replicative, respectively.
+		newFeatures: string for the features of the backbone. Formatted as it
+			will appear in a .gb file.
+	
+	RETURNS:
+		validInput: boolean. True if all input is valid, False otherwise.
+		outputStr: HTML string to output to the website so errors are displayed.
+	"""
 	validInput = True
 	outputStr = ""
 
@@ -213,9 +305,10 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	#whether it already exists in default:
 		try:
 			defaultUser.findBackbone(newName)
-						
+
 			validInput = False
-			outputStr += "ERROR: Backbone {name} already exists in the default library.<br>".format(name = newName)
+			outputStr += "ERROR: Backbone {name} already exists in the default library.<br>".format(
+																name = newName)
 
 		except BackboneNotFoundError:
 			pass
@@ -229,7 +322,8 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	for character in newName:
 		if((character not in validCharacters) and (character not in invalidCharactersName)):
 			validInput = False
-			outputStr += "ERROR: '" + character + "' is not allowed in a backbone's name.<br>"
+			outputStr += "ERROR: '{character}' is not allowed in a backbone's name.<br>".format(
+															character = character)
 			invalidCharactersName.append(character)
 
 						#####	VALIDATE DESCRIPTION 	#####
@@ -242,7 +336,8 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 
 						#####	VALIDATE SEQUENCE 	#####
 	#length
-	if(len(newSeq) < 1 or len(newSeq) > 999999): #I don't know what limits should be used
+		#999,999 chosen arbitrarily, because I think SOME limit is necessary
+	if(len(newSeq) < 1 or len(newSeq) > 999999):
 		validInput = False
 		outputStr += "ERROR: Sequence must be 1-999999 nucleotides.<br>"
 	
@@ -256,7 +351,8 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 	for character in newSeq:
 		if((character not in validNucleotides) and (character not in invalidCharactersSeq)):
 			validInput = False
-			outputStr += "ERROR: '" + character + "' is not an allowed nucleotide.<br>"
+			outputStr += "ERROR: '{character}' is not an allowed nucleotide.<br>".format(
+														character = character)
 			invalidCharactersSeq.append(character)
 
 						#####	VALIDATE TYPE 	#####	
@@ -265,25 +361,45 @@ def validateBackbone(newName, newDesc, newSeq, newType, newFeatures):
 		outputStr += "ERROR: Invalid backbone type received.<br>"
 		
 						#####	VALIDATE Features 	#####
-	#currently assumes it's fine
+	#currently assumes the feature section is formatted properly
+	#?! change? check what?
 
 	return (validInput, outputStr)
 
 def searchBackbone(seq):
-	#search the main sequence
+	"""Search a backbone sequence for the patterns to the left and right of the
+	insertion site.
+	Called by validateSearchBackbone().
+	
+	PARAMETER:
+		seq: string sequence to search.
+		
+	RETURNS:
+		sitesL: list of integer indices for where the left pattern begins
+		sitesR: list of integer indices for where the right pattern begins
+	"""
+	#make seq uppercase
+	seq = seq.upper()
+	
+	#set the left and right patterns to search for
 	patternL = "{spacerL}\w\w{start}".format(spacerL = "AGGA", start = "GTCTTC")
 	patternR = "{end}\w\w{spacerR}".format(end = "GAAGAC", spacerR = "TACA")
 
+	#search the the linear sequence
 	sitesL = [m.start() for m in re.finditer(patternL, seq)]
 	sitesR = [m.start() for m in re.finditer(patternR, seq)]
 
-	#search the very end and beginning, combined (since it's ciruclar)
+		#search the very end and beginning, combined (since it's circular)
+		
 	loopLen = 11 #length of the pattern (spacer-4 bp, NN-2 bp, recog.-6 bp) - 1
 	
+	#merge the very end and very beginning of seq, to search for the patterns
 	veryEnd = seq[-loopLen:] + seq[0:loopLen]
 	
+	#search for the left pattern
 	matchL = re.search(patternL, veryEnd)
 	if(matchL):
+		#adjust the index to apply to the complete sequence, not just veryEnd
 		index = matchL.start()
 		if(index < loopLen):
 			index = len(seq) - (loopLen - index)
@@ -292,8 +408,10 @@ def searchBackbone(seq):
 
 		sitesL.append(index)
 
+	#search for the right pattern
 	matchR = re.search(patternR, veryEnd)
 	if(matchR):
+		#adjust the index to apply to the complete sequence, not just veryEnd
 		index = matchR.start()
 		if(index < loopLen):
 			index = len(seq) - (loopLen - index)
@@ -305,33 +423,64 @@ def searchBackbone(seq):
 	return (sitesL, sitesR)
 
 def validateSearchBackbone(outputStr, seq):
+	"""Validate backbone sequence has one of each of the left and right patterns
+	around the insertion location. (Patterns are AGGANNGTCTTC and GAAGACNNTACA.)
+	Called by readBackboneGB().
+	Calls searchBackbone().
+	
+	PARAMETERS:
+		outputStr: string of HTML to output to the website. Added onto if errors are found.
+		seq: string sequence of backbone to search for the patterns.
+	
+	RETURNS:
+		validInput: boolean. True if sequence has exactly one of each pattern.
+			False otherwise.
+		outputStr: HTML string to output to the website so errors are displayed.
+	"""
 	validInput = True
 	sitesL, sitesR = searchBackbone(seq)
 
 	if(len(sitesL) == 0):
 		validInput = False
 		sitesL.append(None)
-		outputStr += "ERROR: No match found for the <span class = 'monospaced'>AGGANNGTCTTC</span> pattern.<br>"
+		outputStr += ("ERROR: No match found for the <span class = 'monospaced'>"
+											"AGGANNGTCTTC</span> pattern.<br>")
 	elif(len(sitesL) > 1):
 		validInput = False
-		outputStr += "ERROR: Multiple matches found for the <span class = 'monospaced'>AGGANNGTCTTC</span> pattern.<br>"
+		outputStr += ("ERROR: Multiple matches found for the <span class = "
+								"'monospaced'>AGGANNGTCTTC</span> pattern.<br>")
 
 	if(len(sitesR) == 0):
 		validInput = False
 		sitesR.append(None)
-		outputStr += "ERROR: No match found for the <span class = 'monospaced'>GAAGACNNTACA</span> pattern.<br>"
+		outputStr += ("ERROR: No match found for the <span class = 'monospaced'>"
+											"GAAGACNNTACA</span> pattern.<br>")
 	elif(len(sitesL) > 1):
 		validInput = False
-		outputStr += "ERROR: Multiple matches found for the <span class = 'monospaced'>GAAGACNNTACA</span> pattern.<br>"
+		outputStr += ("ERROR: Multiple matches found for the <span class = "
+								"'monospaced'>GAAGACNNTACA</span> pattern.<br>")
 
 	return (validInput, outputStr, sitesL[0], sitesR[0])
 
-def extractSequence(originSeq):
-	"""Remove all numbers and whitespace from a string."""
-	seq = re.sub("\s|\d", "", originSeq)
-	return seq
-
 def readBackboneGB(dataBytes, outputStr):
+	"""Read a backbone .gb file, validate it as a properly formatted .gb file,
+	and extract relevant information about the backbone.
+	
+	PARAMETERS:
+		dataBytes: the .gb file in byte form
+		outputStr: string of HTML to output to the website. Errors will be added to it.
+	
+	RETURNS:
+		outputStr: string of HTML to output to the website. Displays all errors.
+		validInput: boolean. True if the .gb file is valid, False otherwise.
+		a dictionary of information extracted from the file, with the following keys
+			name: backbone name
+			molType: backbone's molecule type (e.g. "DNA")
+			division: backbone's division (e.g. "SYN")
+			definition: backbone's definition (i.e. description)
+			features: backbone's features section [words]
+			sequence: backboene's sequence
+	"""
 	validInput = True
 
 	features = None
@@ -350,10 +499,10 @@ def readBackboneGB(dataBytes, outputStr):
 	except Exception as e:
 		validInput = False
 		print(e)
-		outputStr += "ERROR: Invalid input received."  
+		outputStr += "ERROR: Invalid input received."
 	
 	if(validInput):
-		#check the first line
+		#look at the first line
 		try:
 			header = backboneData[0].split()
 			
@@ -392,9 +541,15 @@ def readBackboneGB(dataBytes, outputStr):
 				header.pop(lengthIndex + 1)
 						
 			if(len(header) < lengthIndex + 3):
-				raise Exception("First line is too short. It must have the format: LOCUS locus_name sequence_length molecule_type (optional: circular or linear) (optional: GenBank_division) modification_date")
+				raise Exception(("First line is too short."
+					 "It must have the format: LOCUS locus_name sequence_length "
+					 "molecule_type (optional: circular or linear) (optional: GenBank_division) "
+					 "modification_date"))
 			elif(len(header) > lengthIndex + 5):
-				raise Exception("First line is too long. It must have the format: LOCUS locus_name sequence_length molecule_type (optional: circular or linear) (optional: GenBank_division) modification_date")
+				raise Exception(("First line is too long."
+					 "It must have the format: LOCUS locus_name sequence_length "
+					 "molecule_type (optional: circular or linear) (optional: GenBank_division) "
+					 "modification_date"))
 
 			#name
 			name = " ".join(header[1:lengthIndex])
@@ -463,9 +618,11 @@ def readBackboneGB(dataBytes, outputStr):
 			seq = extractSequence("\n".join(backboneData[originIndex + 1 : originEnd]))
 			
 			if(len(seq) != length):
-				raise Exception("Length of sequence declared in the first line ({firstLine} bp) and of the actual sequence in the ORIGIN section ({originSec} bp) are inconsistent.".format(
-						firstLine = length,
-						originSec = len(seq)))
+				raise Exception(("Length of sequence declared in the first line "
+								 "({firstLine} bp) and of the actual sequence in "
+								 "the ORIGIN section ({originSec} bp) are inconsistent.").format(
+															firstLine = length,
+															originSec = len(seq)))
 
 			#replace spacing of the FEATURES section with tabs
 			for i in range(featureIndex + 1, originIndex):
@@ -487,36 +644,71 @@ def readBackboneGB(dataBytes, outputStr):
 		except Exception as e:
 			validInput = False
 			outputStr += "ERROR: {}".format(e)
-		
-	return (outputStr, validInput, {"name": name, "molType": molType, "division": division, "definition": definition, "features" : features, "sequence": seq})
+
+	return (outputStr, validInput, {"name": name,
+									"molType": molType,
+									"division": division,
+									"definition": definition,
+									"features" : features,
+									"sequence": seq})
 			
 def processGBfeatures(seq, features, outputStr):
+	"""Process a backbone's sequence and features for storage as a Backbone in the database.
+	FINISH ANNOTATING THIS, IT IS A VERY COMPLICATED AND CONFUSING FUNCTION
+	Calls validateSearchBackbone()
+	
+	PARAMETERS:
+		seq: string sequence of the backbone
+		features: string features
+		outputStr: string of HTML to output to the website. Errors will be added to it.
+		
+	RETURNS:
+		validInput: boolean. True if input is valid, False otherwise.
+		outputStr: HTML string to output to the website so errors are displayed.
+		a dictionary of information for creating a new Backbone, with keys:
+			seqBefore: string sequence of the backbone before the insertion region
+			seqAfter: string sequence of the backbone after the insertion region
+			featureSection: string of the features, formatted for a .gb file
+				Has stylistic modifications (e.g. tabs instead of spaces) and
+				"[AddLength]"s, for use during assembly.
+	"""
 	sequenceBefore = None
 	sequenceAfter = None
 	featureSection = None
 	
-	#do some MORE processing whee
+	#get the indices for the start of the left and right pattern
+	#if there are only one of each
 	validInput, outputStr, siteL, siteR = validateSearchBackbone(outputStr, seq)
 
 	length = len(seq)
 
-	if(printActions):
-		print("siteL {} siteR {}".format(siteL, siteR))
+	printIf("siteL {} siteR {}".format(siteL, siteR))
 
 	if(validInput):
 		try:
+			#Apologies in advance if this entire section does not make sense.
+			#I barely understood how it worked when I wrote it, and have since
+			#forgotten.
+			
+			#insL is the leftmost index of the insertion region, i.e. the first
+			#nucleotide to be removed.
+			#it uses the numbering of the .gb file, which counts from 1 NOT 0
+			#which is why it is calculated with + 5, not + 4
 			if(siteL + 4 >= length):
 				insL = 5 - (length - siteL)
 			else:
 				insL = siteL + 5
 			
+			#relatedly, insR is the rightmost index of the insertion region, i.e.
+			#the last nucleotide to be removed
+			#I THINK???????
+			#?!
 			if(siteR + 7 >= length):
 				insR = 8 - (length - siteR)
 			else:
 				insR = siteR + 8
 
-			if(printActions):
-				print((insL, insR))
+			printIf((insL, insR))
 
 			if(insR >= insL):
 				insertionAdjustment = (insR - insL) + 1
@@ -525,179 +717,245 @@ def processGBfeatures(seq, features, outputStr):
 				insertionAdjustment = insR
 				rightmost = length + 1
 
-			if(printActions):
-		 		print("insertionAdjustment {} rightmost {}".format(insertionAdjustment, rightmost))
+			printIf("insertionAdjustment {} rightmost {}".format(insertionAdjustment, rightmost))
 			
 			deleteNextLine = False
 
-			#Go through every feature
+			#go through every line of the features
 			for i in range(len(features)):
+				#remove whitespace on the left of the line
 				features[i] = features[i].lstrip()
 				
-				if(features[i]):
-					if(features[i][0] != "/"):
-						#extract the row
-						row = features[i].split(maxsplit = 1)
+				#do nothing if there's nothing in this line
+				if(not features[i]):
+					continue
+				
+				#if the line does NOT begin with "/", so it is a feature key
+				#that says what type the feature is
+				if(features[i][0] != "/"):
+					#split the line into row, which splits the type (?) and location
+					#so "gene 5..10" turns into ["gene", "5..10"]
+					row = features[i].split(maxsplit = 1)
 
-						if(printActions):
-							print(features[i])
+					printIf(features[i])
 
-						if(len(row) > 1):
-							#should have numbers in the string of the format NUMBER..NUMBER							
-							rowElements = re.split("(\d+..\d+)", row[1])
-							if(rowElements[0] == "join("):
-								isJoin = True
-							else:
-								isJoin = False
+					#if there is a range/location for the feature
+					if(len(row) > 1):
+						#should have numbers in the string of the format NUMBER..NUMBER							
+						rowElements = re.split("(\d+..\d+)", row[1])
+						#determine if it's formatted like join(5..10, 15..20)
+						if(rowElements[0] == "join("):
+							isJoin = True
+						else:
+							isJoin = False
 
-							pairsRemove = 0
+						pairsRemove = 0
 
-							for j in range(1, len(rowElements), 2):
-								removeFeature = False
-								
-								#this SHOULD be the pattern
-								startIndex, endIndex = rowElements[j].split("..")
-								newStart = int(startIndex)
-								
-								if(newStart > length):
-									newStart -= length
+						print(rowElements)
+						#every other element in the list should be a number pair
+						#the other elements will be "join(" etc.
+						for j in range(1, len(rowElements), 2):
+							removeFeature = False
+							
+							#get the start and end index of the range
+							startIndex, endIndex = rowElements[j].split("..")
+							newStart = int(startIndex)
+							newEnd = int(endIndex)
+							
+							#make sure the indices are less than the length
+							#if they loop around
+							if(newStart > length):
+								newStart -= length
+							
+							if(newEnd > length):
+								newEnd -= length
+							
+							printIf("newStart {} newEnd {} \t insL {} insR {}".format(
+									newStart, newEnd, insL, insR))
+							
+							#if the insertion region is in the middle of the sequence
+							#it does NOT loop around at the end
+							if(insR >= insL):
+								#if newStart is within the insertion region
+								if(newStart >= insL and newStart <= insR):
+									#if newEnd is within the insertion region
+									if(newEnd >= insL and newEnd <= insR):
+										#need to remove the feature
+										removeFeature = True
+										
+										printIf("need to remove the entire thing")
+										
+									#otherwise, shove newStart to insR + 1
+									#so the range begins at the end of the
+									#insertion region
+									else:
+										newStart = insR + 1
+										
+										if(newStart > length):
+											newStart = newStart - length
+								#if newEnd is within the insertion region
+								#(but newStart is not)
+								elif(newEnd > insL and newEnd <= insR):
+									#shove newEnd insL - 1
+									#so the range ends at the beginning of the
+									#insertion region
+									newEnd = insL - 1
 									
-								newEnd = int(endIndex)
-								if(newEnd > length):
-									newEnd -= length
-								
-								if(printActions):
-									print("newStart {} newEnd {} \t insL {} insR {}".format(newStart, newEnd,
-										  insL, insR))
-								
-								if(insR >= insL):
-									if(newStart >= insL and newStart <= insR):
-										#start within insertion region
-										if(newEnd >= insL and newEnd <= insR):
-											removeFeature = True
-											
-											if(printActions):
-												print("need to remove the entire thing")
+									if(newEnd < 1):
+										newEnd = length + newEnd
+									
+								insR2 = insR
 
-										else:
-											newStart = insR + 1
-											if(newStart > length):
-												newStart = newStart - length
-									elif(newEnd > insL and newEnd <= insR):
-										#end within insertion region
+							#otherwise the insertion region DOES loop around
+							else:
+								#if newStart is within the insertion region
+								if(newStart <= insR):
+									#if newEnd is also within the insertion region
+									if(newEnd <= insR):
+										#need to remove the entire feature
+										removeFeature = True
+
+										printIf("need to remove the entire thing")
+										
+									else:
+										#shove newStart to the end of the
+										#insertion region
+										newStart = insR + 1
+										
+										if(newStart > length):
+											newStart = newStart - length
+								#if newEnd is within the insertion region
+								if(newEnd >= insL):
+									#end within insertion region
+									if(newStart >= insL):
+										#rneed to remove the entire feature
+										removeFeature = True
+
+										printIf("need to remove the entire thing")
+									else:
+										#shove newEnd to the beginning of the
+										#insertion region
 										newEnd = insL - 1
+										
 										if(newEnd < 1):
 											newEnd = length + newEnd
-										
-									#what is insR2 I'm not sure
-									insR2 = insR
 
-								else:
-									if(newStart <= insR):
-										#start within insertion region
-										if(newEnd <= insR):
-											removeFeature = True
+								printIf("newStart {} newEnd {} insR {}".format(newStart, newEnd, insR))
 
-											if(printActions):
-												print("need to remove the entire thing")
-											#remove the entire thing
-										else:
-											newStart = insR + 1
-											if(newStart > length):
-												newStart = newStart - length
-									if(newEnd >= insL):
-										#end within insertion region
-										if(newStart >= insL):
-											removeFeature = True
+								printIf("newStart -= insR; newEnd -= insR")
 
-											if(printActions):
-												print("need to remove the entire thing")
-										else:
-											newEnd = insL - 1
-											if(newEnd < 1):
-												newEnd = length + newEnd
-
-									if(printActions):
-										print("newStart {} newEnd {} insR {}".format(newStart, newEnd, insR))
-
-										print("newStart -= insR; newEnd -= insR")
-
-									newStart -= insR
-									newEnd -= insR
-									
-									insR2 = length - insR
-
-								#add to the numbers as necessary
-								#get the strings to replace them with
-								if(newStart >= insR2):
-
-									if(newStart >= rightmost):
-										startStr = "[AddLength]{}[AddLength]".format(newStart - insertionAdjustment)
-									else:
-										startStr = str(newStart - insertionAdjustment)
-								else:
-									startStr = str(newStart)
+								#finally, subtract insR from newStart and newEnd
+								#to account for the removal of the insertion region
+								newStart -= insR
+								newEnd -= insR
 								
-								if(newEnd >= insR2):
-									if(newEnd >= rightmost):
-										endStr = "[AddLength]{}[AddLength]".format(newEnd - insertionAdjustment)
-									else:
-										endStr = str(newEnd - insertionAdjustment)
-								else:
-									endStr = str(newEnd)
-									
-								#finalllyyyyy
-								if(removeFeature):
-									rowElements[j] = ""
-									pairsRemove += 1
-								else:
-									rowElements[j] = "{start}..{end}".format(start = startStr, end = endStr)
+								insR2 = length - insR
 
-							if(pairsRemove == int(len(rowElements) / 2)):
-								deleteNextLine = True
-								features[i] = ""
-								if(printActions):
-									print("isJoin = {} \tpairsRemove = {} \tint(len(rowElements) / 2) - 1) = {}".format(
-										isJoin, pairsRemove, int(len(rowElements) / 2) - 1))
+							#normally, rightmost = insR
+							#looping, rightmost = length + 1
+							
+							#normally, insR2 = insR
+							#looping, insR2 = length - insR
+														
+							#?!!!! what is going on
+							
+							#I have previously stated I do not remember how this
+							#section works. So I'm not really sure what insR and
+							#rightmost represent, nor why these if statments are
+							#used. I only know that they work.
+							
+							#dealing with newStart
+							if(newStart >= insR2):
+								#if newStart is to the right of the insertion region
+								if(newStart >= rightmost):
+									#[AddLength]NUMBER[AddLength] indicates the
+									#number must have the length of the inserted
+									#sequence added to it in the final sequence
+									startStr = "[AddLength]{}[AddLength]".format(
+												newStart - insertionAdjustment)
+								else:
+									startStr = str(newStart - insertionAdjustment)
 							else:
-								if(printActions):
-									print("isJoin = {} \tpairsRemove = {} \tint(len(rowElements) / 2) - 1) = {}".format(
-										isJoin, pairsRemove, int(len(rowElements) / 2) - 1))
-								deleteNextLine = False
-
-								#replace the row with the properly formatted one
-								if(len(row[0]) <= 3):
-									features[i] = "\t{row1}\t\t{row2}".format(row1 = row[0], row2 = "".join(rowElements))
+								startStr = str(newStart)
+							
+							#dealing with newEnd
+							if(newEnd >= insR2):
+								#if newEnd is to the right of the insertion region
+								if(newEnd >= rightmost):
+									endStr = "[AddLength]{}[AddLength]".format(
+												newEnd - insertionAdjustment)
 								else:
-									features[i] = "\t{row1}\t{row2}".format(row1 = row[0], row2 = "".join(rowElements))
+									endStr = str(newEnd - insertionAdjustment)
+							else:
+								endStr = str(newEnd)
+								
+							#finally, update rowElements[j]
+							if(removeFeature):
+								rowElements[j] = ""
+								pairsRemove += 1
+							else:
+								rowElements[j] = "{start}..{end}".format(start = startStr,
+																end = endStr)
+						#end of "for(j in range..." loop
+						#i.e. have gone through all number pairs
+						
+						#proceed to deal with the line as a whole
 
-							#remove empty numbers in a join
-							if(isJoin):
-								while(features[i].find(",,") != -1):
-									features[i] = features[i].replace(",,", ",")
-								features[i] = features[i].replace("(,", "(")
-								features[i] = features[i].replace(",)", ")")
-								features[i] = features[i].replace("( ", "(")
-								features[i] = features[i].replace(" )", ")")
+						printIf(("isJoin = {} \tpairsRemove = {} \t"
+								"int(len(rowElements) / 2) - 1) = {}").format(
+								isJoin, pairsRemove, int(len(rowElements) / 2) - 1))
 
-								#remove the join() if there's only one set of numbers remaining
-								if(pairsRemove == int(len(rowElements) / 2) - 1):
-									features[i] = features[i].replace("join(", "")
-									features[i] = features[i].replace(")", "")
+						#if the entire feature needs to be removed
+						if(pairsRemove == int(len(rowElements) / 2)):
+							deleteNextLine = True
+							features[i] = ""
+						#otherwise, the feature stays
+						else:
+							deleteNextLine = False
 
-							if(printActions):
-								print(features[i])
-								print("===")
-					else:
-						#add three tabs to the beginning
-						features[i] = "\t\t\t" + features[i]
+							#replace the row with the properly formatted one
+							#if row[0] is 3 characters or shorter
+							if(len(row[0]) <= 3):
+								#two tabs are needed to look right
+								features[i] = "\t{row1}\t\t{row2}".format(row1 = row[0],
+												 row2 = "".join(rowElements))
+							#if row[0] is longer than 3 characters
+							else:
+								#only one tab is needed
+								features[i] = "\t{row1}\t{row2}".format(row1 = row[0],
+												 row2 = "".join(rowElements))
 
+						#remove empty numbers in a join
+						if(isJoin):
+							while(features[i].find(",,") != -1):
+								features[i] = features[i].replace(",,", ",")
+							features[i] = features[i].replace("(,", "(")
+							features[i] = features[i].replace(",)", ")")
+							features[i] = features[i].replace("( ", "(")
+							features[i] = features[i].replace(" )", ")")
+
+							#remove the join() if there's only one set of numbers remaining
+							if(pairsRemove == int(len(rowElements) / 2) - 1):
+								features[i] = features[i].replace("join(", "")
+								features[i] = features[i].replace(")", "")
+
+						printIf(features[i])
+						printIf("===")
+						
+				#if this is a qualifier of a feature, e.g. /organism="Saccharomyces cerevisiae"
+				#so there are no numbers to adjust
+				else:
+					#add three tabs to the beginning
+					features[i] = "\t\t\t" + features[i]
+
+				#clear the line if deleteNextLine is true
+				#i.e. the feature needs to be deleted
 				if(deleteNextLine):
 					features[i] = ""
 
 			featureSection = "".join(features)
 
-			#remove the stuff
+			#remove the insertion region by setting sequenceBefore and sequenceAfter
 			if(insL <= insR):
 				sequenceBefore = seq[0:insL - 1]
 				sequenceAfter = seq[insR:]
@@ -709,59 +967,106 @@ def processGBfeatures(seq, features, outputStr):
 			outputStr += "ERROR: {}".format(e)
 			validInput = False
 	
-	return(outputStr, validInput, {"seqBefore": sequenceBefore, "seqAfter": sequenceAfter, "featureSection": featureSection})
+	return(outputStr, validInput, {"seqBefore": sequenceBefore,
+									"seqAfter": sequenceAfter,
+									"featureSection": featureSection})
 	
-#Assembly
+################################ ASSEMBLY PAGE ################################
+	
 def addSpacerAssemblyGB(spacer, features, i):
+	"""Add a spacer to the features. Modifies the features list to do so.
+	Called when constructing the .zip of an assembled sequence.
+	
+	PARAMETERS:
+		spacer: string spacer sequence to add
+		features: list of strings, each a line for the .gb file's FEATURES section
+		i: integer length of the total assembled sequence so far
+	
+	RETURNS:
+		new integer length of the total assembled sequence
+	"""
 	lenSpacer = len(spacer)
+	
+	#add the appropriate lines to the features
 	features.append("\tmisc_feature\t{start}..{end}".format(
 										start = i + 1,
 										end = i + lenSpacer))
 	features.append("\t\t\t/note=\"spacer\"")
+	#the following lines are only used by Benchling? and aren't standard for .gb files
 	features.append("\t\t\t/ApEinfo_fwdcolor=#E6855F")
 	features.append("\t\t\t/ApEinfo_revcolor=#E6855F")
 
 	return i + lenSpacer
 
 def addCompAssemblyGB(comp, features, i):
-	"""Add feature of component for a GenBank file."""
+	"""Add feature of component for a .gb file. Modifies the features list to do so.
+	
+	PARAMETERS:
+		spacer: Component (ComponentDB?) to add
+		features: list of strings, each a line for the .gb file's FEATURES section
+		i: integer length of the total assembled sequence so far
+	
+	RETURNS:
+		new integer length of the total assembled sequence
+	"""
 	lenSeq = len(comp.getSeq())
 	
+	#if the component is a GOI, format as a gene
 	if(comp.getType() == "GOI"):
-		features.append("\tgene\t\t" + str(i + 1) + ".." + str(i + lenSeq))
-		features.append("\t\t\t/gene=\"" + comp.getName() + "\"")
+		features.append("\tgene\t\t{start}..{end}".format(start = i + 1, end = i + lenSeq))
+		features.append("\t\t\t/gene=\"{name}\"".format(name = comp.getName()))
+	#otherwise, the component is regulatory
 	else:
 		regTypes = {"Pr": "promoter", "RBS" : "ribosome_binding_site", "Term": "terminator"}
 		regName = regTypes[comp.getType()]
 		longTypes = {"Pr": "promoter", "RBS" : "RBS", "Term": "terminator"}
 		longType = longTypes[comp.getType()]
 
-		features.append("\tregulatory\t" + str(i + 1) + ".." + str(i + lenSeq))
+		features.append("\tregulatory\t{start}..{end}".format(start = i + 1, end = i + lenSeq))
 		features.append("\t\t\t/regulatory_class=" + regName)
-		features.append("\t\t\t/note=\"" + longType + " " + comp.getName() + "\"")
+		features.append("\t\t\t/note=\"{longType} {name}\"".format(
+														longType = longType,
+														name = comp.getName()))
 	
 	return i + lenSeq
 
 def finishCompAssemblyGB(features, fullSeq, offset, backboneName):
-	"""Make the head and ORIGIN section of the GenBank file, then join all parts together into a single string."""
-	#fileHead
+	"""Make the head and ORIGIN section of the .gb file, then join all parts together into a single string.
+	
+	PARAMETERS:
+		features: list of strings, each string being one line in the FEATURES section
+		fullSeq: string of the complete assembled sequence
+		offset: integer number of minutes the user's timezone is off from UTC
+		backboneName: string name of the backbone being used.
+		
+	RETURNS:
+		fileString: string of final formatted .gb file
+	"""
+		#file head
+	#get date, modifying for the user's timezone, and then format it into a string
 	dateObject = datetime.utcnow() - timedelta(minutes = offset)
-	print(dateObject.strftime("%d-%b-%Y %H:%M"))
 	date = dateObject.strftime("%d-%b-%Y").upper()
 	
-	completeFile = ["LOCUS\t\tAssembled_sequence\t" + str(len(fullSeq)) + " bp\tDNA\tcircular\tSYN\t" + date,
-				"DEFINITION\tSequence assembled from CyanoConstruct using backbone " + backboneName + ".",
+	#start completeFile, where each string is its own line, with the first three lines:
+	#the header, the definition, and "FEATURES		Location/Qualifiers"
+	completeFile = ["LOCUS\t\tAssembled_sequence\t{length} bp\tDNA\tcircular\tSYN\t{date}".format(
+										length = len(fullSeq), date = date),
+				"DEFINITION\tSequence assembled from CyanoConstruct using backbone {name}.".format(
+										name = backboneName),
 				"FEATURES\t\tLocation/Qualifiers"]
 	
-	#process sequence for ORIGIN section
+		#process sequence for ORIGIN section
 	seq = fullSeq.lower()
 	
 	i = 0
+	#start origin with the first line being "ORIGIN"
 	origin = ["ORIGIN"]
 	
-	#most lines (60 nucleotides per line)
+	#add most lines (60 nucleotides per line)
 	while(i < (len(seq) // 60)):
 		i60 = i * 60
+		#format the line with the index
+		#then 6 blocks of 10 nucleotides separated by spaces
 		line = "{number} {block1} {block2} {block3} {block4} {block5} {block6}".format(
 				number = str(i60 + 1).rjust(9, " "),
 				block1 = seq[i60 : i60 + 10],
@@ -771,14 +1076,14 @@ def finishCompAssemblyGB(features, fullSeq, offset, backboneName):
 				block5 = seq[i60 + 40 : i60 + 50],
 				block6 = seq[i60 + 50 : i60 + 60])
 
+		#add the line to the origin section
 		origin.append(line)
 
 		i += 1
-		
-	#final line
+	
+	#if the final line has <60 nucleotides, it needs to be added in a different way
 	remainder = len(seq) % 60
 	if(remainder != 0):
-		
 		line = str(i * 60 + 1).rjust(9, " ") + " "
 		for j in range(remainder):
 			line += seq[i * 60 + j]
@@ -787,130 +1092,156 @@ def finishCompAssemblyGB(features, fullSeq, offset, backboneName):
 		
 		origin.append(line)
 
-	#merge sections
+	#merge file head, features, and origin sections
 	completeFile.extend(features)
 	completeFile.extend(origin)
 	completeFile.append("//")
 	
-	return "\n".join(completeFile)	
-
-
-
-
-#ZIP-related functions
-def makeZIP(filesDict):
-	if(type(filesDict) != dict):
-		raise TypeError("files not a dict")
-		
-	if(printActions):
-		print("CREATING FASTA AND ZIP FILES")
+	#merge into a single string
+	fileString = "\n".join(completeFile)
 	
-	#check if no files have been produced
+	return fileString
+
+################################ ZIP FUNCTIONS ################################
+def makeZIP(filesDict):
+	"""Make and return a .zip file.
+	
+	PARAMETER:
+		filesDict: dictionary of files; the keys are string file names,
+			while the values are the file contents
+	
+	RETURNS:
+		data: byte data of the complete .zip file
+	"""
+	#type checking
+	if(type(filesDict) != dict):
+		raise TypeError("filesDict not a dict")
+	
+	#check if there are no files to create
 	if(filesDict == {}):
-		if(printActions):
-			print("NO SEQUENCE; NO FILES CREATED")
+		printIf("NO SEQUENCE; NO FILES CREATED")
 		
 		return None
 	
+	#make a random and unique submission ID for the folder
 	submissionID = uuid1().hex
 	
-	#paths
+	#paths for folders
+	#get the path for the "files" folder in cyanoConstruct
 	filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
+	#get the path for the folder that will be created to store the files
 	sessionDir = os.path.join(filesDirPath, submissionID)
-	
+	#create said folder
 	os.mkdir(sessionDir)
 	
-	if(printActions):
-		print("MADE DIRECTORY: " + sessionDir)	
+	printIf("MADE DIRECTORY: " + sessionDir)	
 	
-	#write files
+	#write files to the folder
 	for fileName in filesDict:
 		newName = os.path.join(sessionDir, fileName)
 		with open(newName, "w") as f:
 			f.write(filesDict[fileName])
 			
-	#make zip
+	#make zip and write it to the zips folder
 	zipPath = os.path.join(os.path.join(filesDirPath, "zips"), submissionID)
 	make_archive(zipPath, "zip", sessionDir)
 	
-	#read zip as a byte file
+	#read zip as a byte file and store it as data
 	with open(zipPath + ".zip", "rb") as f:
 		data = f.readlines()
 	
 	#delete the session directory & zip file
 	rmtree(sessionDir)
 	os.remove(zipPath + ".zip")
-	
-	if(printActions):
-		print("FINISHED CREATING FILES FOR SESSION " + submissionID)
+
+	printIf("FINISHED CREATING FILES FOR SESSION " + submissionID)
 
 	return data
 
 def makeAllLibraryZIP(user):
+	"""Create a .zip file of all components of a user.
+	
+	PARAMETER:
+		user: a UserData whose library will be turned into a .zip
+	
+	RETURNS:
+		data: byte data of the completed .zip file
+	"""
+	#type checking
 	if(type(user) != UserData):
 		raise TypeError("user not a UserData")
 
+	#directories and paths
 	filesDirPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
 	sessionDir = os.path.join(filesDirPath, uuid1().hex)
 	libraryDir = os.path.join(sessionDir, user.getEmail() + "Library")
 
+	#make the directories needed
 	try:
 		os.mkdir(sessionDir)
 	except OSError: #if it exists
 		pass
 	os.mkdir(libraryDir)
 	
-	if(printActions):
-		print("MADE DIRECTORY: " + libraryDir)
+	printIf("MADE DIRECTORY: " + libraryDir)
 		
-	#great now what?
+	#do this.
+	#?! DOES THIS RETURN BACKBONES, ACTUALLY?
+	#get the named sequences, sorted
 	sortedNS = user.getSortedNS()
+	#go through each type (e.g. RBS)
 	for typeKey in sortedNS:
-		if(sortedNS[typeKey] == []): #do nothing if the folder would be empty
+		#do nothing if the folder would be empty
+		if(sortedNS[typeKey] == []):
 			continue
 
-		#make folder for the type		
+		#make folder for the type
 		typeDir = os.path.join(libraryDir, typeKey)
 		os.mkdir(typeDir)
 		
+		#for each named sequence of that type
 		for ns in sortedNS[typeKey]:
+			#get the components derived from the sequence
 			nsComps = ns.getAllComponents()
 			
-			if(nsComps == []): #do nothing if the folder would be empty
+			#do nothing if the folder would be empty
+			if(nsComps == []):
 				continue
 
 			#make folder for the sequence
 			nameDir = os.path.join(typeDir, ns.getName())
 			os.mkdir(nameDir)
 			
-			nsComps.sort() #is this necessary?
+			#sort the components
+			nsComps.sort()
 			
+			#for each component derived from the sequence
 			for comp in nsComps:
 				#make folder for the component
 				compDir = os.path.join(nameDir, comp.getNameID())
 				os.mkdir(compDir)
 				
+				#get info. for the component (dict of file names and contents)
 				compZIP = comp.getCompZIP()
 
-				#make the files for the component
+				#write the files for the component
 				for fileName in compZIP:
 					filePath = os.path.join(compDir, fileName)
 
 					with open(filePath, "w") as f:
 						f.write(compZIP[fileName])
 	
-	#make the zip
+	#make the .zip
 	zipPath = os.path.join(sessionDir, "libraryZIP")
-	
 	make_archive(zipPath, "zip", libraryDir)
 	
 	#read zip as a byte file
 	with open(zipPath + ".zip", "rb") as f:
 		data = f.readlines()
 		
+	#delete all folders and files created earlier in this function
 	rmtree(sessionDir)
 
-	if(printActions):
-		print("FINISHED CREATING LIBRARY ZIP FOR USER " + user.getEmail())
+	printIf("FINISHED CREATING LIBRARY ZIP FOR USER " + user.getEmail())
 	
 	return data

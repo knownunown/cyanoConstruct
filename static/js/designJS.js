@@ -7,6 +7,7 @@ function scrollToId(id){
 	document.getElementById(id).scrollIntoView({block: "start", inline: "start", behavior: "smooth"})
 }
 
+//select and scroll to the proper form (design a component, sequence, or backbone)
 function selectForm(){
 	if(document.getElementById("designComponent").checked){
 		document.getElementById("componentForm").style.display = "block";
@@ -17,8 +18,6 @@ function selectForm(){
 		scrollToId("componentForm");
 	}
 	else if(document.getElementById("designSequence").checked){
-		//do that
-		//disable all the other stuff?
 		document.getElementById("sequenceForm").style.display = "block";
 
 		document.getElementById("componentForm").style.display = "none";
@@ -36,11 +35,15 @@ function selectForm(){
 	}
 }
 
-//named sequence
+/* Create Component */
+//Named Sequence section
 function formatNSname(){
 	var currentType = document.getElementById("NStype").value;
 
 	//alter things in the spacer section
+	//since promoters can also be at position 0
+	//and terminators can also be at position T
+	//while RBS's and GOI's can't be either
 	if(currentType == "Pr"){
 		document.getElementById("componentPos0").disabled = false;
 		document.getElementById("componentPosT").disabled = true;
@@ -61,22 +64,23 @@ function formatNSname(){
 		document.getElementById("componentPos0").checked = false;
 	}
 
-	//format the options
-	var retString = "";
+	//format the options (available named sequences, based off the selected type)
+	var optionString = "";
 
 	for(ns of namedSequencesNames[currentType]){ //change so the value is the ID?
-		retString += "<option value = '" + ns.id + "'>" + ns.name + "</option>";
+		optionString += "<option value = '" + ns.id + "'>" + ns.name + "</option>";
 	}
 
-	document.getElementById("NSname").innerHTML = retString;
+	document.getElementById("NSname").innerHTML = optionString;
 
 	formatNSsequence();
-
 
 	return false;
 }
 
 function formatNSsequence(){
+	//Adjust the sequence displayed
+
 	var currID = document.getElementById("NSname").value;
 
 	//adjust sequence textarea
@@ -88,7 +92,7 @@ function formatNSsequence(){
 function finishNSSection(){
 	var id = document.getElementById("NSname").value
 
-	//request
+	//send request
 	$.ajax({
 		data : {NSid: id},
 		type : 'POST',
@@ -116,8 +120,9 @@ function finishNSSection(){
 	return false;
 }
 
-//spacers
+//Spacers section
 function validateSpacers(){
+	//validate spacer info.
 	var canProceed = true;
 
 	if(document.getElementById("componentPos").value == ""){
@@ -137,12 +142,14 @@ function validateSpacers(){
 }
 
 function findSpacers(){
+	//Process spacer info.
+
 	//validate
 	if(!validateSpacers()){
 		return false;
 	}
 
-	//format data
+	//format data to send to the server
 	var pos0 = document.getElementById("componentPos0");
 	var posT = document.getElementById("componentPosT");
 
@@ -158,7 +165,7 @@ function findSpacers(){
 	}
 
 
-	//actually find the spacers
+	//actually find the spacers via request to the server
 	$.ajax({
 		data : {"spacersData": spacersData},
 		type : 'POST',
@@ -187,6 +194,7 @@ function finishSpacersSection(){
 }
 
 function goBackSpacers(){
+	//go back to the NS section
 	document.getElementById("selectNS").disabled = false;
 	document.getElementById("componentSpacers").disabled = true;
 
@@ -365,6 +373,7 @@ function validateSequence(){
 			if(recogSites[0] > 0 || recogSites[1] > 0){
 				canProceed = false;
 
+				//format error message due to too many recognition sites
 				var errorMsg = "WARNING: Unexpected BbsI recognition sites found in sequence: ";
 				if(recogSites[0] == 0){
 					errorMsg += recogSites[1] + " GTCTTC site";
@@ -495,7 +504,7 @@ function resetSeq(){
 	document.getElementById("resetSeqForm").disabled = true;
 }
 
-/* backbone */
+/* Create backbone */
 function validateBBInfo(){
 	canProceed = true;
 
@@ -707,8 +716,6 @@ function backboneFileProcess(){
 
 		var backboneFileData = files[0];
 
-		//alert(backboneFileData.size);
-
 		$.ajax({
 			data : backboneFileData,
 			type : 'POST',
@@ -742,14 +749,16 @@ function resetBackbone(){
 	document.getElementById("createBackboneFinish").disabled = true;
 	document.getElementById("createBackboneInfo").disabled = false;
 
-	scrollToNS("createBackboneInfo");
+	scrollToId("createBackboneInfo");
 
 	return false;
 }
 
 /* misc */
 
-function clearEverything(scrollToNS){
+function clearEverything(shouldScrollToNS){
+	//Clears the Component design section
+
 	//reset values
 	document.getElementById("componentForm").reset();
 	//and then. Reset the values on the server
@@ -777,7 +786,7 @@ function clearEverything(scrollToNS){
 	formatNSsequence();
 
 	//scroll
-	if(scrollToNS){
+	if(shouldScrollToNS){
 		scrollToId("selectNS");
 	}
 
@@ -797,7 +806,8 @@ function formatFeature(selection, id){
 			var locID = "locationOrigin" + id.toString();
 			str += "<div class = 'location'><label for = '" + locID + "'>Location</label>";
 			str += "<input type = 'number' min = '1' id = '" + locID + "' name = '" + locID + "' class = 'featureField' size = '5'>";
-			str += "<input type = 'button' value = 'Highlight' class = 'highlightButton' onclick = \"highlight('" + locID + "','" + locID + "')\"></div>";
+			str += "<input type = 'button' value = 'Highlight' class = 'highlightButton' onclick = \"highlight('" + 
+					locID + "','" + locID + "')\"></div>";
 
 			break;
 		default:
@@ -807,7 +817,8 @@ function formatFeature(selection, id){
 			str += "<input type = 'number' min = '1' id = '" + locIDstart + "' name = '" + locIDstart + "' class = 'featureField' size = '5'>";
 			str += "<label for = '" + locIDend + "'>to</label>";
 			str += "<input type = 'number' min = '1' id = '" + locIDend + "' name = '" + locIDend + "' class = 'featureField' size = '5'>";
-			str += "<input type = 'button' value = 'Highlight' class = 'highlightButton' onclick = \"highlight('" + locIDstart + "','" + locIDend + "')\"></div>";
+			str += "<input type = 'button' value = 'Highlight' class = 'highlightButton' onclick = \"highlight('" + 
+					locIDstart + "','" + locIDend + "')\"></div>";
 
 			break;
 	}
@@ -817,7 +828,9 @@ function formatFeature(selection, id){
 		case "origin":
 			var dirID = "direction" + id.toString();
 			str += "<div class = 'direction'><label for = '" + dirID + "'>Direction</label>";
-			str += "<select class = 'featureField direction' id = '" + dirID + "' name = '" + dirID + "'><option value = 'none'>None</option><option value = 'left'>Left</option><option value = 'right'>Right</option><option value = 'both'>Both</option></select>";
+			str += "<select class = 'featureField direction' id = '" + dirID + "' name = '" + dirID + "'>" + 
+					"<option value = 'none'>None</option><option value = 'left'>Left</option>" + 
+					"<option value = 'right'>Right</option><option value = 'both'>Both</option></select>";
 			str += "</div>";
 
 			break;
@@ -839,10 +852,15 @@ function formatFeature(selection, id){
 			str += "<input type = 'text' name = '" + organismID + "' id = '" + organismID + "' maxlength = '64'></div>";
 
 			var molID = "molType" + id.toString();
-			str += "<div class = 'molType'><label for = '" + molID + "'>Molecule</label>";
-			str += "<select class = 'featureField' id = '" + molID + "' name = '" + molID + "'><option value = 'genomicDNA'>Genomic DNA</option><option value = 'otherDNA'>Other DNA</option><option value = 'unassignedDNA'>Unassigned DNA</option>";
-			str += "<option value = 'genomicRNA'>Genomic RNA</option><option value = 'mRNA'>mRNA</option><option value = 'tRNA'>tRNA</option><option value = 'rRNA'>rRNA</option><option value = 'otherRNA'>Other RNA</option><option value = 'transcribedRNA'>Transcribed RNA</option><option value = 'viralcRNA'>Viral cRNA</option><option value = 'unassignedRNA'>Unassigned RNA</option>";
-			str += "</select></div>";
+			str += "<div class = 'molType'><label for = '" + molID + "'>Molecule</label>" + 
+					"<select class = 'featureField' id = '" + molID + "' name = '" + molID + "'>" + 
+					"<option value = 'genomicDNA'>Genomic DNA</option><option value = 'otherDNA'>Other DNA</option>" + 
+					"<option value = 'unassignedDNA'>Unassigned DNA</option>" + 
+					"<option value = 'genomicRNA'>Genomic RNA</option><option value = 'mRNA'>mRNA</option>" + 
+					"<option value = 'tRNA'>tRNA</option><option value = 'rRNA'>rRNA</option>" + 
+					"<option value = 'otherRNA'>Other RNA</option><option value = 'transcribedRNA'>Transcribed RNA</option>" + 
+					"<option value = 'viralcRNA'>Viral cRNA</option><option value = 'unassignedRNA'>Unassigned RNA</option>" +
+					"</select></div>";
 
 			break;
 		default:
@@ -867,7 +885,12 @@ function addFeature(){
 		newDiv.classList.add("feature");
 		newDiv.id = "feature" + featureCount.toString();
 		var selectID = "featureType" + featureCount.toString();
-		newDiv.innerHTML = "<div class = 'featureTypeDiv'><label for = '" + selectID + "'>Feature #" + featureCount.toString() + ": Type</label><select class = 'featureType featureField' id = '" + selectID + "'  name = '" + selectID + "' onchange = 'formatFeature(this," + featureCount.toString() + ")'><option value = 'none'>None</option><option value = 'origin'>Origin</option><option value = 'CDS'>Protein-coding</option><option value = 'source'>Source</option><option value = 'misc'>Miscellaneous</option></select></div><div class = 'featureAdditional'></div>";
+		newDiv.innerHTML = "<div class = 'featureTypeDiv'><label for = '" + selectID + "'>Feature #" + featureCount.toString() + 
+							": Type</label><select class = 'featureType featureField' id = '" + selectID + "'  name = '" + selectID + 
+							"' onchange = 'formatFeature(this," + featureCount.toString() + ")'><option value = 'none'>None</option>" + 
+							"<option value = 'origin'>Origin</option><option value = 'CDS'>Protein-coding</option>" + 
+							"<option value = 'source'>Source</option><option value = 'misc'>Miscellaneous</option></select></div>" + 
+							"<div class = 'featureAdditional'></div>";
 
 		document.getElementById("backboneFeatures").appendChild(newDiv);
 
@@ -1007,7 +1030,6 @@ function startOver(){
 
 //onload
 function bodyOnload(){
-	//clearEverything(false); //is this necessary?
 	formatNSname();
 	formatNSsequence();
 

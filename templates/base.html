@@ -1,77 +1,88 @@
 <!DOCTYPE html>
 <html lang = "en">
 <meta charset = "UTF-8">
+
 <head>
-<title>CyanoConstruct | {% block pageName %}{% endblock %} </title>
+	<title>CyanoConstruct | {% block pageName %}{% endblock %} </title>
 
-<link rel = "stylesheet" type = "text/css" href = "/static/styles/style.css">
-<link rel = "icon" type = "image/png" href = "/static/images/favicon.png">
-<meta name="google-signin-client_id" content="431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleusercontent.com">
+	<link rel = "stylesheet" type = "text/css" href = "/static/styles/style.css">
+	<link rel = "icon" type = "image/png" href = "/static/images/favicon.png">
+	<meta name="google-signin-client_id" content="431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleusercontent.com">
 
-<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
-<script src = "https://apis.google.com/js/platform.js" async defer></script>
+	<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+	<script src = "https://apis.google.com/js/platform.js" async defer></script>
 
-<script>
-function googleSignOut(){
-	var auth2 = gapi.auth2.getAuthInstance();
-    auth2.signOut();
+	<script>
+	function googleSignOut(){
+		var auth2 = gapi.auth2.getAuthInstance();
+	    auth2.signOut();
 
-    window.location.href = "/logout";
+	    window.location.href = "/logout";
 
-    return true;
-}
+	    return true;
+	}
 
-</script>
-{% block headContent %}{% endblock %}
-
+	</script>
+	{% block headContent %}{% endblock %}
 </head>
+
 <body onload = "bodyOnload();"><div id = "bodyDiv">
-<a id = "skipToMain" href = "#mainContent">Skip to main content</a>
+	<!-- skip to main content (for accessibility) -->
+	<a id = "skipToMain" href = "#mainContent">Skip to main content</a>
 
-<div id = "navigation">
-	<a class = "sideSpacer"></a>
-	<a href = "/index" class = "{% block indexClass %}{% endblock %}">CyanoConstruct</a>
-	<a href = "/about" class = "{% block aboutClass %}{% endblock %}">About</a>
-	{% if not current_user.is_anonymous %}
-		<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
-		<a href = "/library"class = "{% block libraryClass %}{% endblock %}">Library</a>
-		<a href = "/design" class = "{% block designClass %}{% endblock %}">Design</a>
+	<!-- navigation bar -->
+	<div id = "navigation">
+		<a class = "sideSpacer"></a>
 
-		<div class = "shouldGrow"></div>
+		<!-- links -->
+		<a href = "/index" class = "{% block indexClass %}{% endblock %}">CyanoConstruct</a>
+		<a href = "/about" class = "{% block aboutClass %}{% endblock %}">About</a>
+		{% if not current_user.is_anonymous %}
+			<!-- if logged in, include the links for: /assemble, /library, /design, /account, and log out -->
+			<a href = "/assemble" class = "{% block assembleClass %}{% endblock %}">Assemble</a>
+			<a href = "/library" class = "{% block libraryClass %}{% endblock %}">Library</a>
+			<a href = "/design" class = "{% block designClass %}{% endblock %}">Design</a>
 
-		<a href = "/account" class = "{% block accountClass %}{% endblock %}" id = "accountNav">Account</a>
-		<a href = "javascript:googleSignOut()" id = "logInOut">Log Out</a>
-		<div class = "g-signin2" style = "display:none"></div>
+			<div class = "shouldGrow"></div>
 
-	{% else %}
-		<div class = "shouldGrow"></div>
+			<a href = "/account" class = "{% block accountClass %}{% endblock %}" id = "accountNav">Account</a>
+			<a href = "javascript:googleSignOut()" id = "logInOut">Log Out</a>
+			<div class = "g-signin2" style = "display:none"></div>
 
-		<a href = "/login" id = "logInOut">Log In</a>
-	{% endif %}
+		{% else %}
+			<!-- if not logged in, include the link for /login -->
+			<div class = "shouldGrow"></div>
 
-	<a class = " sideSpacer"></a>	
-</div>
+			<a href = "/login" id = "logInOut">Log In</a>
+		{% endif %}
+		<!-- end links -->
 
-<div id = "mainContent">
-{% block content %}{% endblock %}
-</div>
-
-<div id = "footer">
-	<div class = "sideSpacer"></div>
-	<div class = "shouldGrow">
-		<p>Contact info.</p>
+		<a class = " sideSpacer"></a>	
 	</div>
-	<div class = "shouldGrow">
-		<p>© 2020</p>
+	<!-- end navigation bar -->
+
+	<!-- main content, variable by page -->
+	<div id = "mainContent">{% block content %}{% endblock %}</div>
+
+	<!-- footer, with misc. info. -->
+	<div id = "footer">
+		<div class = "sideSpacer"></div>
+		<div class = "shouldGrow">
+			<p>Contact info.</p>
+		</div>
+		<div class = "shouldGrow">
+			<p>© 2020</p>
+		</div>
+		<div class = "shouldGrow">
+			<p><a href = "/privacy">Privacy & Cookies Policy</a></p>
+		</div>
+		<div>
+			<p><a id = "returnToTop" href = "#bodyDiv">Return to top of page</a></p>
+		</div>
+		<div class = "sideSpacer"></div>
 	</div>
-	<div class = "shouldGrow">
-		<p><a href = "/privacy">Privacy & Cookies Policy</a></p>
-	</div>
-	<div>
-		<p><a id = "returnToTop" href = "#bodyDiv">Return to top of page</a></p>
-	</div>
-	<div class = "sideSpacer"></div>
-</div>
+	<!-- end footer -->
 
 </div></body>
+
 </html>
