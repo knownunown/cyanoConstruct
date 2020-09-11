@@ -12,11 +12,10 @@ function redirect(url){
 }
 
 function login(){
-	var loginData = "{'email': '" + document.getElementById("emailLogin").value + "', 'remember': '" + document.getElementById("loginRememberMe").checked.toString() + "'}";
-
 	//send request
 	$.ajax({
-		data : {"loginData": loginData},
+		data : {"email": document.getElementById("emailLogin").value,
+				"remember": document.getElementById("loginRememberMe").checked},
 		type : 'POST',
 		url : '/loginProcess'
 		})
@@ -33,10 +32,10 @@ function login(){
 }
 
 function register(){
-	var registrationData = "{'email': '" + document.getElementById("emailRegister").value + "', 'remember': '" + document.getElementById("registerRememberMe").checked.toString() + "'}";
 	//send request
 	$.ajax({
-		data : {"registrationData": registrationData},
+		data : {"email": document.getElementById("emailRegister").value,
+				"remember": document.getElementById("registerRememberMe").checked},
 		type : 'POST',
 		url : '/registerProcess'
 		})
@@ -57,11 +56,11 @@ function onSignIn(googleUser) {
 
 	var IDtoken = googleUser.getAuthResponse().id_token;
 
-	var loginData = "{'fullName': \"\"\"" + profile.getName() + "\"\"\", 'email': \"\"\"" + profile.getEmail() + 
-					"\"\"\", 'remember': '" + document.getElementById("googleRememberMe").checked.toString() + "', 'IDtoken': \"\"\"" + IDtoken + "\"\"\"}";
-
 	$.ajax({
-		data : {loginData: loginData},
+		data : {"fullName": profile.getName(),
+				"email": profile.getEmail(),
+				"remember": document.getElementById("googleRememberMe").checked,
+				"IDtoken": IDtoken},
 		type : 'POST',
 		url : '/loginGoogle'
 		})

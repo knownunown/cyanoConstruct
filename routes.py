@@ -20,7 +20,6 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 
 #misc.
-from ast import literal_eval as leval
 from werkzeug.urls import url_parse #for redirect parsing
 
 ##########################################################################################
@@ -298,11 +297,10 @@ def loginProcess():
 
     #get information (email & remember me) from the page's form
     try:
-        loginData = leval(request.form["loginData"])
-        email = loginData["email"]
+        email = request.form["email"]
 
         try:
-            remember = rf.boolJS(loginData["remember"])
+            remember = rf.boolJS(request.form["remember"])
         except Exception:
             raise ValueError("invalid remember me")
 
@@ -337,18 +335,10 @@ def loginGoogle():
 
     #get information from the page
     try:
-        loginData = leval(str(request.form["loginData"]))   #the str isn't really necessary but
-                                                            #when printing, the IDtoken gets cut off
-                                                            #and some other issue must have existed
-                                                            #so it couldn't read the IDtoken.
-                                                            #Now it can, despite not being able to
-                                                            #print it?
-                                                            #so it works but I don't know why
-
-        token = loginData["IDtoken"]
-        email = loginData["email"]
+        token = request.form["IDtoken"]
+        email = request.form["email"]
         try:
-            remember = rf.boolJS(loginData["remember"])
+            remember = rf.boolJS(request.form["remember"])
         except Exception:
             raise ValueError("invalid remember me")
 
@@ -428,10 +418,9 @@ def registerProcess():
     
     #get information from the page's form
     try:        
-        registrationData = leval(request.form["registrationData"])
-        email = registrationData["email"]
+        email = request.form["email"]
         try:
-            remember = rf.boolJS(registrationData["remember"])
+            remember = rf.boolJS(request.form["remember"])
         except Exception:
             raise ValueError("invalid remember me")
 
@@ -450,7 +439,7 @@ def registerProcess():
 
             #indicate success
             outputStr += "Successfully registered and logged in as {email}.<br>".format(
-                                            email = registrationData["email"])
+                                            email = email)
             succeeded = True
         except Exception as e:
             outputStr += "ERROR: " + str(e) + "<br>"
@@ -488,10 +477,8 @@ def googleConnect():
 
     #get information
     try:
-        connectData = leval(request.form["connectData"])
-
-        token = connectData["IDtoken"]
-        email = connectData["email"]
+        token = request.form["IDtoken"]
+        email = request.form["email"]
 
         #check token
 
@@ -623,10 +610,8 @@ def findSpacers():
 
     #get data
     try:
-        spacersData = leval(request.form["spacersData"])
-        
-        newPosStr = spacersData["componentPos"]
-        newTerminalStr = spacersData["isTerminal"]
+        newPosStr = request.form["componentPos"]
+        newTerminalStr = request.form["isTerminal"]
     except Exception:
         validInput = False
         outputStr = "ERROR: invalid input received.<br>"
@@ -676,10 +661,9 @@ def findPrimers():
 
     #get form data
     try:
-        primersData = leval(request.form["primersData"])
-        TMstr = primersData["meltingPoint"]
-        rangeStr = primersData["meltingPointRange"]
-        skipStr = primersData["skipPrimers"]
+        TMstr = request.form["meltingPoint"]
+        rangeStr = request.form["meltingPointRange"]
+        skipStr = request.form["skipPrimers"]
         skipPrimers = rf.boolJS(skipStr)
 
     except Exception:
@@ -813,8 +797,6 @@ def finishComponent():
             #get the ID of the new component, for the ZIP download link/button
             newID = newComponent.getID()
 
-            print("get ID")
-
             succeeded = True
             
         except Exception as e:
@@ -862,11 +844,9 @@ def newNamedSeq():
 
     #get data from web form
     try:
-        newNSData = leval(request.form["newNSData"])
-
-        newNSType = newNSData["NStype"]
-        newNSName = newNSData["NSname"]
-        newNSSeq = newNSData["NSseq"].upper()
+        newNSType = request.form["NStype"]
+        newNSName = request.form["NSname"]
+        newNSSeq = request.form["NSseq"].upper()
 
     except Exception:
         validInput = False
@@ -909,19 +889,14 @@ def newBackbone2():
 
     #get information from the web form
     try:
-        backboneData = leval(request.form["newBackboneData"])
-
-        BBname = backboneData["backboneName"]
-        BBdesc = backboneData["backboneDesc"]
-        BBseq = backboneData["backboneSeq"]
-        BBtype = backboneData["backboneType"]
-        BBfeatures = backboneData["backboneFeatures"]
-        #BBfeatures will have had " replaced with &quot; and ' replaced with &#039;
-            #in order to be parsed properly. These replacements must be reversed
-        BBfeatures = BBfeatures.replace("&quot;", "\\\"").replace("&#039;", "\'")
+        BBname = request.form["backboneName"]
+        BBdesc = request.form["backboneDesc"]
+        BBseq = request.form["backboneSeq"]
+        BBtype = request.form["backboneType"]
+        BBfeatures = request.form["backboneFeatures"]
 
     except Exception as e:
-        print(e)
+        printIf(e)
         validInput = False
         outputStr = "ERROR: invalid input received.<br>"
 
@@ -954,8 +929,6 @@ def newBackbone2():
         try:
             getCurrUser().createBackbone(BBname, BBtype, BBdesc, seqBefore, seqAfter, features)
 
-            print("created")
-
             #outputStr
             libraryName = "Personal"
             outputStr += ("Successfully created <a target = '_blank' href = '/library#"
@@ -985,29 +958,13 @@ def backbonePreview():
 
     #get data
     try:
-        previewData = leval(request.form["previewData"])
-        #maybe evaluate the length of the thing before evaluating it?
-        #Because apparently leval could crash python if it's too much
-        
-        keyList = list(previewData.keys())
-        
-        #the limit of 64 is arbitrary, meant to prevent spam or overloading the site
-        #it can be made higher, if people begin genuinely trying to make 65+ features.
-        if(len(keyList) > 64):
-            validInput = False
-            outputStr += "ERROR: only 64 features are allowed.<br>"
-        
-        #remove all empty features
-        for key in keyList:
-            if(previewData[key] == {}):
-                del previewData[key]
-            int(key) #ensures all keys are integers. An error will be raised if not.
+        numFeatures = int(request.form["numFeatures"])
             
-        printIf(previewData)
+        printIf(request.form)
         
     except Exception as e:
         validInput = False
-        print(e)
+        printIf(e)
         outputStr = "ERROR: Invalid input received.<br>"
     
     #make features
@@ -1019,21 +976,22 @@ def backbonePreview():
                        "unassignedDNA": "unassigned DNA", "unassignedRNA": "unassigned RNA"}
         try:
             #go through each feature
-            for key in previewData.keys():
-                field = previewData[key]
-                featType = field["featureType" + key]
+            for key in range(numFeatures):
+                featType = request.form["featureType{}".format(key)]
                 
                 #get locations
                 #if there is just locus: the origin
-                if(featType == "origin"):
-                    locOrig = int(field["locationOrigin" + key])
+                if(featType == "none"):
+                    continue
+                elif(featType == "origin"):
+                    locOrig = int(request.form["locationOrigin{}".format(key)])
                     if(locOrig < 1):
                         validInput = False
                         outputStr += "ERROR: origin location must be at least 1.<br>"
                 #all other feature types have a start and end location
                 else:
-                    locStart =  int(field["locationStart" + key])
-                    locEnd =  int(field["locationEnd" + key])
+                    locStart =  int(request.form["locationStart{}".format(key)])
+                    locEnd =  int(request.form["locationEnd{}".format(key)])
                     
                     if(locStart < 1 or locEnd < 1):
                         outputStr += "ERROR: locations for feature #{} must be at least 1.<br>".format(key)
@@ -1051,20 +1009,22 @@ def backbonePreview():
                     direction = False
                     
                     try:
-                        direction = field["direction" + key]
+                        direction = request.form["direction{}".format(key)]
                     except Exception:
                         pass
                     
                     #if there is a direction, add it to the string
                     if(direction):
-                        if(direction not in ["left", "right", "both"]):
+                        if(direction == "none"):
+                            pass
+                        elif(direction not in ["left", "right", "both"]):
                             raise Exception("invalid direction {}".format(direction))
                         else:
                             featureStr += "\t\t\t/direction={direction}\n".format(direction = direction)
                     
                 elif(featType == "source"):
-                    organism = field["organism" + key]
-                    molType = field["molType" + key]
+                    organism = request.form["organism{}".format(key)]
+                    molType = request.form["molType{}".format(key)]
                     
                     if(len(organism) > 64):
                         validInput = False
@@ -1080,7 +1040,7 @@ def backbonePreview():
                                                             molLong = molLong)
                     
                 elif(featType == "CDS"):
-                    gene = field["geneName" + key]
+                    gene = request.form["geneName{}".format(key)]
                     
                     if(len(gene) > 64):
                         validInput = False
@@ -1092,7 +1052,7 @@ def backbonePreview():
                             geneName = gene)
                     
                 elif(featType == "misc"):
-                    note = field["miscNote" + key]
+                    note = request.form["miscNote{}".format(key)]
                     
                     if(len(note) > 1024):
                         validInput = False
@@ -1109,7 +1069,7 @@ def backbonePreview():
 
         except Exception as e:
             validInput = False
-            print(e)
+            printIf(e)
             outputStr = "ERROR: Invalid input received.<br>"
         
         if(validInput):
@@ -1246,28 +1206,30 @@ def processAssembly():
 
     #get info.
     try:
-        formData = request.form["assemblyData"]
-        dataDict = leval(formData)
-    except Exception:
+        #get basic info.
+        offset = int(request.form["timezoneOffset"])
+        bbID = request.form["backbone"]
+        numMidElem = int(request.form["numMidElements"])
+
+    except Exception as e:
+        printIf(e)
         validInput = False
+        succeeded = False
         outputStr = "ERROR: bad input."
 
     #insert more validation?
 
     if(validInput):
-        printIf("ASSEMBLING SEQUENCE FROM:\n{}".format(dataDict))
-        
         outputStr = "Backbone:<br>"
 
         try:
-            #get timezone offset from the data
+            #store timezone offset as a cookie
             #this is used so the .gb file has a date that is accurate to
             #the user's timezone.
-            offset = int(dataDict["timezoneOffset"])
             session["timezoneOffset"] = offset
 
             #get the backbone
-            bbID = int(dataDict["backbone"])
+            #bbID = int(dataDict["backbone"])
             bb = BackboneDB.query.get(bbID)
             
             #check if the backbone exists.
@@ -1303,86 +1265,73 @@ def processAssembly():
         except Exception as e:
             validInput = False
             succeeded = False
-            print(e)
+            printIf(e)
 
-        #remove from dataDict the info. that is not about a specific element
-        del dataDict["fidelity"]
-        del dataDict["backbone"]
-        del dataDict["timezoneOffset"]
+        #gather the components
+        if(validInput):
+            outputStr += "<br>Components:<br>"
 
-        outputStr += "<br>Components:<br>"
-        
-        #go through the dataDict, creating another dict of all elements,
-        #gatheredElements, with the position of each element as the key
-        #and the value being a dict that will eventually have "type" and "name"
-        #key-value combinations
-        gatheredElements = {}
-        for key in dataDict.keys():
-            number = int(key[8:])
-            
-            if(number not in gatheredElements.keys()):
-                gatheredElements[number] = {}
-                
-            if(key[0:8] == "elemType"):
-                gatheredElements[number]["type"] = dataDict[key]
-                
-            elif(key[0:8] == "elemName"):
-                gatheredElements[number]["name"] = dataDict[key]
+            #allPositions stores the positions of all of the elements that were submitted
+            allPositions = [0,999]
+            allPositions.extend([x for x in range(1, numMidElem + 1)])
 
-        compsList = []
+            #compsList stores all of the components found
+            compsList = []
 
-        #find the components of gatheredElements
-        for posKey in gatheredElements.keys():
-            comp = gatheredElements[posKey]
+            #for each position, find the corresponding component
+            for pos in allPositions:
+                #get the type and name from the request
+                elemType = request.form["elemType{}".format(pos)]
+                elemName = request.form["elemName{}".format(pos)]
 
-            #get the terminalLetter, to be used for searching for components
-            if(posKey == 0):
-                terminalLetter = "S"
-            elif(posKey == 999):
-                terminalLetter = "T"
-            elif(posKey < (len(dataDict) / 2) - 2):
-                terminalLetter = "M"
-            else:
-                terminalLetter = "L"
-                
-            #actually search for the components
-            try:
-                #search default library
-                try: 
-                    foundComp = defaultUser.findComponent(comp["type"], comp["name"],
-                                                          posKey, terminalLetter)
-                    libraryName = "Default"
-                #if not found in the default, search user library
-                except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
-                    foundComp = getCurrUser().findComponent(comp["type"], comp["name"],
-                                                           posKey, terminalLetter)
-                    libraryName = "Personal"
+                #get the terminalLetter, to be used for searching for components
+                if(pos == 0):
+                    terminalLetter = "S"
+                elif(pos == 999):
+                    terminalLetter = "T"
+                elif(pos < numMidElem):
+                    terminalLetter = "M"
+                else:
+                    terminalLetter = "L"
                     
-                #add the found component
-                compsList.append(foundComp.getID())
+                #finally search for the component
+                try:
+                    #search default library
+                    try: 
+                        foundComp = defaultUser.findComponent(elemType, elemName,
+                                                              pos, terminalLetter)
+                        libraryName = "Default"
+                    #if not found in the default, search user library
+                    except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
+                        foundComp = getCurrUser().findComponent(elemType, elemName,
+                                                               pos, terminalLetter)
+                        libraryName = "Personal"
+                        
+                    #add the found component
+                    compsList.append(foundComp.getID())
 
-                outputStr += ("Found: <a target = '_blank' href ='/library#"
-                              "{libraryName}{nameID}'>{nameID}</a><br>").format(
-                                      libraryName = libraryName,
-                                      nameID = foundComp.getNameID())
-            #if a component was not found
-            except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
-                outputStr += ("Could not find:<br>Type: {type}<br>Name: {name}"
-                              "<br>Position: {pos}<br>"
-                              "Terminal letter: {terminalLetter}<br>").format(
-                                      type = comp["type"],
-                                      name = comp["name"],
-                                      pos = str(posKey),
-                                      terminalLetter = terminalLetter)
-                
-                succeeded = False
+                    outputStr += ("Found: <a target = '_blank' href ='/library#"
+                                  "{libraryName}{nameID}'>{nameID}</a><br>").format(
+                                          libraryName = libraryName,
+                                          nameID = foundComp.getNameID())
+                except (ee.SequenceNotFoundError, ee.ComponentNotFoundError):
+                    #if a component was not found
+                    outputStr += ("Could not find:<br>Type: {type}<br>Name: {name}"
+                                  "<br>Position: {pos}<br>"
+                                  "Terminal letter: {terminalLetter}<br>").format(
+                                          type = elemType,
+                                          name = elemName,
+                                          pos = pos,
+                                          terminalLetter = terminalLetter)
+                    
+                    succeeded = False
     
     #proceed if succeeded, or if everything was found
     if(succeeded):
         #save the component IDs to the session
         session["assemblyCompIDs"] = compsList
         outputStr += "<br>Full sequence can be downloaded."
-        
+    
     else:
         outputStr += ("<br>Errors in finding components are often due to not having"
                       "a component with the right terminal letter.<br>Sequence not created.")

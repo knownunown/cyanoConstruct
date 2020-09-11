@@ -153,21 +153,21 @@ function findSpacers(){
 	var pos0 = document.getElementById("componentPos0");
 	var posT = document.getElementById("componentPosT");
 
+	var componentPos = document.getElementById("componentPos").value;
+	var isTerminal = document.getElementById("componentTerminal").checked;
+
 	if(!pos0.disabled && pos0.checked){
-		var spacersData = "{'componentPos': '0', 'isTerminal': '" + document.getElementById("componentTerminal").checked + "'}";
+		componentPos = 0;
 	}
 	else if(!posT.disabled && posT.checked){
-		var spacersData = "{'componentPos': '999', 'isTerminal': '" + document.getElementById("componentTerminal").checked + "'}";
-	}
-	else{
-		var spacersData = "{'componentPos': '" + document.getElementById("componentPos").value + 
-						"', 'isTerminal': '" + document.getElementById("componentTerminal").checked + "'}";
+		componentPos = 999;
 	}
 
 
 	//actually find the spacers via request to the server
 	$.ajax({
-		data : {"spacersData": spacersData},
+		data : {"componentPos": componentPos,
+				"isTerminal": isTerminal},
 		type : 'POST',
 		url : '/findSpacers'
 		})
@@ -234,13 +234,11 @@ function findPrimers(){
 		return false;
 	}
 
-	primersData = "{'meltingPoint': '" + document.getElementById("componentTM").value + 
-					"', 'meltingPointRange': '" + document.getElementById("TMRange").value + 
-					"', 'skipPrimers': '" + document.getElementById("skipPrimers").checked +"'}";
-
 	//actually find the primers
 	$.ajax({
-		data : {"primersData": primersData},
+		data : {"meltingPoint": document.getElementById("componentTM").value,
+				"meltingPointRange": document.getElementById("TMRange").value,
+				"skipPrimers": document.getElementById("skipPrimers").checked},
 		type : 'POST',
 		url : '/findPrimers'
 		})
@@ -472,14 +470,11 @@ function newNS(){
 	var seq = document.getElementById("sequenceSeq").value;
 	seq = seq.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
-	//create the NamedSequence
-	var newNSData = "{'NStype': '" + document.getElementById("seqType").value +
-					"', 'NSname': '" + name + 
-					"', 'NSseq': '" + seq + "'}";
-
 	//send request
 	$.ajax({
-		data : {"newNSData": newNSData},
+		data : {"NStype": document.getElementById("seqType").value,
+				"NSname": name,
+				"NSseq": seq},
 		type : 'POST',
 		url : '/newNamedSeq'
 		})
@@ -663,27 +658,13 @@ function newBackbone(){
 
 	var features = document.getElementById("featuresFile").innerText + "\n" + 
 				   document.getElementById("featuresInput").innerText;
-	features = features.replace(/"""/g, "&quot;&quot;&quot;").replace(/'''/g, "&#039;");
-
-	console.log(features);
-
-	var name = document.getElementById("backboneName").value;
-	name = name.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-
-	var seq = document.getElementById("backboneSeq").value;
-	seq = seq.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-
-	var desc = document.getElementById("backboneDesc").value;
-	desc = desc.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-
-	var newBackboneData = "{'backboneName': '" + name +
-						  "', 'backboneSeq': '" + seq + 
-						  "', 'backboneDesc': '" + desc + 
-						  "', 'backboneType': '" + document.getElementById("backboneType").value +
-						  "', 'backboneFeatures': \"\"\"" + features + "\"\"\"}";
 
 	$.ajax({
-		data : {"newBackboneData": newBackboneData},
+		data : {"backboneName": document.getElementById("backboneName").value,
+			  	"backboneSeq": document.getElementById("backboneSeq").value,
+			  	"backboneDesc": document.getElementById("backboneDesc").value,
+				"backboneType": document.getElementById("backboneType").value,
+			  	"backboneFeatures": features},
 		type : 'POST',
 		url : '/newBackbone'
 		})
@@ -810,6 +791,8 @@ function formatFeature(selection, id){
 					locID + "','" + locID + "')\"></div>";
 
 			break;
+		case "none":
+			break;
 		default:
 			var locIDstart = "locationStart" + id.toString();
 			var locIDend = "locationEnd" + id.toString();
@@ -916,6 +899,7 @@ function removeFeature(){
 }
 
 function allInput(element, array){
+	//appends to an array all input elements nested within a single element
 	if(element.nodeName == "SELECT" || element.nodeName == "INPUT"){
 		if(element.type != "button"){
 			array.push(element);
@@ -958,43 +942,30 @@ function previewFeatures(){
 
 	var features = document.getElementsByClassName("feature");
 
-	var previewData = "{";
+	var previewData = {"numFeatures": features.length};
 
 	for(i = 0; i < features.length; i++){
+		//get featureArray
+		var featureArray = Array();
+		allInput(features[i], featureArray);
 
-		var featureData = Array();
-		allInput(features[i], featureData);
-		console.log(featureData)
-
-		previewData += "'" + i.toString() + "' : {";
-		
-
-		for(j = 0; j < featureData.length; j++){
-			if(featureData[j].value == ""){
+		for(j = 0; j < featureArray.length; j++){
+			if(featureArray[j].value == ""){
 				validInput = false;
 				break;
 			}
-			if(featureData[j].value != "none"){
-				previewData += "'" + featureData[j].name + "': '" + featureData[j].value + "'";
-			}
-
-			if(j != featureData.length - 1){
-				previewData += ", ";
+			else{
+				previewData[featureArray[j].name] = featureArray[j].value;
 			}
 		} //end loop through each input
 
-		previewData += "}";
-
-		if(i != features.length - 1){
-			previewData += ", ";
-		}
 	}//end loop through features
-
-	previewData += "}";
 	
+	console.log(previewData);
+
 	if(validInput){
 		$.ajax({
-			data : {previewData: previewData},
+			data : previewData,
 			type : 'POST',
 			url : '/backbonePreview'
 			})

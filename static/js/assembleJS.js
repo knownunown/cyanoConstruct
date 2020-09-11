@@ -16,7 +16,7 @@ function validPos(pos, name){
 
 //format element divs
 function formatElements(){ //just get a thing for the seqElements
-	var retString = "<select class = 'formField' name = 'elemType" + count + "' id = 'elemType" + count + "' onchange = 'updateForm(this)'>";
+	var retString = "<select class = 'formField eType' name = 'elemType" + count + "' id = 'elemType" + count + "' onchange = 'updateForm(this)'>";
 	for(seqElem of seqElements){
 		retString += "<option value = '" + seqElem[0] + "'>" + seqElem[1] + "</option>"; //need an id?
 	}
@@ -25,7 +25,7 @@ function formatElements(){ //just get a thing for the seqElements
 }
 
 function formatOptions(elementToUse, idNumber = count){ //get a thing for the lower down stuff
-	var retString = "<select class = 'formField' name = 'elemName" + idNumber + "' id = 'elemName" + idNumber + "'>";
+	var retString = "<select class = 'formField eName' name = 'elemName" + idNumber + "' id = 'elemName" + idNumber + "'>";
 	for(option of elemOptions[elementToUse]){
 		var idString = idNumber.toString();
 		if(validPos(idNumber, option)){
@@ -61,9 +61,9 @@ function formatSec0(){
 	format += "<span class = 'elemName'>0:</span>";
 	//first select
 	format += "<label for = 'elemType0'>Type</label>";
-	format += "<div><select class = 'formField' name = 'elemType0' id = 'elemType0'><option value = 'Pr'>Promoter</option></select></div>";
+	format += "<div><select class = 'formField eType' name = 'elemType0' id = 'elemType0'><option value = 'Pr'>Promoter</option></select></div>";
 	//second select
-	format += "<label for = 'elemName0'>Name</label>";
+	format += "<label for = 'elemName0 eName'>Name</label>";
 	format += "<div>";
 	format += formatOptions("Pr", 0); //idk man
 	format += "</div></div>";
@@ -75,9 +75,9 @@ function formatSecT(){
 	format += "<span class = 'elemName'>T:</span>";
 	//first select
 	format += "<label for = 'elemType999'>Type</label>";
-	format += "<div><select class = 'formField' name = 'elemType999' id = 'elemType999'><option value = 'Term'>Terminator</option></select></div>";
+	format += "<div><select class = 'formField eType' name = 'elemType999' id = 'elemType999'><option value = 'Term'>Terminator</option></select></div>";
 	//second select
-	format += "<label for = 'elemName999'>Name</label>";
+	format += "<label for = 'elemName999 eName'>Name</label>";
 	format += "<div>";
 	format += formatOptions("Term", 999);
 	format += "</div></div>";
@@ -144,7 +144,7 @@ function submitForm(allData){
 	var successfulSubmit;
 
 	$.ajax({
-		data : {assemblyData: allData},
+		data : allData,
 		type : 'POST',
 		url : '/processAssembly'
 		})
@@ -188,10 +188,107 @@ function validate(){
 	var collectedError = "";
 
 	//check values of elements & make allData
-	var allFields = document.getElementsByClassName("formField");
-
 	var now = new Date();
 
+	var allData = {"timezoneOffset": now.getTimezoneOffset(),
+					"backbone": document.getElementById("backboneName").value};
+
+	//go through all of the elemTypes and elemNames
+	var allTypes = document.getElementsByClassName("eType");
+	var allNames = document.getElementsByClassName("eName");
+
+	//add the names
+	for(i = 0; i < allNames.length; i++){
+		if(allNames[i].value == ""){
+			$("#elementError").text("Not all elements have values.");
+			retValue = false;
+			return false;	
+		}
+
+		var name = allNames[i].name; 	//key: name
+		var value = allNames[i].value; //value: value
+
+		//check terminalLetter
+		var pos = name.substr(8);
+		var isTerminal = (pos == count - 1);
+
+		//should never happen
+		if(posTermComb[value] == "undefined"){
+			retValue = false;
+			collectedError += "Can't find valid " + value + ".";
+		}
+			
+		else{
+			var validPos = false;
+			var validLetter = false;
+
+			//go through all possible position & terminalLetter combinations
+			//ensure it is valid
+			for(posTerm of posTermComb[value]){
+				//only look further if it has the right position
+				if(pos == posTerm.position){
+					//found a valid position
+					validPos = true;
+
+					//check the terminalLetter
+										//last element
+					if(isTerminal){
+						if(posTerm.terminalLetter == "L"){
+							validLetter = true;
+							break;
+						}
+					}
+										//middle element
+					else if(posTerm.terminalLetter == "M"){
+						validLetter = true;
+						break;
+					}
+										//special element (S or T)
+					else if((pos == "0" && posTerm.terminalLetter == "S") || (pos == "999" && posTerm.terminalLetter == "T")){
+						validLetter = true;
+						break;
+					}
+				}
+			}
+			
+			//error messages
+			if(!validPos){ 				//bad position
+				retValue = false;
+				collectedError += "No valid " + value + " at position " + pos + ". ";
+			}
+			if(!validLetter){ 			//bad terminalLetter
+				retValue = false;
+				if(isTerminal){
+					collectedError += "No valid terminal " + value + " at position " + pos + ". ";
+				}
+				else{
+					collectedError += "No valid non-terminal " + value + " at position " + pos + ". ";
+				}
+			}
+		}
+		
+		allData[name] = value;
+
+	}
+
+	//add the types (much simpler)
+	for (i = 0; i < allTypes.length; i ++){
+		if(allTypes[i].value == ""){
+			$("#elementError").text("Not all elements have values.");
+			retValue = false;
+			return false;	
+		}
+
+		var name = allTypes[i].name; 	//key: name
+		var value = allTypes[i].value; //value: value
+
+		allData[name] = value;
+	}
+
+	allData["numMidElements"] = allTypes.length - 2; //-2 to not count elem0 and elemT, which are implied
+	console.log(allData);
+
+	/*
 	var allData = "{'timezoneOffset': '" + now.getTimezoneOffset() + "', ";
 	for (i = 0; i < allFields.length; i++){
 
@@ -274,6 +371,7 @@ function validate(){
 		}
 	}
 	allData += "}";
+	*/
 
 	//submit
 	if(retValue){

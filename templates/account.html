@@ -3,33 +3,7 @@
 {% block pageName %}Account{% endblock %}
 
 {% block headContent %}
-<script>
-	function onSignIn(googleUser) {
-		alert("you're logging in");
-
-		var profile = googleUser.getBasicProfile();
-
-		var IDtoken = googleUser.getAuthResponse().id_token;
-
-		var connectData = "{'IDtoken': '" + IDtoken + "', 'fullName': '" + profile.getName() + "', 'email': '" + profile.getEmail() + "'}";
-
-		$.ajax({
-			data : {connectData: connectData},
-			type : 'POST',
-			url : '/googleConnect'
-			})
-		.done(function(data){
-			document.getElementById("connectOutput").innerHTML = data.output;
-		});
-		event.preventDefault();
-	}
-
-
-	function googleConnect(){
-		return false;
-	}
-</script>
-
+<script src = "/static/js/accountJS.js" ></script>
 {% endblock %}
 
 {% block accountClass %}active{% endblock %}
