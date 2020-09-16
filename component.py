@@ -1,5 +1,5 @@
 """
-Defines the classes: NamedSequence, SpacerData, PrimerData, Component
+Defines the classes: NamedSequence, SpacerData, PrimerData
 
 @author: Lia Thomson
 """

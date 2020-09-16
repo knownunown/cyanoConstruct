@@ -485,8 +485,7 @@ function newNS(){
 		if(data.succeeded){
 			document.getElementById("resetSeqForm").disabled = false;
 		}
-		else{
-		}
+		
 	});
 	event.preventDefault();
 

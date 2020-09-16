@@ -1,3 +1,4 @@
+/* Toggling sections */
 function switchToggleText(headDiv){
 	//Change the text displayed due to toggling display
 	var span = headDiv.nextElementSibling;
@@ -21,6 +22,8 @@ function toggleDisplay(id){
 		div.style.display = "none";
 	}
 }
+
+/* Page loading-related functions */
 
 //technically, removes the hash and then refreshes BUT IT DOESN'T QUITE WORK
 function refreshPage(){
@@ -58,16 +61,8 @@ function bodyOnload(){
 	return false;
 }
 
-function downloadComponentSequence(id){
-	var date = new Date();
-	var offset = date.getTimezoneOffset();
-
-	window.location.href = "/componentZIP.zip?id=" + id + "&timezoneOffset=" + offset;
-
-	return false;
-}
-
 function showLibrary(libraryName){
+	//Displays a library tab, either the Personal or Default library
 	var allLibraries = document.getElementsByClassName("libraryContents");
 
 	for(library of allLibraries){
@@ -88,8 +83,10 @@ function showLibrary(libraryName){
 	return false;
 }
 
+/* Functions for removing things */
 
 function removeComponent(id){
+	//delete a component from the database
 	if(window.confirm("This will permanently remove a component from your library.\nAre you sure?")){
 
 		$.ajax({
@@ -105,17 +102,14 @@ function removeComponent(id){
 			else{
 				alert("ERROR: " + data.errorMessage);
 			}
-
 		});
-
 
 		return true;
 	}
 }
 
 function removeSequence(id){
-	//oh I need to pass the name in
-
+	//delete a named sequence from the database
 	if(window.confirm("This will permanently remove this sequence and all components derived from it from your library.\nAre you sure?")){
 
 		$.ajax({
@@ -131,15 +125,14 @@ function removeSequence(id){
 			else{
 				alert("ERROR: " + data.errorMessage);
 			}
-
 		});
-
 
 		return true;
 	}
 }
 
 function removeBackbone(id){
+	//delete a backbone from the database
 	if(window.confirm("This will permanently remove this backbone from your library.\nAre you sure?")){
 
 		$.ajax({
@@ -162,7 +155,10 @@ function removeBackbone(id){
 	}
 }
 
+/* Downloads */
+
 function downloadLibrary(libName){
+	//download an entire library
 	$.ajax({
 		data : {libraryName: libName},
 		type : 'POST',
@@ -180,4 +176,14 @@ function downloadLibrary(libName){
 
 	});
 	event.preventDefault();
+}
+
+function downloadComponentSequence(id){
+	//download a single component
+	var date = new Date();
+	var offset = date.getTimezoneOffset();
+
+	window.location.href = "/componentZIP.zip?id=" + id + "&timezoneOffset=" + offset;
+
+	return false;
 }
