@@ -12,7 +12,7 @@
           name = "cc-devshell";
 
           buildInputs = with pkgs; [
-            python3 poetry
+            python3 python-language-server python3Packages.pylint poetry
           ];
 
           nativeBuildInputs = with pkgs; [];
