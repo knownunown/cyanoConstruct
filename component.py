@@ -8,7 +8,7 @@ import random
 #from jinja2 import Markup
 
 #from cyanoConstruct import NamedSequenceDB, SpacerDataDB, PrimerDataDB
-from cyanoConstruct import checkType
+from misc import checkType
 
 def inverseSeq(sequence):
 	"""Return complementary strand to an all-caps 5' to 3' sequence.

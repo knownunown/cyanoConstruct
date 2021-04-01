@@ -10,10 +10,9 @@ Contains the tables: UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, Co
 from jinja2 import Markup #for HTML display of Component
 from datetime import datetime, timedelta #for time in GenBank file
 from time import time
+from __init__ import db
 
-from cyanoConstruct import db
-
-EXPIRATIONSECS = 3600 #expires in an hour
+EXPIRATIONSECS = 3600  #expires in an hour
 
 class UserDataDB(db.Model):
 	__tablename__ = "UserData"

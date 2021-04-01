@@ -7,11 +7,11 @@ cyanoConstruct file to run (because there is currently no __main__ file)
 """
 
 import os
-from sys import path as sysPath
+#from sys import path as sysPath
 
-sysPath.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#sysPath.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from cyanoConstruct import app
+from __init__ import app
 
 if(__name__ == "__main__"):
     app.run(debug=True)

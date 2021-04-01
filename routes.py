@@ -5,12 +5,14 @@ Routes file, which is used to load website pages and process input from the site
 
 @author: Lia Thomson
 """
-from cyanoConstruct import app, session, defaultUser, nullPrimerData, printIf
-from cyanoConstruct import UserData, SpacerData, PrimerData
-from cyanoConstruct import NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB
-from cyanoConstruct import login, current_user, login_user, logout_user, login_required
-import cyanoConstruct.routesFuncs as rf
-import cyanoConstruct.enumsExceptions as ee
+
+from misc import printIf
+from __init__ import login, app, session, defaultUser, nullPrimerData
+from users import UserData, SpacerData, PrimerData
+from database import NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB
+from flask_login import current_user, login_user, logout_user, login_required
+import routesFuncs as rf
+import enumsExceptions as ee
 
 #flask
 from flask import request, render_template, jsonify, Response, redirect

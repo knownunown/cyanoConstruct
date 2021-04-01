@@ -3,7 +3,9 @@ from sys import path as sysPath
 
 sysPath.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from cyanoConstruct import PrimerData, db, UserDataDB, PrimerDataDB
+from __init__ import db
+
+from database import PrimerData, UserDataDB, PrimerDataDB
 
 #recalculates primers
 

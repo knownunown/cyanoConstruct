@@ -7,9 +7,9 @@ Functions that are used by the routes file.
 """
 
 #design
-from cyanoConstruct.enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
-from cyanoConstruct import UserData
-from cyanoConstruct import defaultUser, checkType, maxPosition, printIf
+from enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
+from users import UserData
+from __init__ import defaultUser, checkType, maxPosition, printIf
 from string import ascii_letters, digits
 
 #assembly

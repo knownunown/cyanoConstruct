@@ -5,10 +5,10 @@ UserData class, used to manage users and their actions.
 
 @author: Lia Thomson
 """
-from cyanoConstruct import printIf, checkType
-from cyanoConstruct import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
-from cyanoConstruct import NamedSequence, SpacerData, PrimerData
-import cyanoConstruct.enumsExceptions as e
+from misc import printIf, checkType
+from database import db, UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
+from component import NamedSequence, SpacerData, PrimerData
+import enumsExceptions as e
 
 class UserData:
 	def __init__(self):

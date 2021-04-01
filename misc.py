@@ -5,7 +5,8 @@ Misc. multi-use functions.
 
 @author: Lia Thomson
 """
-from cyanoConstruct import printActions
+
+from __init__ import printActions
 
 def printIf(message):
     """Helper function that prints a message if printActions is True."""
