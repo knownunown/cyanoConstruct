@@ -7,10 +7,11 @@ Routes file, which is used to load website pages and process input from the site
 """
 
 from misc import printIf
-from __init__ import login, app, session, nullPrimerData
-from users import UserData, SpacerData, PrimerData, defaultUser
+from users import UserData, defaultUser
+from component import SpacerData, PrimerData, nullPrimerData
 from database import NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB
-from flask_login import current_user, login_user, logout_user, login_required
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask import Blueprint, session
 import routesFuncs as rf
 import enumsExceptions as ee
 
@@ -29,6 +30,10 @@ from werkzeug.urls import url_parse #for redirect parsing
 CLIENT_ID = "431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleusercontent.com"
 
 ##############################   USER-RELATED   ##############################
+
+app = Blueprint('routes', __name__, template_folder='templates/')
+login = LoginManager()
+
 #logging in & current user
 @login.user_loader
 def load_user(user_id):
@@ -267,7 +272,7 @@ def errorZIP(error):
 ###############################################################################
 
 @app.route("/login", methods = ["POST", "GET"])
-def login():
+def loginRoute():
         """Route for /login"""
         #redirect if already logged in
         if(checkLoggedIn()):

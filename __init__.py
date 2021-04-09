@@ -11,31 +11,32 @@ __version__ = "0.4.4"
 
 #import statements
 from flask import Flask, session
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask_login import current_user, login_user, logout_user, login_required
 
 from config import Config
 
 #Flask app
 app = Flask(__name__)
-login = LoginManager(app)
 
-app.config.from_object(Config)
+app.config.update(Config)
 
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-#database
-db = SQLAlchemy(app, session_options={"expire_on_commit": False})
+# database
+from database import db
+db.init_app(app)
 migrate = Migrate(app, db)
+app.app_context().push() # HACK: refactor out and use `with`
+db.create_all()
 
 #import modules
 from misc import printIf, checkType
 import enumsExceptions
-db.create_all()
 
 from component import NamedSequence, SpacerData, PrimerData, inverseSeq
-nullPrimerData = PrimerData.makeNull()
 maxPosition = SpacerData.getMaxPosition()
 
-import routesFuncs
-from routes import *
+from routes import app as base
+from routes import login
+login.init_app(app)
+app.register_blueprint(base)

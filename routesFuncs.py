@@ -9,8 +9,11 @@ Functions that are used by the routes file.
 #design
 from enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
 from users import UserData, defaultUser
-from __init__ import checkType, maxPosition, printIf
+from misc import checkType, printIf
 from string import ascii_letters, digits
+
+from component import SpacerData
+maxPosition = SpacerData.getMaxPosition()
 
 #assembly
 from datetime import datetime, timedelta

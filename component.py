@@ -579,3 +579,5 @@ class PrimerData:
 
         def getTMright(self):
                 return self.__TMright
+
+nullPrimerData = PrimerData.makeNull()
