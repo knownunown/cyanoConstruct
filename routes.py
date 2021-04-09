@@ -1274,8 +1274,9 @@ def processAssembly():
                         outputStr += "<br>Components:<br>"
 
                         #allPositions stores the positions of all of the elements that were submitted
-                        allPositions = [0,999]
+                        allPositions = [0]
                         allPositions.extend([x for x in range(1, numMidElem + 1)])
+                        allPositions.append(999)
 
                         #compsList stores all of the components found
                         compsList = []
