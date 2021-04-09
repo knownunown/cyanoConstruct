@@ -1359,6 +1359,8 @@ def assemblyZIP():
         except KeyError:
                 return errorZIP("No assembled sequence.")
 
+        packageComps = request.args.get("components") is not None
+
         #gather the backbone and components from the session
         try:
                 #get the backbone & see if the user has permission to use it
@@ -1373,11 +1375,16 @@ def assemblyZIP():
                 #get features from the backbone
                 features = bb.getFeatures().splitlines()
 
+                files = {}
+
                 #go through each saved component
-                for compID in compsList:
+                for compNum, compID in enumerate(compsList):
                         #get the component & see if the user has permission to use it
                         comp = ComponentDB.query.get(compID)
                         checkPermission(comp)
+
+                        if packageComps:
+                                files[f"{compNum}_{comp.getNameID()}.gb"] = comp.getGenBankFile(offset)
 
                         #add the component to the assembly
                         #if the component is element 0, (a promoter)
@@ -1427,7 +1434,8 @@ def assemblyZIP():
                 fileFASTA = ">CyanoConstruct assembled sequence\n" + fullSeq
 
                 #make the .zip
-                data = rf.makeZIP({"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB})
+                files = {**files, **{"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB}}
+                data = rf.makeZIP(files)
 
         except Exception as e:
                 return errorZIP(e)

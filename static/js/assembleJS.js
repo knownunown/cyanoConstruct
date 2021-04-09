@@ -388,7 +388,8 @@ function validate(){
 function downloadFile(){
 	if(submitted){
 		$("#downloadMessage").text("Preparing files...");
-		window.location.href = "/assembledSequence.zip";
+        let withComps = document.querySelector("#includeComponents").checked;
+		window.location.href = `/assembledSequence.zip${withComps ? "?components=1" : ""}`;
 		event.preventDefault();
 		$("#downloadMessage").text("Downloaded.");
 	}

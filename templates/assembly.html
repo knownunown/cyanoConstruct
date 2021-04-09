@@ -96,11 +96,15 @@ var backboneDescs = {{ backboneDescs|tojson }};
 			</ul>
 		</div>
 
+        <div>
+        <input type="checkbox" id="includeComponents">
+        <label for="includeComponents">Include individual components</label>
+        </div>
 		<hr style = "width: 100%">
 
 		<!-- download button -->
 		<div>
-			<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download Sequences">
+			<input type = "button" class = "styledButton" onclick = "downloadFile()" value = "Download">
 			<span id = "downloadMessage"></span>
 		</div>
 	</form>
