@@ -8,8 +8,8 @@ Functions that are used by the routes file.
 
 #design
 from enumsExceptions import SequenceMismatchError, SequenceNotFoundError, BackboneNotFoundError
-from users import UserData
-from __init__ import defaultUser, checkType, maxPosition, printIf
+from users import UserData, defaultUser
+from __init__ import checkType, maxPosition, printIf
 from string import ascii_letters, digits
 
 #assembly

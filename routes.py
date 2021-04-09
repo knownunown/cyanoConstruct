@@ -7,8 +7,8 @@ Routes file, which is used to load website pages and process input from the site
 """
 
 from misc import printIf
-from __init__ import login, app, session, defaultUser, nullPrimerData
-from users import UserData, SpacerData, PrimerData
+from __init__ import login, app, session, nullPrimerData
+from users import UserData, SpacerData, PrimerData, defaultUser
 from database import NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB
 from flask_login import current_user, login_user, logout_user, login_required
 import routesFuncs as rf

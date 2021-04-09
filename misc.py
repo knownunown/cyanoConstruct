@@ -6,7 +6,7 @@ Misc. multi-use functions.
 @author: Lia Thomson
 """
 
-from __init__ import printActions
+printActions = True
 
 def printIf(message):
     """Helper function that prints a message if printActions is True."""

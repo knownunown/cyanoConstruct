@@ -7,7 +7,6 @@ Created on Wed Apr  1 21:32:02 2020
 
 cyanoConstruct __init__ file
 """
-printActions = True
 __version__ = "0.4.4"
 
 #import statements
@@ -32,17 +31,11 @@ migrate = Migrate(app, db)
 #import modules
 from misc import printIf, checkType
 import enumsExceptions
-from database import UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, ComponentDB, BackboneDB
 db.create_all()
+
 from component import NamedSequence, SpacerData, PrimerData, inverseSeq
 nullPrimerData = PrimerData.makeNull()
 maxPosition = SpacerData.getMaxPosition()
-from users import UserData
-
-try:
-    defaultUser = UserData.load("default")
-except enumsExceptions.UserNotFoundError:
-    defaultUser = UserData.new("default")
 
 import routesFuncs
 from routes import *

@@ -751,3 +751,9 @@ class UserData:
 		db.session.commit()
 
 		return bb
+
+
+try:
+    defaultUser = UserData.load("default")
+except e.UserNotFoundError:
+    defaultUser = UserData.new("default")
