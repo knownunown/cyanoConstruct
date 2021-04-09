@@ -42,7 +42,7 @@ def load_user(user_id):
         except Exception:
                 return None
 
-login_manager.login_view = "login" #for redirecting if not logged in
+login_manager.login_view = "routes.login" #for redirecting if not logged in
 
 def checkLoggedIn():
         return not getCurrUser().is_anonymous
