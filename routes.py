@@ -32,17 +32,17 @@ CLIENT_ID = "431868350398-t0st3dhimv5i7rc3laka2lv2864kt4pd.apps.googleuserconten
 ##############################   USER-RELATED   ##############################
 
 app = Blueprint('routes', __name__, template_folder='templates/')
-login = LoginManager()
+login_manager = LoginManager()
 
 #logging in & current user
-@login.user_loader
+@login_manager.user_loader
 def load_user(user_id):
         try:
                 return UserData.load(user_id)
         except Exception:
                 return None
 
-login.login_view = "login" #for redirecting if not logged in
+login_manager.login_view = "login" #for redirecting if not logged in
 
 def checkLoggedIn():
         return not getCurrUser().is_anonymous
@@ -272,7 +272,7 @@ def errorZIP(error):
 ###############################################################################
 
 @app.route("/login", methods = ["POST", "GET"])
-def loginRoute():
+def login():
         """Route for /login"""
         #redirect if already logged in
         if(checkLoggedIn()):

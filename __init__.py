@@ -37,6 +37,6 @@ from component import NamedSequence, SpacerData, PrimerData, inverseSeq
 maxPosition = SpacerData.getMaxPosition()
 
 from routes import app as base
-from routes import login
-login.init_app(app)
+from routes import login_manager
+login_manager.init_app(app)
 app.register_blueprint(base)
