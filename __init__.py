@@ -26,8 +26,10 @@ from flask_migrate import Migrate
 from database import db
 db.init_app(app)
 migrate = Migrate(app, db)
-app.app_context().push() # HACK: refactor out and use `with`
-db.create_all()
+with app.app_context():
+    # import for the side effects, init the default user.
+    import users
+    db.create_all()
 
 #import modules
 from misc import printIf, checkType
