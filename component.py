@@ -144,209 +144,208 @@ class NamedSequence:
                 return self.__nameID
 
 class SpacerData:
-        """SpacerData is a class used to store spacer data before adding it to the database.
-        It also stores spacer-relevant variables."""
+	"""SpacerData is a class used to store spacer data before adding it to the database.
+	It also stores spacer-relevant variables."""
+	
+	#Spacer-relevant variables
+	
+	#enzyme recognition sites
+	start = "GAAGAC"
+	end = "GTCTTC"
 
-        #Spacer-relevant variables
+	#spacers for elements 0 and T
+	spacer0L = "AGGA"
+	spacer0R = "AAAA"
+	spacerTL = "ACTC"
+	spacerTR = "TACA"
+	
+	#spacers, from highest allowed fidelity to lowest	
+	spacers985 = [spacer0L, spacer0R]
+	spacers981 = ["CAGA", "GATA", "ATTA", "ACTC", "TACA"]
+	spacers958 = ["CCAG","CGGA","TGAA"]
+	spacers917 = ["GGAA", "GCCA", "CACG", "CTTC", "ACTG", "AAGC", "GACC", "ATCG", "AGAG",
+	              "AGCA", "GTGA", "ACGA", "ATAC", "CAAG", "AAGG"]
 
-        #enzyme recognition sites
-        start = "GAAGAC"
-        end = "GTCTTC"
+	spacers = spacers985 + spacers981 + spacers958 + spacers917
 
-        #spacers for elements 0 and T
-        spacer0L = "AGGA"
-        spacer0R = "AAAA"
-        spacerTL = "ACTC"
-        spacerTR = "TACA"
+	#max position for an element for a given fidelity
+	max985 = 1
+	max981 = len(spacers981)
+	max958 = max981 + len(spacers958)
+	max917 = max958 + len(spacers917) + 1
 
-        #spacers, from highest allowed fidelity to lowest
-        spacers985 = [spacer0L, spacer0R]
-        spacers981 = ["TAGA","GATA","ATTA"]
-        spacers958 = ["CTAA", "TGAA", "CCAG", "CGGA", "CATA"]
-        spacers917 = ["GGAA", "GCCA", "CACG", "CTTC", "TCAA", "ACTG", "AAGC",
-                                "GACC","ATCG", "AGAG", "AGCA", "TGAA", "GTGA", "ACGA", "ATAC",
-                                "CAAG", "AAGG"]
+	@staticmethod
+	def getMaxPosition():
+		"""Returns the maximum allowed position of a component."""
+		return len(SpacerData.spacers) - 1
 
-        spacers = spacers985 + spacers981 + spacers958 + spacers917
+	def __init__(self):
+		"""Empty initialization method."""
+		pass
 
-        #max position for an element for a given fidelity
-        max985 = 0
-        max981 = len(spacers981)
-        max958 = max981 + len(spacers958)
-        max917 = max958 + len(spacers917) + 1
+	@classmethod
+	def makeNew(cls, position, isTerminal):
+		"""Create a new SpacerData.
+		
+		PARAMETERS:
+			position: integer position of the component the spacers are for
+			isTerminal: boolean if spacers are for a terminal component
+		
+		RETURNS:
+			newSpacerData: created 
+		
+		RAISES:
+			Exception: if the JSONDict is lacking one of the necessary fields
+		"""
+		#type checking
+		if(type(position) != int):
+			raise TypeError("position is not an int")
+		if(type(isTerminal) != bool):
+			raise TypeError("isTerminal is not a boolean")
 
-        @staticmethod
-        def getMaxPosition():
-                """Returns the maximum allowed position of a component."""
-                return len(SpacerData.spacers) - 1
+		#initialize the instance
+		newSpacerData = cls()
 
-        def __init__(self):
-                """Empty initialization method."""
-                pass
+		#999 is the special position for element T
+		if(position == 999):
+			newSpacerData.__spacerLeft = SpacerData.spacerTL
+			newSpacerData.__spacerRight = SpacerData.spacerTR
+			
+			newSpacerData.__isTerminal = False #I don't know if this is appropriate
+			newSpacerData.__terminalLetter = "T" #T for terminator
 
-        @classmethod
-        def makeNew(cls, position, isTerminal):
-                """Create a new SpacerData.
+		#validation
+		elif(position < 0 or position > SpacerData.getMaxPosition()):
+			raise ValueError("Position out of bounds. (0-{max})".format(
+				max = SpacerData.getMaxPosition()))
+		
+		elif(position == SpacerData.getMaxPosition() and not isTerminal):
+			raise Exception("Position " + position + " must be terminal.")
+		
+		#other positions
+		else:
+			#set the left spacer sequence
+			newSpacerData.__spacerLeft = SpacerData.spacers[position]
+			
+			#set the right spacer sequence
+			if(isTerminal):
+				#if the spacers are for a terminal element
+				newSpacerData.__spacerRight = SpacerData.spacerTL
+				newSpacerData.__isTerminal = True
+				newSpacerData.__terminalLetter = "L" #L for last
+				
+			else:
+				#if the spacers are not for a terminal element
+				newSpacerData.__spacerRight = SpacerData.spacers[position + 1]
+				newSpacerData.__isTerminal = False
+				newSpacerData.__terminalLetter = "M" #m for middle
+		
+			if(position == 0):
+				#if these are spacers for an element 0
+				newSpacerData.__terminalLetter = "S" #s for start
 
-                PARAMETERS:
-                        position: integer position of the component the spacers are for
-                        isTerminal: boolean if spacers are for a terminal component
+		#set position
+		newSpacerData.__position = position
+		
+		#set the NN on each side
+		newSpacerData.setNN()
+		newSpacerData.setFullSpacerSeqs()
+				
+		return newSpacerData
 
-                RETURNS:
-                        newSpacerData: created
+	#json stuff
+	def toJSON(self):
+		"""Returns a JSON-friendly version of the SpacerData."""
+		return vars(self)
+	
+	@classmethod
+	def fromJSON(cls, JSONDict):
+		"""Create a SpacerData using a JSON dict.
+		
+		PARAMETERS:
+			JSONDict: dictionary containing the relevant spacer data information.
+			
+		RETURNS:
+			newSpacerData: created SpacerData
+			
+		RAISES:
+			Exception: if the JSONDict is lacking one of the necessary fields
+		"""
+		newSpacerData = cls()
+				
+		prefix = "_SpacerData__" #used to get private fields
+		
+		try:
+			#set the properties
+			newSpacerData.__spacerLeft = JSONDict[prefix + "spacerLeft"]
+			newSpacerData.__spacerRight = JSONDict[prefix + "spacerRight"]
+			newSpacerData.__isTerminal = JSONDict[prefix + "isTerminal"]
+			newSpacerData.__terminalLetter = JSONDict[prefix + "terminalLetter"]
+			newSpacerData.__position = JSONDict[prefix + "position"]
+			newSpacerData.__leftNN = JSONDict[prefix + "leftNN"]
+			newSpacerData.__rightNN = JSONDict[prefix + "rightNN"]
+			newSpacerData.__fullSeqLeft = JSONDict[prefix + "fullSeqLeft"]
+			newSpacerData.__fullSeqRight = JSONDict[prefix + "fullSeqRight"]
 
-                RAISES:
-                        Exception: if the JSONDict is lacking one of the necessary fields
-                """
-                #type checking
-                if(type(position) != int):
-                        raise TypeError("position is not an int")
-                if(type(isTerminal) != bool):
-                        raise TypeError("isTerminal is not a boolean")
+		except KeyError:
+			raise Exception("Can't create a NamedSequence from this JSONDict.")
+		
+		return newSpacerData
 
-                #initialize the instance
-                newSpacerData = cls()
+	#setters
+	def setFullSpacerSeqs(self):
+		"""Set the SpacerData's full left sequence and full right sequence."""
+		self.__fullSeqLeft = self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
+		self.__fullSeqRight = SpacerData.end + self.getRightNN() + self.getSpacerRight()
 
-                #999 is the special position for element T
-                if(position == 999):
-                        newSpacerData.__spacerLeft = SpacerData.spacerTL
-                        newSpacerData.__spacerRight = SpacerData.spacerTR
+	def setNN(self):
+		"""Calculate and set the SpacerData's NN."""
+		#randomly choose A, G, or C for all four N nucleotides 
+		#technically, T is allowed in certain circumstances, but it is less
+		#complicated to not allow T
+		self.__leftNN = random.choice(["A", "G", "C"]) + random.choice(["A", "G", "C"])
+		self.__rightNN = random.choice(["A", "G", "C"]) + random.choice(["A", "G", "C"])
 
-                        newSpacerData.__isTerminal = False #I don't know if this is appropriate
-                        newSpacerData.__terminalLetter = "T" #T for terminator
+	#complicated getters
+	def __str__(self):
+		retStr = "Spacers for position " + str(self.getPosition())
+		if(self.getIsTerminal()):
+			retStr += " is last element"
+		else:
+			retStr += " is middle element"
+			
+		retStr += "\nLeft:\n" + self.getSpacerLeft()
+		retStr += "\nRight:\n" + self.getSpacerRight()
+		retStr += "\nTerminal Letter: " + self.getTerminalLetter()
+		return retStr
 
-                #validation
-                elif(position < 0 or position > SpacerData.getMaxPosition()):
-                        raise ValueError("Position out of bounds. (0-{max})".format(
-                                                                                        max = SpacerData.getMaxPosition()))
+	#basic getters
+	def getPosition(self):
+		return self.__position 
 
-                elif(position == SpacerData.getMaxPosition() and not isTerminal):
-                        raise Exception("Position " + position + " must be terminal.")
+	def getSpacerLeft(self):
+		return self.__spacerLeft
+	
+	def getSpacerRight(self):
+		return self.__spacerRight
+	
+	def getIsTerminal(self):
+		return self.__isTerminal
+	
+	def getTerminalLetter(self):
+		return self.__terminalLetter
 
-                #other positions
-                else:
-                        #set the left spacer sequence
-                        newSpacerData.__spacerLeft = SpacerData.spacers[position]
+	def getLeftNN(self):
+		return self.__leftNN
+	
+	def getRightNN(self):
+		return self.__rightNN
 
-                        #set the right spacer sequence
-                        if(isTerminal):
-                                #if the spacers are for a terminal element
-                                newSpacerData.__spacerRight = SpacerData.spacerTL
-                                newSpacerData.__isTerminal = True
-                                newSpacerData.__terminalLetter = "L" #L for last
+	def getFullSeqLeft(self):
+		return self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
 
-                        else:
-                                #if the spacers are not for a terminal element
-                                newSpacerData.__spacerRight = SpacerData.spacers[position + 1]
-                                newSpacerData.__isTerminal = False
-                                newSpacerData.__terminalLetter = "M" #m for middle
-
-                        if(position == 0):
-                                #if these are spacers for an element 0
-                                newSpacerData.__terminalLetter = "S" #s for start
-
-                #set position
-                newSpacerData.__position = position
-
-                #set the NN on each side
-                newSpacerData.setNN()
-                newSpacerData.setFullSpacerSeqs()
-
-                return newSpacerData
-
-        #json stuff
-        def toJSON(self):
-                """Returns a JSON-friendly version of the SpacerData."""
-                return vars(self)
-
-        @classmethod
-        def fromJSON(cls, JSONDict):
-                """Create a SpacerData using a JSON dict.
-
-                PARAMETERS:
-                        JSONDict: dictionary containing the relevant spacer data information.
-
-                RETURNS:
-                        newSpacerData: created SpacerData
-
-                RAISES:
-                        Exception: if the JSONDict is lacking one of the necessary fields
-                """
-                newSpacerData = cls()
-
-                prefix = "_SpacerData__" #used to get private fields
-
-                try:
-                        #set the properties
-                        newSpacerData.__spacerLeft = JSONDict[prefix + "spacerLeft"]
-                        newSpacerData.__spacerRight = JSONDict[prefix + "spacerRight"]
-                        newSpacerData.__isTerminal = JSONDict[prefix + "isTerminal"]
-                        newSpacerData.__terminalLetter = JSONDict[prefix + "terminalLetter"]
-                        newSpacerData.__position = JSONDict[prefix + "position"]
-                        newSpacerData.__leftNN = JSONDict[prefix + "leftNN"]
-                        newSpacerData.__rightNN = JSONDict[prefix + "rightNN"]
-                        newSpacerData.__fullSeqLeft = JSONDict[prefix + "fullSeqLeft"]
-                        newSpacerData.__fullSeqRight = JSONDict[prefix + "fullSeqRight"]
-
-                except KeyError:
-                        raise Exception("Can't create a NamedSequence from this JSONDict.")
-
-                return newSpacerData
-
-        #setters
-        def setFullSpacerSeqs(self):
-                """Set the SpacerData's full left sequence and full right sequence."""
-                self.__fullSeqLeft = self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
-                self.__fullSeqRight = SpacerData.end + self.getRightNN() + self.getSpacerRight()
-
-        def setNN(self):
-                """Calculate and set the SpacerData's NN."""
-                #randomly choose A, G, or C for all four N nucleotides
-                #technically, T is allowed in certain circumstances, but it is less
-                #complicated to not allow T
-                self.__leftNN = random.choice(["A", "G", "C"]) + random.choice(["A", "G", "C"])
-                self.__rightNN = random.choice(["A", "G", "C"]) + random.choice(["A", "G", "C"])
-
-        #complicated getters
-        def __str__(self):
-                retStr = "Spacers for position " + str(self.getPosition())
-                if(self.getIsTerminal()):
-                        retStr += " is last element"
-                else:
-                        retStr += " is middle element"
-
-                retStr += "\nLeft:\n" + self.getSpacerLeft()
-                retStr += "\nRight:\n" + self.getSpacerRight()
-                retStr += "\nTerminal Letter: " + self.getTerminalLetter()
-                return retStr
-
-        #basic getters
-        def getPosition(self):
-                return self.__position
-
-        def getSpacerLeft(self):
-                return self.__spacerLeft
-
-        def getSpacerRight(self):
-                return self.__spacerRight
-
-        def getIsTerminal(self):
-                return self.__isTerminal
-
-        def getTerminalLetter(self):
-                return self.__terminalLetter
-
-        def getLeftNN(self):
-                return self.__leftNN
-
-        def getRightNN(self):
-                return self.__rightNN
-
-        def getFullSeqLeft(self):
-                return self.getSpacerLeft() + self.getLeftNN() + SpacerData.start
-
-        def getFullSeqRight(self):
-                return SpacerData.end + self.getRightNN() + self.getSpacerRight()
+	def getFullSeqRight(self):
+		return SpacerData.end + self.getRightNN() + self.getSpacerRight()
 
 
 class PrimerData:

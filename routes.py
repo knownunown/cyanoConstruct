@@ -1137,71 +1137,71 @@ def backboneFile():
 @app.route("/assemble", methods = ["POST", "GET"])
 @login_required
 def assemble():
-        """Route for /assemble"""
-        allDefaultNS = defaultUser.getSortedNS()
-        allSessionNS = getCurrUser().getSortedNS()
-        
-        #dict of all components
-        allAvailableNames = {}
-        posTerminalComb = {}
+	"""Route for /assemble"""
+	allDefaultNS = defaultUser.getSortedNS()
+	allSessionNS = getCurrUser().getSortedNS()
+	
+	#dict of all components
+	allAvailableNames = {}
+	posTerminalComb = {}
 
-        for typeKey in allDefaultNS.keys():
-                allAvailableNames[typeKey] = []
-                
-                #default library
-                for ns in allDefaultNS[typeKey]:
-                        allAvailableNames[typeKey].append(ns.getName()) #add names
-                                                
-                        posTerminalComb[ns.getName()] = []
-                        
-                        for comp in ns.getAllComponents():              
-                                #the combination
-                                posTermCombRow = {"position": comp.getPosition(),
-                                                  "terminalLetter": comp.getTerminalLetter()}
-                                if(posTermCombRow not in posTerminalComb[ns.getName()]):
-                                        posTerminalComb[ns.getName()].append(posTermCombRow)
-                                                
-                #user-made library
-                for ns in allSessionNS[typeKey]:
-                        if(ns.getName() not in allAvailableNames[typeKey]): #add user-made sequences if not already there
-                                allAvailableNames[typeKey].append(ns.getName())
-                        
-                                if(ns.getName() not in posTerminalComb):
-                                        posTerminalComb[ns.getName()] = []
-                                
-                        for comp in ns.getAllComponents():
-                                                                        
-                                #that combination
-                                posTermCombRow = {"position": comp.getPosition(),
-                                                                  "terminalLetter": comp.getTerminalLetter()}
-                                if(posTermCombRow not in posTerminalComb[ns.getName()]):
-                                        posTerminalComb[ns.getName()].append(posTermCombRow)
-        
-        #list of fidelities
-        fidelities = ["98.1%", "95.8%", "91.7%"]
+	for typeKey in allDefaultNS.keys():
+		allAvailableNames[typeKey] = []
+		
+		#default library
+		for ns in allDefaultNS[typeKey]:
+			allAvailableNames[typeKey].append(ns.getName()) #add names
+						
+			posTerminalComb[ns.getName()] = []
+			
+			for comp in ns.getAllComponents():		
+				#the combination
+				posTermCombRow = {"position": comp.getPosition(),
+								  "terminalLetter": comp.getTerminalLetter()}
+				if(posTermCombRow not in posTerminalComb[ns.getName()]):
+					posTerminalComb[ns.getName()].append(posTermCombRow)
+						
+		#user-made library
+		for ns in allSessionNS[typeKey]:
+			if(ns.getName() not in allAvailableNames[typeKey]): #add user-made sequences if not already there
+				allAvailableNames[typeKey].append(ns.getName())
+			
+				if(ns.getName() not in posTerminalComb):
+					posTerminalComb[ns.getName()] = []
+				
+			for comp in ns.getAllComponents():
+									
+				#that combination
+				posTermCombRow = {"position": comp.getPosition(),
+								  "terminalLetter": comp.getTerminalLetter()}
+				if(posTermCombRow not in posTerminalComb[ns.getName()]):
+					posTerminalComb[ns.getName()].append(posTermCombRow)
+	
+	#list of fidelities
+	fidelities = ["98.5%", "98.1%", "95.8%", "91.7%"]
 
-        fidelityLimits = {"98.1%": SpacerData.max981, "95.8%": SpacerData.max958, "91.7%": SpacerData.max917}
-        
-        #list of backbones & IDs
-        availableBackbones = {"i": [], "r": []}
-        backboneDescs = {}
-        for BB in defaultUser.getSortedBB():
-                availableBackbones[BB.getType()].append([BB.getID(), BB.getName()])
-                backboneDescs[BB.getID()] = BB.getDesc()
-        for BB in getCurrUser().getSortedBB():
-                availableBackbones[BB.getType()].append([BB.getID(), BB.getName()])
-                backboneDescs[BB.getID()] = BB.getDesc()
+	fidelityLimits = {"98.5%": SpacerData.max985, "98.1%": SpacerData.max981, "95.8%": SpacerData.max958, "91.7%": SpacerData.max917}
+	
+	#list of backbones & IDs
+	availableBackbones = {"i": [], "r": []}
+	backboneDescs = {}
+	for BB in defaultUser.getSortedBB():
+		availableBackbones[BB.getType()].append([BB.getID(), BB.getName()])
+		backboneDescs[BB.getID()] = BB.getDesc()
+	for BB in getCurrUser().getSortedBB():
+		availableBackbones[BB.getType()].append([BB.getID(), BB.getName()])
+		backboneDescs[BB.getID()] = BB.getDesc()
 
-        seqElements = [["Pr", "Promoter"], ["RBS", "RBS"], ["GOI", "Gene"], ["Term", "Terminator"]]
+	seqElements = [["Pr", "Promoter"], ["RBS", "RBS"], ["GOI", "Gene"], ["Term", "Terminator"]]
 
-        return render_template("assembly.html", fidelities = fidelities,
-                                                   fidelityLimits = fidelityLimits,
-                                                   availableElements = allAvailableNames, 
-                                                   posTermComb = posTerminalComb,
-                                                   availableBackbones = availableBackbones,
-                                                   backboneDescs = backboneDescs,
-                                                   seqElements = seqElements,
-                                                   loggedIn = checkLoggedIn())
+	return render_template("assembly.html", fidelities = fidelities,
+						   fidelityLimits = fidelityLimits,
+						   availableElements = allAvailableNames, 
+						   posTermComb = posTerminalComb,
+						   availableBackbones = availableBackbones,
+						   backboneDescs = backboneDescs,
+						   seqElements = seqElements,
+						   loggedIn = checkLoggedIn())
 
 #process assembly
 @app.route("/processAssembly", methods = ["POST"])
