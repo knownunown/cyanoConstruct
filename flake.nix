@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "nixpkgs/release-20.09";
+    nixpkgs.url = "nixpkgs";
     utils.url = "github:numtide/flake-utils";
   };
 
@@ -13,7 +13,7 @@
           name = "cc-devshell";
 
           buildInputs = with pkgs; [
-            python3 python3Packages.pylint poetry
+            python3 python3Packages.pylint poetry mypy black
           ] ++ linuxPkgs;
 
           nativeBuildInputs = with pkgs; [];
