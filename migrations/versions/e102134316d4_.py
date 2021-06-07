@@ -10,22 +10,23 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e102134316d4'
-down_revision = 'bd2054290318'
+revision = "e102134316d4"
+down_revision = "bd2054290318"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.add_column('UserData', sa.Column('googleID', sa.TEXT(), nullable=True))
-    op.add_column('UserData', sa.Column('googleAssoc', sa.BOOLEAN(), nullable=True))
-    op.add_column('UserData', sa.Column('tempPass', sa.String(32), nullable = True))
-    op.add_column('UserData', sa.Column('tempExp', sa.INTEGER(), nullable = True))
+    op.add_column("UserData", sa.Column("googleID", sa.TEXT(), nullable=True))
+    op.add_column("UserData", sa.Column("googleAssoc", sa.BOOLEAN(), nullable=True))
+    op.add_column("UserData", sa.Column("tempPass", sa.String(32), nullable=True))
+    op.add_column("UserData", sa.Column("tempExp", sa.INTEGER(), nullable=True))
     return
 
+
 def downgrade():
-    op.drop_column('UserData', 'googleID')
-    op.drop_column('UserData', 'googleAssoc')
-    op.drop_column('UserData', 'tempPass')
-    op.drop_column('UserData', 'tempExp')
+    op.drop_column("UserData", "googleID")
+    op.drop_column("UserData", "googleAssoc")
+    op.drop_column("UserData", "tempPass")
+    op.drop_column("UserData", "tempExp")
     return

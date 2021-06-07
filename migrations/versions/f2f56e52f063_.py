@@ -10,18 +10,26 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f2f56e52f063'
-down_revision = 'e102134316d4'
+revision = "f2f56e52f063"
+down_revision = "e102134316d4"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    #op.execute("UPDATE UserData SET googleAssoc = false")
-    op.alter_column("UserData", "googleAssoc", nullable=False, server_default = False, existing_type=sa.BOOLEAN())
+    # op.execute("UPDATE UserData SET googleAssoc = false")
+    op.alter_column(
+        "UserData",
+        "googleAssoc",
+        nullable=False,
+        server_default=False,
+        existing_type=sa.BOOLEAN(),
+    )
     return
 
 
 def downgrade():
-    op.alter_column('UserData', 'googleAssoc', nullable=True, existing_type=sa.BOOLEAN())
+    op.alter_column(
+        "UserData", "googleAssoc", nullable=True, existing_type=sa.BOOLEAN()
+    )
     return

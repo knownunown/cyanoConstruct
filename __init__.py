@@ -9,13 +9,13 @@ cyanoConstruct __init__ file
 """
 __version__ = "0.4.4"
 
-#import statements
+# import statements
 from flask import Flask, session
 from flask_login import current_user, login_user, logout_user, login_required
 
 from config import Config
 
-#Flask app
+# Flask app
 app = Flask(__name__)
 
 app.config.update(Config)
@@ -24,21 +24,25 @@ from flask_migrate import Migrate
 
 # database
 from database import db
+
 db.init_app(app)
 migrate = Migrate(app, db)
 with app.app_context():
     # import for the side effects, init the default user.
     import users
+
     db.create_all()
 
-#import modules
+# import modules
 from misc import printIf, checkType
 import enumsExceptions
 
 from component import NamedSequence, SpacerData, PrimerData, inverseSeq
+
 maxPosition = SpacerData.getMaxPosition()
 
 from routes import app as base
 from routes import login_manager
+
 login_manager.init_app(app)
 app.register_blueprint(base)
