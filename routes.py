@@ -1380,7 +1380,7 @@ def assemblyZIP():
                 #go through each saved component
                 for compNum, compID in enumerate(compsList):
                         #get the component & see if the user has permission to use it
-                        comp = ComponentDB.query.get(compID)
+                        comp: ComponentDB = ComponentDB.query.get(compID)
                         checkPermission(comp)
 
                         if packageComps:
@@ -1402,6 +1402,9 @@ def assemblyZIP():
                                                 compID = comp.getNameID(),
                                                 spacer = comp.getLeftSpacer()))
 
+
+                                # HACK(tny): GenBank annotations and sequences should be less ad-hoc.
+                                if comp.getType() == "RBS": fullSeq += "GG"
                                 i = rf.addCompAssemblyGB(comp, features, i)
                                 printIf("adding {compID} seq".format(compID = comp.getNameID()))
 
@@ -1432,6 +1435,7 @@ def assemblyZIP():
 
                 fileGB = rf.finishCompAssemblyGB(features, fullSeq, offset, bb.getName())
                 fileFASTA = ">CyanoConstruct assembled sequence\n" + fullSeq
+                print(f"assemblyZIP: sequence is of len {len(fullSeq)}, remaining in frame: {len(fullSeq) % 3}")
 
                 #make the .zip
                 files = {**files, **{"fullSequence.fasta": fileFASTA, "fullSequence.gb": fileGB}}
