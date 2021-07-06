@@ -12,9 +12,14 @@
         devShell = pkgs.mkShell {
           name = "cc-devshell";
 
+          # development dependencies
           buildInputs = with pkgs; [
+            # backend
             python3 python3Packages.pylint poetry mypy black
-          ] ++ linuxPkgs;
+          ] ++ (with nodePackages; [
+            # frontend
+            nodejs npm typescript-language-server vls
+          ]) ++ linuxPkgs;
 
           nativeBuildInputs = with pkgs; [];
         };
