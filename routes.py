@@ -56,7 +56,7 @@ def checkLoggedIn():
     return not getCurrUser().is_anonymous
 
 
-def getCurrUser():
+def getCurrUser() -> UserData:
     return current_user
 
 
@@ -1247,6 +1247,7 @@ def backboneFile():
 #################################   ASSEMBLY  #################################
 ###############################################################################
 
+from typing import Dict
 # the page for assembly
 @app.route("/assemble", methods=["POST", "GET"])
 @login_required
@@ -1255,8 +1256,8 @@ def assemble():
     allDefaultNS = defaultUser.getSortedNS()
     allSessionNS = getCurrUser().getSortedNS()
 
-    # dict of all components
-    allAvailableNames = {}
+    # dict of all components: component type -> component name
+    allAvailableNames: Dict[str, str] = {}
     posTerminalComb = {}
 
     for typeKey in allDefaultNS.keys():

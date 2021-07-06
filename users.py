@@ -5,6 +5,8 @@ UserData class, used to manage users and their actions.
 
 @author: Lia Thomson
 """
+from typing import Dict, List
+
 from misc import printIf, checkType
 from database import (
     db,
@@ -172,7 +174,7 @@ class UserData:
         return self.getEntry().getAllBackbones().all()
 
     # get sorted
-    def getSortedNS(self):
+    def getSortedNS(self) -> Dict[str, List[NamedSequenceDB]]:
         """Return dict of sorted NamedSequenceDBs of the user.
 
         RETURNS:
@@ -180,34 +182,13 @@ class UserData:
                         a sorted array of all NamedSequenceDB of the type.
         """
         # the use of order_by is likely unnecessary, but not deeply detrimental
-        allPr = (
-            self.getAllNSQuery()
-            .filter_by(elemType="Pr")
+        return {
+            typ : self.getAllNSQuery()
+            .filter_by(elemType=typ)
             .order_by(NamedSequenceDB.nameID.asc())
             .all()
-        )
-        allRBS = (
-            self.getAllNSQuery()
-            .filter_by(elemType="RBS")
-            .order_by(NamedSequenceDB.nameID.asc())
-            .all()
-        )
-        allGOI = (
-            self.getAllNSQuery()
-            .filter_by(elemType="GOI")
-            .order_by(NamedSequenceDB.nameID.asc())
-            .all()
-        )
-        allTerm = (
-            self.getAllNSQuery()
-            .filter_by(elemType="Term")
-            .order_by(NamedSequenceDB.nameID.asc())
-            .all()
-        )
-
-        sortedNS = {"Pr": allPr, "RBS": allRBS, "GOI": allGOI, "Term": allTerm}
-
-        return sortedNS
+            for typ in ["Pr", "RBS", "GOI", "Term"]
+        }
 
     def getSortedComps(self):
         """Return dict of sorted ComponentDBs of the user.
