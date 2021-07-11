@@ -1,19 +1,42 @@
 <template>
-<!--<img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" /> -->
-  
-  <ConstructComponent />
+  <construct-component
+    v-for="item in data"
+    :name="'foo'"
+    :position="item.pos"
+    :spacers="item.spacers"
+  />
+  <p class="transform rotate-45">Wacky and wild!</p>
 </template>
-
 <script lang="ts">
-import { defineComponent } from 'vue'
-import HelloWorld from './components/HelloWorld.vue'
-import ConstructComponent from './components/ConstructComponent.vue'
+import { Vue, Options } from 'vue-class-component';
 
-export default defineComponent({
-  name: 'App',
-  components: {ConstructComponent}
+import ConstructComponent from './components/ConstructComponent.vue'
+import { PositionInfo, PositionType, Spacers } from './types';
+
+interface Data {
+    pos: PositionInfo,
+    spacers: Spacers,
+}
+
+@Options({
+    components: { ConstructComponent }
 })
+export default class App extends Vue {
+    data() {
+        return {
+            data: [{
+                pos: {
+                    posType: PositionType.Middle,
+                    pos: 1
+                },
+                spacers: {
+                    left: "AAAA",
+                    right: "CAGA"
+                }
+            }] as Array<Data>
+        };
+    }
+}
 </script>
 
 <style>
