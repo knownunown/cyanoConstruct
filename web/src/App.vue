@@ -1,19 +1,24 @@
 <template>
+  <div class="flex flex-row overflow-x-auto">
   <construct-component
     v-for="item in data"
-    :name="'foo'"
+    :name="item.name"
     :position="item.pos"
     :spacers="item.spacers"
   />
-  <p class="transform rotate-45">Wacky and wild!</p>
+  </div>
 </template>
+
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 
 import ConstructComponent from './components/ConstructComponent.vue'
 import { PositionInfo, PositionType, Spacers } from './types';
 
+import sampleData from '../data.json';
+
 interface Data {
+    name: String,
     pos: PositionInfo,
     spacers: Spacers,
 }
@@ -21,10 +26,12 @@ interface Data {
 @Options({
     components: { ConstructComponent }
 })
+
 export default class App extends Vue {
     data() {
+        console.log(sampleData);
         return {
-            data: [{
+            data: /*[{
                 pos: {
                     posType: PositionType.Middle,
                     pos: 1
@@ -33,7 +40,8 @@ export default class App extends Vue {
                     left: "AAAA",
                     right: "CAGA"
                 }
-            }] as Array<Data>
+            }]*/
+            sampleData as Array<Data>
         };
     }
 }
