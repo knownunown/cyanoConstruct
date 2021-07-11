@@ -14,6 +14,9 @@
 
           # development dependencies
           buildInputs = with pkgs; [
+            # utilities
+            sqlite
+
             # backend
             python3 python3Packages.pylint poetry mypy black
           ] ++ (with nodePackages; [
