@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["esnext", "dom"],
+    "plugins": [ "@vuedx/typescript-plugin-vue" ],
 
     "experimentalDecorators": true,
   },
