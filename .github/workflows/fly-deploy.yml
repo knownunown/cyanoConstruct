@@ -26,7 +26,7 @@ jobs:
       - name: Build and push to Fly registry
         run: |
           nix build .#docker
-          docker load result
+          docker load <result
           docker tag cyanoconstruct:latest registry.fly.io/broken-shape-7985:latest
           docker push registry.fly.io/broken-shape-7985:latest
       - name: Fly deploy
