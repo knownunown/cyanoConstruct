@@ -1,0 +1,34 @@
+name: Fly Deploy
+on:
+  push:
+    branches:
+      - fly-deploy
+      - main
+
+defaults:
+  run:
+    shell: nix develop --command bash -e {0}
+
+jobs:
+  deploy:
+    name: Build and deploy app
+    runs-on: ubuntu-latest
+    concurrency: deploy-group    # optional: ensure only one action runs at a time
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: registry.fly.io
+          username: x
+          password: ${{ secrets.FLY_API_TOKEN }}
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build and push to Fly registry
+        run: |
+          nix build .#docker
+          docker load result
+          docker tag cyanoconstruct:latest registry.fly.io/broken-shape-7985:latest
+          docker push registry.fly.io/broken-shape-7985:latest
+      - name: Fly deploy
+        run: |
+          flyctl deploy
