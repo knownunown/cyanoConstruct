@@ -9,7 +9,7 @@ import random
 # from jinja2 import Markup
 
 # from cyanoConstruct import NamedSequenceDB, SpacerDataDB, PrimerDataDB
-from misc import checkType
+from cyanoconstruct.misc import checkType
 
 
 def inverseSeq(sequence):

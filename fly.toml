@@ -1,0 +1,31 @@
+# fly.toml app configuration file generated for old-dew-5588 on 2024-11-19T01:49:23-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'broken-shape-7985'
+primary_region = 'ewr'
+
+# [build]
+# image = "cyanoconstruct:latest"
+[build]
+image = "registry.fly.io/broken-shape-7985:latest"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-2x'
+
+[mounts]
+  source = "cyanoconstruct_data"
+  destination = "/data" 
+  initial_size = "1gb" # optional - the size of the volume created on first deploy
+
+[env]
+  SQLALCHEMY_DATABASE_URI = "sqlite:////data/cc.sqlite"

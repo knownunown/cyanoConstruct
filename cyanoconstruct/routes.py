@@ -6,10 +6,12 @@ Routes file, which is used to load website pages and process input from the site
 @author: Lia Thomson
 """
 
-from misc import printIf
-from users import UserData, defaultUser
-from component import SpacerData, PrimerData, nullPrimerData
-from database import NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB
+from typing import cast
+
+from cyanoconstruct.misc import printIf
+from cyanoconstruct.users import UserData, defaultUser
+from cyanoconstruct.component import SpacerData, PrimerData, nullPrimerData
+from cyanoconstruct.database import NamedSequenceDB, UserDataDB, ComponentDB, BackboneDB
 from flask_login import (
     LoginManager,
     current_user,
@@ -18,8 +20,8 @@ from flask_login import (
     login_required,
 )
 from flask import Blueprint, session
-import routesFuncs as rf
-import enumsExceptions as ee
+import cyanoconstruct.routesFuncs as rf
+import cyanoconstruct.enumsExceptions as ee
 
 # flask
 from flask import request, render_template, jsonify, Response, redirect
@@ -29,7 +31,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 
 # misc.
-from werkzeug.urls import url_parse  # for redirect parsing
+from urllib3.util import parse_url as url_parse  # for redirect parsing
 
 ##########################################################################################
 
@@ -304,6 +306,9 @@ def errorZIP(error):
 ##################################   LOG IN ################################
 ###############################################################################
 
+from cyanoconstruct.auth import auth
+
+app.register_blueprint(auth)
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
@@ -453,49 +458,6 @@ def logoutProcess():
     return redirect("/index")
 
 
-@app.route("/registerProcess", methods=["POST"])
-def registerProcess():
-    """Register a user using an email.
-
-    NOTE:
-            This function should not be called upon in the final site.
-    """
-    validInput = False
-    outputStr = ""
-    succeeded = False
-
-    # get information from the page's form
-    try:
-        email = request.form["email"]
-        try:
-            remember = rf.boolJS(request.form["remember"])
-        except Exception:
-            raise ValueError("invalid remember me")
-
-        validInput = True
-
-    except Exception:
-        outputStr = "ERROR: could not get valid data from form.<br>"
-
-    # try to register a new account
-    if validInput:
-        try:
-            user = UserData.new(email)
-            login_user(user, remember=remember)
-
-            clearSelected()
-
-            # indicate success
-            outputStr += "Successfully registered and logged in as {email}.<br>".format(
-                email=email
-            )
-            succeeded = True
-        except Exception as e:
-            outputStr += "ERROR: " + str(e) + "<br>"
-
-    return jsonify({"output": outputStr, "succeeded": succeeded})
-
-
 ###############################  USER PAGE   ###############################
 ###############################################################################
 
@@ -504,13 +466,13 @@ def registerProcess():
 @login_required
 def accountInfo():
     """Route for /account"""
-    currUser = getCurrUser()
-    email = currUser.getEmail()
+    user = cast(UserData, current_user).getEntry()
 
-    googleAssoc = currUser.getEntry().getGoogleAssoc()
+    email = user.getEmail()
+    googleAssoc = user.getGoogleAssoc()
 
     return render_template(
-        "account.html", email=email, googleAssoc=googleAssoc, loggedIn=checkLoggedIn()
+        "account.html", email=email, googleAssoc=googleAssoc, webauthn=user.webauthn
     )
 
 
@@ -668,6 +630,7 @@ def findSpacers():
     validInput = True
     succeeded = False
 
+    outputStr = ""
     # get data
     try:
         newPosStr = request.form["componentPos"]

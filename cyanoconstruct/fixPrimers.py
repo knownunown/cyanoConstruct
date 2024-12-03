@@ -3,7 +3,7 @@ from sys import path as sysPath
 
 sysPath.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from __init__ import db
+from database import db
 
 from database import PrimerData, UserDataDB, PrimerDataDB
 

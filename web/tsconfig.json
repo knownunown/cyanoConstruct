@@ -12,6 +12,7 @@
     "plugins": [ "@vuedx/typescript-plugin-vue" ],
 
     "experimentalDecorators": true,
+    /* "useDefineForClassFields": true */
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]
 }

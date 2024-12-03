@@ -6,16 +6,51 @@ Contains the tables: UserDataDB, NamedSequenceDB, SpacerDataDB, PrimerDataDB, Co
 
 @author: Lia Thomson
 """
+from __future__ import annotations
 
-from jinja2 import Markup  # for HTML display of Component
+from typing import Dict, List
+
+from markupsafe import Markup  # for HTML display of Component
 from datetime import datetime, timedelta  # for time in GenBank file
 from time import time
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
+from sqlalchemy import BigInteger, DateTime, Integer, Text, String, LargeBinary
+from sqlalchemy import ForeignKey
+from sqlalchemy import orm
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.sql import func
+
 
 EXPIRATIONSECS = 3600  # expires in an hour
 
-db = SQLAlchemy(session_options={"expire_on_commit": False})
+
+convention = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
+
+metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy(session_options={"expire_on_commit": False}, metadata=metadata)
+
+
+# https://simplewebauthn.dev/docs/packages/server#additional-data-structures
+class WebAuthn(db.Model):
+    __tablename__ = "WebAuthn"
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    public_key: Mapped[bytes] = mapped_column(unique=True)
+    counter: Mapped[int] = mapped_column(BigInteger, default=0)
+
+    last_used: Mapped[datetime] = mapped_column(DateTime, onupdate=func.now())
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("UserData.id"))
+    user: Mapped[UserDataDB] = orm.relationship(back_populates="webauthn")
 
 
 class UserDataDB(db.Model):
@@ -30,6 +65,8 @@ class UserDataDB(db.Model):
     # google-related info.
     googleAssoc = db.Column(db.Boolean, default=False, nullable=False)
     googleID = db.Column(db.Text)
+
+    webauthn: Mapped[list[WebAuthn]] = orm.relationship(back_populates="user")
 
     # temporary password & expiration (NOT IN USE CURRENTLY)
     tempPass = db.Column(db.String(32))
@@ -179,7 +216,7 @@ class NamedSequenceDB(db.Model):
     def getAllComponents(self):
         return self.getAllComponentsQuery().all()
 
-    def getAllComponentsQuery(self):
+    def getAllComponentsQuery(self): # -> List[ComponentDB]:
         return ComponentDB.query.filter_by(namedSequence_id=self.id)
 
     def getHTMLdisplay(self):

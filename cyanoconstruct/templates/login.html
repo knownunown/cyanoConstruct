@@ -9,11 +9,17 @@
 		var returnURL = {{ returnURL|tojson }};
 	</script>
 
-	<script src = "/static/js/loginJS.js" ></script>
+	<script
+		src="https://unpkg.com/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js"
+		integrity="sha384-9+Bm5pUMP2324xMjhRahdomA9HaTxP6JcMhbl3tUAcV2+Jiohq8/T+dGj/rx/MaM"
+		crossorigin="anonymous">
+	</script>
+	<script src = "/static/js/login.js"></script>
 {% endblock %}
 
 
 {% block content %}
+<!--
 <h1>Log In or Register through Google</h1>
 <p>Note: need to register this login.</p>
 
@@ -22,12 +28,12 @@
 	<label for = "googleRememberMe">Remember me</label>
 	<input name = "googleRememberMe" id = "googleRememberMe" type = "checkbox">
 </form>
-<p id = "loginOutput">
 </p>
-<span id = "returnURL"></span>
 
 <hr>
-<p>Testing:</p>
+<p>Testing:</p>-->
+<p id = "loginOutput"></p>
+<span id = "returnURL"></span>
 
 <h2>Existing Users</h2>
 <p>
@@ -39,7 +45,7 @@
 </p>
 
 <h2>Log In</h2>
-<form id = "loginForm" onsubmit = "login()">
+<form id = "loginForm">
 	<label for = "emailLogin">Email</label>
 	<input name = "emailLogin" id = "emailLogin" type = "text">
 
@@ -54,7 +60,7 @@
 </form>
 
 <h2>Register</h2>
-<form id = "registrationForm" onsubmit="register()">
+<form id="registrationForm">
 	<label for = "emailRegister">Email</label>
 	<input name = "emailRegister" id = "emailRegister" type = "text">
 

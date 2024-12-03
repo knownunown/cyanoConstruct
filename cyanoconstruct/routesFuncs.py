@@ -7,16 +7,17 @@ Functions that are used by the routes file.
 """
 
 # design
-from enumsExceptions import (
+from cyanoconstruct.enumsExceptions import (
     SequenceMismatchError,
     SequenceNotFoundError,
     BackboneNotFoundError,
 )
-from users import UserData, defaultUser
-from misc import checkType, printIf
+from cyanoconstruct.users import UserData, defaultUser
+from cyanoconstruct.misc import checkType, printIf
+from cyanoconstruct.component import SpacerData
+
 from string import ascii_letters, digits
 
-from component import SpacerData
 
 maxPosition = SpacerData.getMaxPosition()
 

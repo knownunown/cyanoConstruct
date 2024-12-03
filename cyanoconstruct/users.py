@@ -7,8 +7,8 @@ UserData class, used to manage users and their actions.
 """
 from typing import Dict, List
 
-from misc import printIf, checkType
-from database import (
+from cyanoconstruct.misc import printIf, checkType
+from cyanoconstruct.database import (
     db,
     UserDataDB,
     NamedSequenceDB,
@@ -17,8 +17,8 @@ from database import (
     ComponentDB,
     BackboneDB,
 )
-from component import NamedSequence, SpacerData, PrimerData
-import enumsExceptions as e
+from cyanoconstruct.component import NamedSequence, SpacerData, PrimerData
+import cyanoconstruct.enumsExceptions as e
 
 
 class UserData:
@@ -104,6 +104,17 @@ class UserData:
             newUserData.__entryDB = u
 
             return newUserData
+    
+    @classmethod
+    def from_db(cls, db: UserDataDB):
+        """Constructs a UserData from an extant UserDataDB."""
+        result = cls()
+
+        result.__DBid = db.getID()
+        result.__entryDB = db
+        
+        return result
+        
 
     # properties for Flask-Login
     @property
@@ -138,7 +149,7 @@ class UserData:
     def getID(self):
         return self.__DBid
 
-    def getEntry(self):
+    def getEntry(self) -> UserDataDB:
         return self.__entryDB
 
     def getEmail(self):
